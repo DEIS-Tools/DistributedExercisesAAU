@@ -49,3 +49,5 @@ Your tasks are as follows:
 
  - implement the above behaviour - however, with the freedom to pick which person to talk to, when to send a message, etc. 
  - Try to minimize the number of messages.
+ - How few messages can are enough?
+ - Is your solution optimal? And in what sense?
