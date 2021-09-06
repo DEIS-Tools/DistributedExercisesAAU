@@ -34,11 +34,11 @@ is strongly discouraged: such changes would likely break the solutions of your f
 # Exercise 1
 Implement the following gossiping problem in `exercises/exercise1.py`.
 
-A number of persons initially know one distinct secret each. A person can communicate to another person - although only one message at a time.
+A number of persons initially know one distinct secret each.
 
 In each message, a person discloses all their secrets to the recipient.
 
-These individuals can communicate only in pairs (no conference calls) but it is possible that different pairs of people talk concurrently. For all of the tasks below you should consider the following three scenarios:
+These individuals can communicate only in pairs (no conference calls) but it is possible that different pairs of people talk concurrently. For all the tasks below you should consider the following two scenarios:
 
  - Scenario 1: a person may call any other person, thus the network is a total graph,
  - Scenario 2: the persons are organized in a bi-directional circle, where the each person can only pass messages to the left and the right (use the modulo operator).
@@ -49,5 +49,5 @@ Your tasks are as follows:
 
  - implement the above behaviour - however, with the freedom to pick which person to talk to, when to send a message, etc. 
  - Try to minimize the number of messages.
- - How few messages can are enough?
+ - How few messages are enough?
  - Is your solution optimal? And in what sense?
