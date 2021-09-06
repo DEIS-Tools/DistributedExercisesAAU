@@ -1,4 +1,5 @@
 import argparse
+import inspect
 
 import exercises.exercise1
 import exercises.demo
@@ -6,7 +7,18 @@ from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
 
 
+def fetch_alg(lecture: str, algorithm: str):
+    if '.' in algorithm or ';' in algorithm:
+        raise ValueError(f'"." and ";" are not allowed as names of solutions.')
+    alg = eval(f'exercises.{lecture}.{algorithm}')
+    if not inspect.isclass(alg):
+        raise TypeError(f'Could not find "exercises.{lecture}.{algorithm} class')
+    return alg
+
+
 def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int):
+    print(
+        f'Running Lecture {lecture_no} Algorithm {algorithm} in a network of type [{network_type}] using {number_of_devices} devices')
     if number_of_devices < 2:
         raise IndexError(f'At least two devices are needed as an input argument, got {number_of_devices}')
     emulator = None
@@ -16,28 +28,27 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
         emulator = SyncEmulator
     instance = None
     if lecture_no == 0:
-        if algorithm == "Demo" or algorithm == "PingPong":
-            instance = emulator(number_of_devices, exercises.demo.PingPong)
-    elif lecture_no == 1:
-        if algorithm == "Gossip":
-            instance = emulator(number_of_devices, exercises.exercise1.Gossip)
+        alg = fetch_alg('demo', 'PingPong')
+        instance = emulator(number_of_devices, alg)
+    else:
+        alg = fetch_alg(f'exercise{lecture_no}', algorithm)
+        instance = emulator(number_of_devices, alg)
 
     if instance is not None:
-        print(
-            f'Running Lecture {lecture_no} Algorithm {algorithm} in a network of type [{network_type}] using {number_of_devices} devices')
         instance.run()
         print(f'Execution Complete')
         instance.print_result()
         print('Statistics')
         instance.print_statistics()
     else:
-        raise NotImplementedError(f'You are trying to run an exercise ({algorithm}) of a lecture ({lecture_no}) which has not yet been released')
+        raise NotImplementedError(
+            f'You are trying to run an exercise ({algorithm}) of a lecture ({lecture_no}) which has not yet been released')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
     parser.add_argument('--lecture', metavar='N', type=int, nargs=1,
-                        help='Lecture number', required=True, choices=[0,1])
+                        help='Lecture number', required=True, choices=[0, 1])
     parser.add_argument('--algorithm', metavar='alg', type=str, nargs=1,
                         help='Which algorithm from the exercise to run', required=True)
     parser.add_argument('--type', metavar='nw', type=str, nargs=1,
