@@ -51,3 +51,10 @@ Your tasks are as follows:
  - Try to minimize the number of messages.
  - How few messages are enough?
  - Is your solution optimal? And in what sense?
+
+### NOTICE:
+You can have several copies of the `Gossip` class, just give the class another name in the `exercise1.py` document, for instance `ImprovedGossip`.
+You should then be able to call the framework with your new class via:
+```bash
+python3.9 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async --devices 3
+```
