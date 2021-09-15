@@ -12,7 +12,6 @@ class SyncEmulator(EmulatorStub):
 
     def __init__(self, number_of_devices: int, kind):
         super().__init__(number_of_devices, kind)
-        self._terminated = 0
         self._round_lock = threading.Lock()
         self._done = [False for _ in self.ids()]
         self._awaits = [threading.Lock() for _ in self.ids()]
@@ -22,7 +21,7 @@ class SyncEmulator(EmulatorStub):
         self._rounds = 0
 
     def reset_done(self):
-        self._done = [False for _ in range(0, len(self._devices))]
+        self._done = [False for _ in self.ids()]
 
     def run(self):
         self._progress.acquire()
@@ -39,6 +38,7 @@ class SyncEmulator(EmulatorStub):
             # check if everyone terminated
             self._progress.acquire()
             if self.all_terminated():
+                self._progress.release()
                 break
             # send messages
             for index in self.ids():
@@ -54,7 +54,8 @@ class SyncEmulator(EmulatorStub):
             ids = [x for x in self.ids()] # convert to list to make it shuffleable
             random.shuffle(ids)
             for index in ids:
-                self._awaits[index].release()
+                if self._awaits[index].locked():
+                    self._awaits[index].release()
             self._progress.release()
         for t in self._threads:
             t.join()
@@ -92,8 +93,7 @@ class SyncEmulator(EmulatorStub):
         self._done[index] = True
 
         # check if the thread have marked their round as done OR have ended
-        if all([self._done[x] or not self._threads[x].is_alive()
-                for x in self.ids()]):
+        if all([self._done[x] or not self._threads[x].is_alive() for x in self.ids()]):
             self._round_lock.release()
         self._progress.release()
         self._awaits[index].acquire()
@@ -106,8 +106,9 @@ class SyncEmulator(EmulatorStub):
 
     def terminated(self, index:int):
         self._progress.acquire()
-        self._terminated += 1
-        if self._terminated >= len(self._devices):
+        self._done[index] = True
+        if all([self._done[x] or not self._threads[x].is_alive()
+                for x in self.ids()]):
             if self._round_lock.locked():
                 self._round_lock.release()
         self._progress.release()
