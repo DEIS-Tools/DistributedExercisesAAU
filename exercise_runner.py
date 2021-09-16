@@ -2,6 +2,7 @@ import argparse
 import inspect
 
 import exercises.exercise1
+import exercises.exercise2
 import exercises.demo
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
@@ -10,8 +11,11 @@ from emulators.SyncEmulator import SyncEmulator
 def fetch_alg(lecture: str, algorithm: str):
     if '.' in algorithm or ';' in algorithm:
         raise ValueError(f'"." and ";" are not allowed as names of solutions.')
-    alg = eval(f'exercises.{lecture}.{algorithm}')
-    if not inspect.isclass(alg):
+    try:
+        alg = eval(f'exercises.{lecture}.{algorithm}')
+        if not inspect.isclass(alg):
+            raise TypeError(f'Could not find "exercises.{lecture}.{algorithm} class')
+    except:
         raise TypeError(f'Could not find "exercises.{lecture}.{algorithm} class')
     return alg
 
@@ -48,7 +52,7 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
     parser.add_argument('--lecture', metavar='N', type=int, nargs=1,
-                        help='Lecture number', required=True, choices=[0, 1])
+                        help='Lecture number', required=True, choices=[0, 1, 2])
     parser.add_argument('--algorithm', metavar='alg', type=str, nargs=1,
                         help='Which algorithm from the exercise to run', required=True)
     parser.add_argument('--type', metavar='nw', type=str, nargs=1,
