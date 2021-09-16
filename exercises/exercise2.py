@@ -36,13 +36,16 @@ class RipCommunication(Device):
     def run(self):
         for neigh in self.neighbors:
             self.routing_table[neigh] = (neigh, 1)
+        self.routing_table[self.index()] = (self.index(), 0)
         for neigh in self.neighbors:
             self.medium().send(RipMessage(self.index(), neigh, self.routing_table))
 
         while True:
             ingoing = self.medium().receive()
             if ingoing is None:
-                break
+                # this call is only used for synchronous networks
+                self.medium().wait_for_next_round()
+                continue
 
             if type(ingoing) is RipMessage:
                 print(f"Device {self.index()}: Got new table from {ingoing.source}")
