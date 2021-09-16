@@ -75,7 +75,7 @@ class RipCommunication(Device):
                     (next_hop, distance) = self.routing_table[ingoing.last_node]
                     self.medium().send(RoutableMessage(self.index, next_hop, ingoing.first_node, ingoing.last_node, ingoing.content))
                     continue
-                print(f"\tDevice {self.index()}:  DROP Unknown route #{ingoing.first_node} to #{ingoing.last_node} via #{self.index}, message #{content}")
+                print(f"\tDevice {self.index()}:  DROP Unknown route #{ingoing.first_node} to #{ingoing.last_node} via #{self.index}, message #{ingoing.content}")
 
             # this call is only used for synchronous networks
             self.medium().wait_for_next_round()
