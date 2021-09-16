@@ -3,13 +3,6 @@ from emulators.Medium import Medium
 from emulators.MessageStub import MessageStub
 
 
-class NewNeighborMessage(MessageStub):
-    def __init__(self, sender: int, destination: int):
-        super().__init__(sender, destination)
-
-    def __str__(self):
-        return f'NewNeighbourMessage: {self.source} -> {self.destination}'
-
 class RipMessage(MessageStub):
     def __init__(self, sender: int, destination: int, table):
         super().__init__(sender, destination)
@@ -50,13 +43,6 @@ class RipCommunication(Device):
             ingoing = self.medium().receive()
             if ingoing is None:
                 break
-
-            if type(ingoing) is NewNeighborMessage:
-                print(f"Device {self.index()}: Got new neighbors (#{ingoing.source})")
-                self.neighbors.append((ingoing.source, ingoing.destination))
-                self.routing_table[ingoing.destination] = (ingoing.destination, 1)
-                for neigh in self.neighbors:
-                    self.medium().send(RipMessage(self.index, neigh, self.routing_table))
 
             if type(ingoing) is RipMessage:
                 print(f"Device {self.index()}: Got new table from {ingoing.source}")
