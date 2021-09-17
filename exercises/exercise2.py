@@ -57,12 +57,12 @@ class RipCommunication(Device):
 
             if type(ingoing) is RoutableMessage:
                 print(f"Device {self.index()}: Routing from {ingoing.first_node} to {ingoing.last_node} via #{self.index()}: [#{ingoing.content}]")
-                if ingoing.destination is self.index():
-                    print(f"\tDevice {self.index()}: delivered message from {ingoing.source} to {ingoing.destination}: {ingoing.content}")
+                if ingoing.last_node is self.index():
+                    print(f"\tDevice {self.index()}: delivered message from {ingoing.first_node} to {ingoing.last_node}: {ingoing.content}")
                     continue
                 if self.routing_table[ingoing.last_node] is not None:
                     (next_hop, distance) = self.routing_table[ingoing.last_node]
-                    self.medium().send(RoutableMessage(self.index, next_hop, ingoing.first_node, ingoing.last_node, ingoing.content))
+                    self.medium().send(RoutableMessage(self.index(), next_hop, ingoing.first_node, ingoing.last_node, ingoing.content))
                     continue
                 print(f"\tDevice {self.index()}:  DROP Unknown route #{ingoing.first_node} to #{ingoing.last_node} via #{self.index}, message #{ingoing.content}")
 
