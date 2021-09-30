@@ -256,24 +256,22 @@ class Maekewa(WorkerDevice):
         self._state = State.RELEASED
         self._waiting = []
         self._voted = False
+        self._grants = 0
         # Generate quorums/ voting set
         self._voting_set = set()
         dimension = int(math.sqrt(self.number_of_devices()))
         offset_x = self.index() % dimension
         offset_y = int(self.index() / dimension)
-        for i in range(0, dimension - 1):
+        for i in range(0, dimension):
             # same "column"
             if i * dimension + offset_x < self.number_of_devices():
                 self._voting_set.add(i * dimension + offset_x)
             # same "row"
             if offset_y * dimension + i < self.number_of_devices():
                 self._voting_set.add(offset_y * dimension + i)
-        self._voting_set.remove(self.index())
 
     def run(self):
         while True:
-            if self.has_work():
-                self.acquire()
             ingoing = self.medium().receive()
             if ingoing is not None:
                 if ingoing.is_grant():
@@ -282,6 +280,9 @@ class Maekewa(WorkerDevice):
                     self.handle_request(ingoing)
                 elif ingoing.is_release():
                     self.handle_release(ingoing)
+            if self.has_work():
+                self.acquire()
+            self.medium().wait_for_next_round()
 
     def acquire(self):
         if self._state == State.WANTED:
