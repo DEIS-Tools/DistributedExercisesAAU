@@ -479,7 +479,6 @@ class Bully(Device):
         self._leader = None
         self._shut_up = False
         self._election = False
-        self._start_time = 0
 
     def largest(self):
         return self.index() == max(self.medium().ids())
@@ -525,7 +524,6 @@ class Bully(Device):
             first_round = False
 
     def start_election(self):
-        self._start_time = time.time()
         if not self._election:
             self._election = True
             for id in self.medium().ids():

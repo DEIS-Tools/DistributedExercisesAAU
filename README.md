@@ -106,7 +106,7 @@ For all exercises today, you can use the `sync` network type - but most algorith
 
 3. Characterize the algorithms performance and correctness:
    1. Is the algorithm correct? (ME1, ME2, ME3)
-   2. How does it perform ? (bandwidth, enter/exit delay,throughput)
+   2. How does it perform ? (bandwidth, enter/exit delay)
    3. How does it cope with failures? / How can it be made fault tolerant?
 
 4. Bonus exercise, modifying the `TokenRing` class of `exercises/exercise4.py`:
