@@ -18,3 +18,6 @@ class Medium:
 
     def wait_for_next_round(self):
         self._emulator.done(self._id)
+
+    def ids(self):
+        return self._emulator.ids()
