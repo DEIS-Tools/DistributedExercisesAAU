@@ -249,7 +249,7 @@ class RicartAgrawala(WorkerDevice):
         print(f"RA {self.index()} Terminated with request? {self._state == State.WANTED}")
 
 
-class Maekewa(WorkerDevice):
+class Maekawa(WorkerDevice):
 
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
