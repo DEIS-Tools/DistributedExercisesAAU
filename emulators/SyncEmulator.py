@@ -33,10 +33,10 @@ class SyncEmulator(EmulatorStub):
         # make sure the round_lock is locked initially
         self._round_lock.acquire()
         while True:
-            print(f'## ROUND {self._rounds} ##')
             self._round_lock.acquire()
             # check if everyone terminated
             self._progress.acquire()
+            print(f'## ROUND {self._rounds} ##')
             if self.all_terminated():
                 self._progress.release()
                 break
