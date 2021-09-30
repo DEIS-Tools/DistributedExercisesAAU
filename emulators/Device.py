@@ -36,7 +36,7 @@ class WorkerDevice(Device):
 
     def has_work(self) -> bool:
         # The random call emulates that a concurrent process asked for the
-        self._has_work = self._has_work or random.randint(1, self.number_of_devices()) == self.index()
+        self._has_work = self._has_work or random.randint(0, self.number_of_devices()) == self.index()
         return self._has_work
 
     def do_work(self):

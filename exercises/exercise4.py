@@ -162,17 +162,17 @@ class TokenRing(WorkerDevice):
         print(f"Token Ring {self.index()} Terminated with request? {self._requested}")
 
 
-class TimedMessage(MutexMessage):
+class StampedMessage(MutexMessage):
 
     def __init__(self, sender: int, destination: int, message_type: Type, time: int):
         super().__init__(sender, destination, message_type)
-        self._time = time
+        self._stamp = time
 
-    def time(self) -> int:
-        return self._time
+    def stamp(self) -> int:
+        return self._stamp
 
     def __str__(self):
-        return super().__str__() + f' [time={self._time}]'
+        return super().__str__() + f' [stamp={self._stamp}]'
 
 
 class State(enum.Enum):
@@ -205,20 +205,20 @@ class RicartAgrawala(WorkerDevice):
                     break
             self.medium().wait_for_next_round()
 
-    def handle_request(self, message: TimedMessage):
-        new_time = max(self._time, message.time()) + 1
+    def handle_request(self, message: StampedMessage):
+        new_time = max(self._time, message.stamp()) + 1
         if self._state == State.HELD or (self._state == State.WANTED and
-                                         (self._time, self.index()) < (message.time(), message.source)):
+                                         (self._time, self.index()) < (message.stamp(), message.source)):
             self._time = new_time
             self._waiting.append(message.source)
         else:
             new_time += 1
-            self.medium().send(TimedMessage(self.index(), message.source, Type.GRANT, new_time))
+            self.medium().send(StampedMessage(self.index(), message.source, Type.GRANT, new_time))
             self._time = new_time
 
-    def handle_grant(self, message: TimedMessage):
+    def handle_grant(self, message: StampedMessage):
         self._grants += 1
-        self._time = max(self._time, message.time()) + 1
+        self._time = max(self._time, message.stamp()) + 1
         if self._grants == self.number_of_devices() - 1:
             self._state = State.HELD
             self.do_work()
@@ -230,7 +230,7 @@ class RicartAgrawala(WorkerDevice):
         self._time += 1
         for id in self._waiting:
             self.medium().send(
-                TimedMessage(self.index(), id, Type.GRANT, self._time)
+                StampedMessage(self.index(), id, Type.GRANT, self._time)
             )
         self._waiting.clear()
 
@@ -242,8 +242,8 @@ class RicartAgrawala(WorkerDevice):
         for id in self.medium().ids():
             if id != self.index():
                 self.medium().send(
-                    TimedMessage(self.index(), id,
-                                 Type.REQUEST, self._time))
+                    StampedMessage(self.index(), id,
+                                   Type.REQUEST, self._time))
 
     def print_result(self):
         print(f"RA {self.index()} Terminated with request? {self._state == State.WANTED}")
@@ -321,6 +321,99 @@ class Maekewa(WorkerDevice):
 
     def print_result(self):
         print(f"MA {self.index()} Terminated with request? {self._state == State.WANTED}")
+
+
+class SKToken(MessageStub):
+    def __init__(self, sender: int, destination: int, queue: [int], ln: [int]):
+        super().__init__(sender, destination)
+        self._queue = queue
+        self._ln = ln
+
+    def queue(self):
+        return self._queue
+
+    def ln(self):
+        return self._ln
+
+    def __str__(self):
+        return f"Token: {self.source} -> {self.destination}, \n" \
+               f"\t\tQueue {str(self._queue)}\n" \
+               f"\t\tLN {str(self._ln)}"
+
+
+class SuzukiKasami(WorkerDevice):
+
+    def __init__(self, index: int, number_of_devices: int, medium: Medium):
+        super().__init__(index, number_of_devices, medium)
+        self._rn = [0 for _ in range(0, number_of_devices)]
+        self._waiting = []
+        self._token = None
+
+        # By tradition, let index=0 start with the token
+        if index == 0:
+            self._token = ([], [0 for _ in range(0, number_of_devices)])
+        self._working = False
+        self._requested = False
+
+    def run(self):
+        while True:
+            self.handle_messages()
+            if self.has_work():
+                if self._token is not None:
+                    self._working = True
+                    self.do_work()
+                    # make sure we cleanup the message queue before continuing
+                    self.handle_messages()
+                    self.release()
+                else:
+                    self.acquire()
+
+            self.medium().wait_for_next_round()
+
+    def handle_messages(self):
+        while True:
+            ingoing = self.medium().receive()
+            if ingoing is None:
+                break
+            if isinstance(ingoing, SKToken):
+                self._token = (ingoing.queue(), ingoing.ln())
+            elif ingoing.is_request():
+                self.handle_request(ingoing)
+
+    def handle_request(self, message: StampedMessage):
+        self._rn[message.source] = max(self._rn[message.source], message.stamp())
+        if self._token is not None and not self._working:
+            (queue, ln) = self._token
+            if self._rn[message.source] == ln[message.source] + 1:
+                self._token = None
+                self.medium().send(SKToken(self.index(), message.source, queue, ln))
+
+    def release(self):
+        self._working = False
+        self._requested = False
+        (queue, ln) = self._token
+        ln[self.index()] = self._rn[self.index()]
+        # let's generate a new queue with all devices with outstanding requests
+        for id in self.medium().ids():
+            if ln[id] + 1 == self._rn[id]:
+                if id not in queue:
+                    queue.append(id)
+        # if anybody has an outstanding request, grant it
+        if len(queue) > 0:
+            nxt = queue.pop(0)
+            self._token = None
+            self.medium().send(SKToken(self.index(), nxt, queue, ln))
+
+    def acquire(self):
+        if self._requested:
+            return
+        # Tell everyone that we want the token!
+        self._requested = True
+        self._rn[self.index()] += 1
+        for id in self.medium().ids():
+            if id != self.index():
+                self.medium().send(
+                    StampedMessage(self.index(), id, Type.REQUEST, self._rn[self.index()]))
 
 
 # Election Algorithms
