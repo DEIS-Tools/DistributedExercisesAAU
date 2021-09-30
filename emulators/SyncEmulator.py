@@ -44,10 +44,12 @@ class SyncEmulator(EmulatorStub):
             for index in self.ids():
                 # intentionally change the order
                 if index in self._current_round_messages:
-                    self._last_round_messages[index] = self._current_round_messages[index].copy()
-                    random.shuffle(self._last_round_messages[index])
-                else:
-                    self._last_round_messages[index] = []
+                    nxt = self._current_round_messages[index].copy()
+                    random.shuffle(nxt)
+                    if index in self._last_round_messages:
+                        self._last_round_messages[index] += nxt
+                    else:
+                        self._last_round_messages[index] = nxt
             self._current_round_messages = {}
             self.reset_done()
             self._rounds += 1
