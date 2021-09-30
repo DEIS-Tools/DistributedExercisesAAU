@@ -60,7 +60,7 @@ class AsyncEmulator(EmulatorStub):
             return m
 
     def done(self, index: int):
-        # intentionally does nothing, to match Sync interface
+        time.sleep(random.uniform(0.01, 0.1)) # try to obfuscate delays and emulate network delays
         return
 
 

@@ -33,10 +33,10 @@ class SyncEmulator(EmulatorStub):
         # make sure the round_lock is locked initially
         self._round_lock.acquire()
         while True:
-            print(f'## ROUND {self._rounds} ##')
             self._round_lock.acquire()
             # check if everyone terminated
             self._progress.acquire()
+            print(f'## ROUND {self._rounds} ##')
             if self.all_terminated():
                 self._progress.release()
                 break
@@ -44,10 +44,12 @@ class SyncEmulator(EmulatorStub):
             for index in self.ids():
                 # intentionally change the order
                 if index in self._current_round_messages:
-                    self._last_round_messages[index] = self._current_round_messages[index].copy()
-                    random.shuffle(self._last_round_messages[index])
-                else:
-                    self._last_round_messages[index] = []
+                    nxt = self._current_round_messages[index].copy()
+                    random.shuffle(nxt)
+                    if index in self._last_round_messages:
+                        self._last_round_messages[index] += nxt
+                    else:
+                        self._last_round_messages[index] = nxt
             self._current_round_messages = {}
             self.reset_done()
             self._rounds += 1
