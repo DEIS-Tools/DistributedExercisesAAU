@@ -94,9 +94,11 @@ Please consult the moodle page, this exercise is not via this framework.
 Look at `exercises/exercise4.py`, here you should find the `SuzukiKasami` class 
 implementing Suzuki-Kasami’s Mutex Algorithm.
 
+For all exercises today, you can use the `sync` network type - but most algorithms should work for `async` also.
+
 1. Examine the algorithm 
     1. Make a doodle on the blackboard/paper showing a few processes, their state, and messages exchanged. Use e.g. a sequence diagram.
-    2. Define the purpose of the vectors `rn` and `ln`.
+    2. Define the purpose of the vectors `_rn` and `_ln`.
 2. Discuss the following situations
    1. Is it possible that a node receives a token request message after the corresponding request has been granted? Sketch a scenario.
    2. How can a node know which nodes have ungranted requests?
@@ -111,3 +113,8 @@ implementing Suzuki-Kasami’s Mutex Algorithm.
    1. Implement heartbeats in the token-ring algorithm for failure detection,
    2. Make it robust against node-failiures, and
    3. Make it possible for new processes to join the ring.
+
+5. Extracurricular exercise/challenge (only if you have nothing better to do over the weekend)
+   1. Extend the mutex algorithm implementations s.t. the `do_work()` call starts an asynchronous process (e.g. a future) which later calls a `release()` method on the mutex classes.
+   2. Check that the algorithms still work, and modify where needed.
+   3. Submit a pull-request!
