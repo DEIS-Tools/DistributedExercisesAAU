@@ -1,7 +1,6 @@
 import copy
 import random
 import threading
-from threading import Lock
 from typing import Optional
 
 from emulators.EmulatorStub import EmulatorStub
@@ -44,7 +43,7 @@ class SyncEmulator(EmulatorStub):
             for index in self.ids():
                 # intentionally change the order
                 if index in self._current_round_messages:
-                    nxt = self._current_round_messages[index].copy()
+                    nxt = copy.deepcopy(self._current_round_messages[index])
                     random.shuffle(nxt)
                     if index in self._last_round_messages:
                         self._last_round_messages[index] += nxt
