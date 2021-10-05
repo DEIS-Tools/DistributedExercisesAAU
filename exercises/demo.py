@@ -38,7 +38,7 @@ class PingPong(Device):
         # for this algorithm, we will repeat the protocol 10 times and then stop
         for repetetions in range(0, 10):
             # in each repetition, let us send the ping to one random other device
-            message = PingMessage(self.index(), random.randint(0, self.number_of_devices()), self._is_ping)
+            message = PingMessage(self.index(), random.randrange(0, self.number_of_devices()), self._is_ping)
             # we send the message via a "medium"
             self.medium().send(message)
             # in this instance, we also try to receive some messages, there can be multiple, but
