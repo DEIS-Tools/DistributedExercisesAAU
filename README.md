@@ -118,3 +118,5 @@ For all exercises today, you can use the `sync` network type - but most algorith
    1. Extend the mutex algorithm implementations s.t. the `do_work()` call starts an asynchronous process (e.g. a future) which later calls a `release()` method on the mutex classes.
    2. Check that the algorithms still work, and modify where needed.
    3. Submit a pull-request!
+
+# Exercise 5

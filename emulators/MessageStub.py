@@ -13,3 +13,11 @@ class MessageStub:
     @property
     def source(self) -> int:
         return self._source
+
+    @destination.setter
+    def destination(self, value):
+        self._destination = value
+
+    @source.setter
+    def source(self, value):
+        self._source = value
