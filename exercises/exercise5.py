@@ -193,8 +193,6 @@ class ReliableIPMulticast(MulticastListener, MulticastService, Device):
                 self._seq_numbers[oid] += 1
                 self.try_deliver()  # recursively!
                 return
-            elif seqnr > self._seq_numbers[oid]:
-                print(f"Skip {self.index()}, ({oid}, {seqnr}))")
 
     def nack_missing(self, n_seq: list[int]):
         for id in range(0, len(n_seq)):
