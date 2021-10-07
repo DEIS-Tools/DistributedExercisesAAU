@@ -142,3 +142,5 @@ For all exercises today, you can use the `sync` network type - but most algorith
 4. Discuss FIFO ordering in two overlapping multicast groups
    1. FIFO is no longer guaranteed, how is it broken, and how do you fix it?
 
+5. Bonus exercise: Fix the ISIS algorithm!
+   1. Hint: how (and when) do you identify a tie?
