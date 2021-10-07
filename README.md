@@ -118,3 +118,29 @@ For all exercises today, you can use the `sync` network type - but most algorith
    1. Extend the mutex algorithm implementations s.t. the `do_work()` call starts an asynchronous process (e.g. a future) which later calls a `release()` method on the mutex classes.
    2. Check that the algorithms still work, and modify where needed.
    3. Submit a pull-request!
+
+# Exercise 5
+1. Identify two problems with IP-multicast
+   1. What is a practical problem for IP-multicast? 
+   2. What is a theoretical problem for IP-multicast?
+   
+2. Identify all the events in the following picture
+   1. Compute the lamport clocks for each event
+   2. Compute the vector clock for each event
+   3. What is the difference in the orderings produced by vector and lamport clocks?
+
+![A message sequence chart of three processes, without vector-clock annotations](figures/vector_clock_exercise.png)
+
+
+3. Design (and implement) Totally Ordered FIFO multicast (both requirements must be met).
+   You can use the `TOSEQMulticast` from `exercise5.py` as a starting-point.
+
+   1. Is it reliable? 
+      1. if not, can it become so? 
+      2. if it is, argue why!
+
+4. Discuss FIFO ordering in two overlapping multicast groups
+   1. FIFO is no longer guaranteed, how is it broken, and how do you fix it?
+
+5. Bonus exercise: Fix the ISIS algorithm!
+   1. Hint: how (and when) do you identify a tie?

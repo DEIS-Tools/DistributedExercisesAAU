@@ -8,12 +8,13 @@ from emulators.MessageStub import MessageStub
 class EmulatorStub:
 
     def __init__(self, number_of_devices: int, kind):
+        self._nids = number_of_devices
         self._devices = []
         self._threads = []
         self._media = []
         self._progress = threading.Lock()
 
-        for index in range(0, number_of_devices):
+        for index in self.ids():
             self._media.append(Medium(index, self))
             self._devices.append(kind(index, number_of_devices, self._media[-1]))
             self._threads.append(threading.Thread(target=self._run_thread, args=[index]))
@@ -38,7 +39,7 @@ class EmulatorStub:
                     for x in self.ids()])
 
     def ids(self):
-        return range(0, len(self._devices))
+        return range(0, self._nids)
 
     def print_result(self):
         for d in self._devices:
