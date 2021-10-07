@@ -111,8 +111,10 @@ class ReliableMulticast(MulticastListener, MulticastService, Device):
 
     def deliver(self, message):
         (origin_index, seq_number, content) = message
-        if message not in self._received and origin_index is not self.index():
-            self._b_multicast.send(message)
+
+        if message not in self._received:
+            if origin_index is not self.index():
+                self._b_multicast.send(message)
             self._received.add(message)
             self._application.deliver(content)
 
