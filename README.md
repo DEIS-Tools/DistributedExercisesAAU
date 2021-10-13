@@ -152,4 +152,4 @@ For all exercises today, you can use the `sync` network type - but most algorith
    3. Construct a test demonstrating that your code works
    4. Discuss how you can use Paxos in "continued consensus" where you have to agree on the order of entries in a log-file
 
-2. Bonus Exercise: Implement the King Algorithm in `exercise6.py` (see moodle for pseudo-code)
+2. Bonus Exercise: Implement the King Algorithm in `exercise6.py` (see slides on moodle for pseudo-code)
