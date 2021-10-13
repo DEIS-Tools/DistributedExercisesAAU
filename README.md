@@ -146,10 +146,15 @@ For all exercises today, you can use the `sync` network type - but most algorith
    1. Hint: how (and when) do you identify a tie?
 
 # Exercise 6
-1. Implement the Paxos algorithm in `exercise6.py`, see the pseudo-code on moodle for the two interesting roles (proposer and acceptor).
+1. Implement the Paxos algorithm in `exercise6.py`, see the pseudo-code on moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
    1. Identify messages send/received by each role
+      1. Investigate `PAXOSNetwork`
    2. Implement each role but the learner
-   3. Construct a test demonstrating that your code works
+      1. Assume that each device is both a `Proposer` and an `Acceptor` (the `Learner` is provided)
+      2. A class combining/forwarding messages is provided (`PAXOS`).
+      3. Your job is to implement the missing functionality in `Proposer` and `Acceptor`, search for "TODO"
+   3. Demonstrate that your code works in an `async` environment
+      1. Try with a large number of devices (for instance 20 or 30)
    4. Discuss how you can use Paxos in "continued consensus" where you have to agree on the order of entries in a log-file
 
-2. Bonus Exercise: Implement the King Algorithm in `exercise6.py` (see slides on moodle for pseudo-code)
+3. Bonus Exercise: Implement the King Algorithm in `exercise6.py` (see slides on moodle for pseudo-code)
