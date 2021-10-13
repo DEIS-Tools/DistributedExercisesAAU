@@ -144,3 +144,12 @@ For all exercises today, you can use the `sync` network type - but most algorith
 
 5. Bonus exercise: Fix the ISIS algorithm!
    1. Hint: how (and when) do you identify a tie?
+
+# Exercise 6
+1. Implement the Paxos algorithm in `exercise6.py`, see the pseudo-code on moodle for the two interesting roles (proposer and acceptor).
+   1. Identify messages send/received by each role
+   2. Implement each role but the learner
+   3. Construct a test demonstrating that your code works
+   4. Discuss how you can use Paxos in "continued consensus" where you have to agree on the order of entries in a log-file
+
+2. Bonus Exercise: Implement the King Algorithm in `exercise6.py` (see moodle for pseudo-code)
