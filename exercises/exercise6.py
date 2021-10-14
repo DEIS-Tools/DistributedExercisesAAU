@@ -144,6 +144,20 @@ def find_majority(raw: [(int, int)]):
             best = None
     return best
 
+class King(Device):
+    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: ConsensusRequester = None):
+        super().__init__(index, number_of_devices, medium)
+        if application is not None:
+            self._application = application
+        else:
+            self._application = SimpleRequester()
+
+    def run(self):
+        pass
+
+    def print_result(self):
+        pass
+
 
 class PrepareMessage(MessageStub):
     def __init__(self, sender: int, destination: int, uid: int):
