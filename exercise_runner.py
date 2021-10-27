@@ -6,6 +6,7 @@ import exercises.exercise2
 import exercises.exercise4
 import exercises.exercise5
 import exercises.exercise6
+import exercises.exercise7
 import exercises.demo
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
@@ -55,7 +56,7 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
     parser.add_argument('--lecture', metavar='N', type=int, nargs=1,
-                        help='Lecture number', required=True, choices=[0, 1, 2, 4, 5, 6])
+                        help='Lecture number', required=True, choices=[0, 1, 2, 4, 5, 6, 7])
     parser.add_argument('--algorithm', metavar='alg', type=str, nargs=1,
                         help='Which algorithm from the exercise to run', required=True)
     parser.add_argument('--type', metavar='nw', type=str, nargs=1,
