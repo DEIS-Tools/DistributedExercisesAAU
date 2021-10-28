@@ -164,3 +164,13 @@ For all exercises today, you can use the `sync` network type - but most algorith
    3. Demonstrate that your code works in an `async` environment
       1. Try with a large number of devices (for instance 20 or 30)
    4. Discuss how you can use Paxos in "continued consensus" where you have to agree on the order of entries in a log-file
+
+# Exercise 7
+1. DS5ed 18.5, 18.13
+2. Sketch an architecture for the following three systems: A bulletin board (simple reddit), a bank, a version control system (e.g. GIT)
+   1. Identify the system types
+   2. Which replication type is suitable, and for which parts of the system
+   3. If you go for a gossip solution, what is a suitable update frequency?
+3. BONUS Exercise: Implement the Bully algorithm (DS 5ed, page 660) in `exercise7.py`
+   1. In which replication scheme is it useful?
+   2. What is the "extra cost" of a new leader in replication?

@@ -1,9 +1,5 @@
 import math
 import random
-import threading
-import time
-
-import copy
 
 from emulators.Device import Device
 from emulators.Medium import Medium
