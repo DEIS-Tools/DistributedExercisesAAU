@@ -32,6 +32,13 @@ class GfsMaster(Device):
             key = (ingoing.filename, ingoing.chunkindex)
             chunk = self._metadata.get(key)
             if chunk is not None:
+
+                for c in self.chunks_being_allocated:
+                    if c[0] == chunk[0]:
+                        self.chunks_being_allocated.append((chunk[0], ingoing.source))
+                        return True
+                        
+
                 anwser = File2ChunkRspMessage(
                     self.index(),
                     ingoing.source,
@@ -64,7 +71,6 @@ class GfsMaster(Device):
 
     def add_chunk_to_metadata(self, chunk, chunkserver):
         chunk[1].append(chunkserver)
-        print("now they are " + str(len(chunk[1])))
         if len(chunk[1]) == NUMBER_OF_REPLICAS:
             for request in self.chunks_being_allocated:
                 if request[0] == chunk[0]:
@@ -167,7 +173,7 @@ class GfsClient(Device):
 
             randomserver = ingoing.locations[random.randint(0,999)%len(ingoing.locations)]
             data = "hello from client number " + str(self.index()) + "\n"
-            self.medium().send(RecordAppendReqMessage(self.index(), randomserver, data))
+            self.medium().send(RecordAppendReqMessage(self.index(), randomserver, ingoing.chunkhandle, data))
         elif isinstance(ingoing, RecordAppendRspMessage):
             # project completed, time to quit
             for i in GfsNetwork.gfsmaster:
@@ -245,10 +251,11 @@ class AllocateChunkRspMessage(MessageStub):
         return f'ALLOCATE RESPONSE {self.source} -> {self.destination}: ({self.chunkhandle, self.result})'
 
 class RecordAppendReqMessage(MessageStub):
-    def __init__(self, sender: int, destination: int, data: str):
+    def __init__(self, sender: int, destination: int, chunkhandle: int, data: str):
         super().__init__(sender, destination)
+        self.chunkhandle = chunkhandle
         self.data = data
 
     def __str__(self):
-        return f'RECORD APPEND REQUEST {self.source} -> {self.destination}: ({self.data})'
+        return f'RECORD APPEND REQUEST {self.source} -> {self.destination}: ({self.chunkhandle}, {self.data})'
 
