@@ -178,7 +178,7 @@ For all exercises today, you can use the `sync` network type - but most algorith
 # Exercise 8
 1. Compare GFS and Chubby, and identify use cases that are better for one or the other solution.
 2. Consider the code in `exercise8.py`, which sketches GFS, and complete the "append record" implementation.
-   1. Take a look at how the GFS master is implemented, and how it translates file + chunk inded to chunk handle
+   1. Take a look at how the GFS master is implemented, and how it translates file + chunk index to chunk handle
    2. Sketch a design for the "passive replication" solution of the GFS. Consider how many types of messages you need, when they should be sent, etc
    3. Implement your solution, starting from the handler of RecordAppendReqMessage of the GfsChunkserver class
    4. Try out your solution with a larger number of clients, to have more concurrent changes to the "file"
