@@ -129,7 +129,8 @@ class GfsChunkserver(Device):
             self.medium().send(message)
         elif isinstance(ingoing, RecordAppendReqMessage):
             #
-            # need to implement passive replication
+            # TODO: need to implement the storate operation
+            # do not forget the passive replication discipline
             #
             pass
         return True
@@ -258,4 +259,13 @@ class RecordAppendReqMessage(MessageStub):
 
     def __str__(self):
         return f'RECORD APPEND REQUEST {self.source} -> {self.destination}: ({self.chunkhandle}, {self.data})'
+
+class RecordAppendRspMessage(MessageStub):
+    def __init__(self, sender: int, destination: int, result: str):
+        super().__init__(sender, destination)
+        self.result = result
+        # TODO: possibly, complete this message with the fields you need
+
+    def __str__(self):
+        return f'RECORD APPEND REQUEST {self.source} -> {self.destination}: ({self.result})'
 
