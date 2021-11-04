@@ -183,3 +183,8 @@ For all exercises today, you can use the `sync` network type - but most algorith
    3. Implement your solution, starting from the handler of RecordAppendReqMessage of the GfsChunkserver class
    4. Try out your solution with a larger number of clients, to have more concurrent changes to the "file"
 3. BONUS Exercise: Consider how to add shadow masters to the system. Clients and chunk servers will still interact with the first master to change the file system, but the shadow master can always work as read-only.
+
+NOTICE: To execute the code, issue for example:
+```bash
+python3.9 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devices 7
+```
