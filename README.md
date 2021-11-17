@@ -202,3 +202,16 @@ NOTICE: To execute the code, issue for example:
 ```bash
 python3 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async --devices 6
 ```
+
+# Exercise 10
+1. Consider the code in `exercise10.py`, which sketches a blockchain similar to bitcoint. Consider that transactions are just strings and we will do no check on the transactions. I had to add a very "random" termination condition. I associate a miner to each client, the code will never stop if I have an odd number of devices.
+   1. Take a look at the Block and the Blockchain (they are NOT devices) and consider how the blockchain is supposed to grow.
+   2. Design the logic for when a miner sends a blockchain (with its new block) to another miner. What do you do when you receive a new block? What if a fork? Can it happen? How do you manage it to preserve the "longest chain" rule?
+   3. Look for the TODOs, and implement your solution
+   4. Try the code for both sync and async devices. Does it work in both cases?
+2. There are more "exercises" (actually, questions) on the moodle. Don't forget to answer them.
+
+NOTICE: To execute the code, issue for example:
+```bash
+python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
+```
