@@ -215,3 +215,4 @@ NOTICE: To execute the code, issue for example:
 ```bash
 python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
 ```
+
