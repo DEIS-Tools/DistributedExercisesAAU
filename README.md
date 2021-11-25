@@ -216,3 +216,15 @@ NOTICE: To execute the code, issue for example:
 python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
 ```
 
+# Exercise 11
+1. There are "exercises" on the moodle. I suggest to start with them.
+2. Consider the code in `exercise11.py`, which sets up the finger tables for chord nodes. I have a client, connected always to the same node, which issues some PUTs.
+   1. Take a look at how the finger tables are populated, but please use the slides, since the code can be quite cryptic.
+   2. Design the logic for the routing process, thus: when do I end the routing process? Who should I send the message to, if I am not the destination?
+   3. Look for the TODOs, and implement your solution
+   4. If you have time, implement the JOIN process for device 1.
+
+NOTICE: To execute the code, issue for example:
+```bash
+python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
+```
