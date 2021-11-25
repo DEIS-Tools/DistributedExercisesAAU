@@ -217,7 +217,7 @@ python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type asy
 ```
 
 
-# Exercise 10
+# Exercise 11
 1. There are "exercises" on the moodle. I suggest to start with them.
 2. Consider the code in `exercise11.py`, which sets up the finger tables for chord nodes. I have a client, connected always to the same node, which issues some PUTs.
    1. Take a look at how the finger tables are populated, but please use the slides, since the code can be quite cryptic.
