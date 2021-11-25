@@ -60,11 +60,11 @@ class ChordNode(Device):
 
     def is_request_for_me(self, guid):
         # TODO: implement this function that checks if the routing process is over
-        pass
+        return False
 
     def next_hop(self, guid):
         # TODO: implement this function with the routing logic
-        pass
+        return 0
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, PutMessage):
@@ -75,7 +75,7 @@ class ChordNode(Device):
                 # TODO: route the message
                 # you can fill up the next_hop function for this
                 next_hop = self.next_hop(ingoing.guid)
-                message = PutMessage(self.index(), next_hop[0], ingoing.guid, ingoing.data)
+                message = PutMessage(self.index(), next_hop, ingoing.guid, ingoing.data)
                 self.medium().send(message)
         if isinstance(ingoing, GetReqMessage):
             # maybe TODO, but the GET is not very interesting
@@ -123,7 +123,7 @@ class ChordClient(Device):
             message = PutMessage(self.index(), 2, guid, "hello")
             self.medium().send(message)
 
-        # TODO: uncomment this code to start the JOIN process
+        # TODO: uncomment the following code to start the JOIN process (exercise 11.2.4)
         #new_chord_id = random.randint(0, pow(2,address_size)-1)
         #while new_chord_id in all_nodes:
         #   new_chord_id = random.randint(0, pow(2,address_size)-1)
@@ -135,18 +135,6 @@ class ChordClient(Device):
             message = QuitMessage(self.index(), i)
             self.medium().send(message)
         return
-
-        # currently, I do not manage incoming messages
-        while True:
-            for ingoing in self.medium().receive_all():
-                if not self.handle_ingoing(ingoing):
-                    return
-            self.medium().wait_for_next_round()
-
-    def handle_ingoing(self, ingoing: MessageStub):
-        if isinstance(ingoing, QuitMessage):
-            return False
-        return True
 
     def print_result(self):
         print(f"client {self.index()} quits")
