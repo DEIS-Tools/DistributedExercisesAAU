@@ -216,6 +216,7 @@ NOTICE: To execute the code, issue for example:
 python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
 ```
 
+
 # Exercise 11
 1. There are "exercises" on the moodle. I suggest to start with them.
 2. Consider the code in `exercise11.py`, which sets up the finger tables for chord nodes. I have a client, connected always to the same node, which issues some PUTs.
@@ -227,4 +228,17 @@ python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type asy
 NOTICE: To execute the code, issue for example:
 ```bash
 python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
+```
+
+
+# Exercise 12
+1. There are "exercises" on the moodle. I suggest to start with them.
+2. Consider the code in `exercise12.py`, which creates the topology for your IoT wireless network. The goal is to implement AODV.
+   1. Please note that you can self.medium().send() messages only in the nodes in self.neighbors. This simulates a wireless network with limited range.
+   2. Design the logic for the Route Request process. What can you use as a broadcast id? Design also the Route Reply, which should be much easier.
+   3. Look for the TODOs, and implement your solution.
+
+NOTICE: To execute the code, issue for example:
+```bash
+python3 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
 ```
