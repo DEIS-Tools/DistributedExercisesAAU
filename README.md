@@ -240,5 +240,5 @@ python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type asy
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 12 --algorithm BlockchainNetwork --type async --devices 10
+python3 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
 ```
