@@ -15,6 +15,7 @@ import exercises.exercise12
 import exercises.demo
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
+from emulators.SteppingEmulator import SteppingEmulator
 
 
 def fetch_alg(lecture: str, algorithm: str):
@@ -39,6 +40,8 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
         emulator = AsyncEmulator
     elif network_type == 'sync':
         emulator = SyncEmulator
+    elif network_type == 'stepping':
+        emulator = SteppingEmulator
     instance = None
     if lecture_no == 0:
         alg = fetch_alg('demo', 'PingPong')
@@ -65,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('--algorithm', metavar='alg', type=str, nargs=1,
                         help='Which algorithm from the exercise to run', required=True)
     parser.add_argument('--type', metavar='nw', type=str, nargs=1,
-                        help='whether to use [async] or [sync] network', required=True, choices=['async', 'sync'])
+                        help='whether to use [async] or [sync] network', required=True, choices=['async', 'sync', 'stepping'])
     parser.add_argument('--devices', metavar='N', type=int, nargs=1,
                         help='Number of devices to run', required=True)
     args = parser.parse_args()
