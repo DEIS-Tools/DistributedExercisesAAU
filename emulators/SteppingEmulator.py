@@ -4,12 +4,30 @@ import time
 from emulators.AsyncEmulator import AsyncEmulator
 from typing import Optional
 from emulators.MessageStub import MessageStub
+from pynput import keyboard
+from getpass import getpass #getpass to hide input, cleaner terminal
+from threading import Thread #run getpass in seperate thread
 
 
 class SteppingEmulator(AsyncEmulator):
     def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
         super().__init__(number_of_devices, kind)
+        self._stepper = Thread(target=lambda: getpass(""), daemon=True)
+        self._stepper.start()
         self._stepping = True
+        self._single = False
+        self._keyheld = False
+        self.count = 0
+        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+        self.listener.start()
+        msg = """
+        keyboard input:
+            space:  Step a single time through messages
+            f:      Fast-forward through messages
+            enter:  Kill stepper daemon and run as an async emulator
+        """
+        print(msg)
+
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
         #return super().dequeue(index) #uncomment to run as a normal async emulator (debug)
@@ -21,11 +39,8 @@ class SteppingEmulator(AsyncEmulator):
             self._progress.release()
             return None
         else:
-            # giving the user the ability to end stepping at any time
-            if self._stepping:
-                _input = input(f'Receive step?')
-                if len(_input) > 0:
-                    self._stepping = False
+            if self._stepping and self._stepper.is_alive(): #first expression for printing a reasonable amount, second to hide user input
+                self._step("step?")
             m = self._messages[index].pop()
             print(f'\tRecieve {m}')
             self._progress.release()
@@ -34,10 +49,8 @@ class SteppingEmulator(AsyncEmulator):
     def queue(self, message: MessageStub):
         #return super().queue(message) #uncomment to run as normal queue (debug)
         self._progress.acquire()
-        if self._stepping:
-            _input = input("Send step?")
-            if len(_input) > 0:
-                self._stepping = False
+        if self._stepping and self._stepper.is_alive():
+            self._step("step?")
         self._messages_sent += 1
         print(f'\tSend {message}')
         if message.destination not in self._messages:
@@ -46,3 +59,36 @@ class SteppingEmulator(AsyncEmulator):
         random.shuffle(self._messages[message.destination]) # shuffle to emulate changes in order
         time.sleep(random.uniform(0.01, 0.1)) # try to obfuscate delays and emulate network delays
         self._progress.release()
+
+    def _step(self, message:str = ""):
+        self.count+= 1
+        if not self._single:
+            print(f'\t{self.count}: {message}')
+        while self._stepping: #run while waiting for input
+            if self._single:  #break while if the desired action is a single message
+                self._single = False
+                break
+
+    def on_press(self, key:keyboard.KeyCode | keyboard.Key):
+        try:
+            #for key class
+            key = key.char
+        except:
+            #for keycode class
+            key = key.name
+        if key == "f" or key == "enter":
+            self._stepping = False
+        elif key == "space" and not self._keyheld:
+            self._single = True
+        self._keyheld = True
+
+    def on_release(self, key:keyboard.KeyCode | keyboard.Key):
+        try:
+            #for key class
+            key = key.char
+        except:
+            #for keycode class
+            key = key.name
+        if key == "f":
+            self._stepping = True
+        self._keyheld = False
