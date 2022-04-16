@@ -17,7 +17,6 @@ class SteppingEmulator(AsyncEmulator):
         self._stepping = True
         self._single = False
         self._keyheld = False
-        self.count = 0
         self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
         self.listener.start()
         msg = """
@@ -61,20 +60,19 @@ class SteppingEmulator(AsyncEmulator):
         self._progress.release()
 
     def _step(self, message:str = ""):
-        self.count+= 1
         if not self._single:
-            print(f'\t{self.count}: {message}')
+            print(f'\t{self._messages_sent}: {message}')
         while self._stepping: #run while waiting for input
             if self._single:  #break while if the desired action is a single message
                 self._single = False
                 break
 
-    def on_press(self, key:keyboard.KeyCode | keyboard.Key):
+    def on_press(self, key:keyboard.KeyCode):
         try:
-            #for key class
+            #for keycode class
             key = key.char
         except:
-            #for keycode class
+            #for key class
             key = key.name
         if key == "f" or key == "enter":
             self._stepping = False
@@ -82,7 +80,7 @@ class SteppingEmulator(AsyncEmulator):
             self._single = True
         self._keyheld = True
 
-    def on_release(self, key:keyboard.KeyCode | keyboard.Key):
+    def on_release(self, key:keyboard.KeyCode):
         try:
             #for key class
             key = key.char
