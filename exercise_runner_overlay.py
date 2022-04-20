@@ -35,4 +35,6 @@ devices_frame,   devices_entry   = input_builder(input_area, "Devices",   3)
 start_button = TK.Button(master, text="Start", command=run)
 start_button.pack(side=TK.TOP)
 
+master.resizable(False,False)
+
 master.mainloop()

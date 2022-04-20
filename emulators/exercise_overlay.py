@@ -19,9 +19,8 @@ def overlay(emulator:EmulatorStub):
 
     def step():
         #insert stepper function
-        emulator._stepping = False
+        emulator._single = True
         bottom_text.config(text=emulator._last_message)
-        pass
 
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
