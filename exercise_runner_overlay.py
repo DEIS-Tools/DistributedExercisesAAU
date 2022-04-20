@@ -29,7 +29,7 @@ input_area.pack(side=TK.BOTTOM)
 
 lecture_frame,   lecture_entry   = input_builder(input_area, "Lecture",   0)
 algorithm_frame, algorithm_entry = input_builder(input_area, "Algorithm", "PingPong")
-type_frame,      type_entry      = input_builder(input_area, "Type",      "async")
+type_frame,      type_entry      = input_builder(input_area, "Type",      "stepping")
 devices_frame,   devices_entry   = input_builder(input_area, "Devices",   3)
 
 start_button = TK.Button(master, text="Start", command=run)

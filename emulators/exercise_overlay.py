@@ -1,5 +1,4 @@
 from random import randint
-from threading import Thread
 import tkinter as  TK
 
 from emulators.EmulatorStub import EmulatorStub
@@ -13,14 +12,18 @@ def overlay(emulator:EmulatorStub):
 
     def show_info():
         window = TK.Toplevel(master)
-        data = TK.Label(window, text="___placeholder___")
         window.resizable(False, False)
+        data = TK.Label(window, text="___placeholder___")
         data.pack(side=TK.TOP)
+        for device in emulator._devices:
+            pass
 
     def step():
         #insert stepper function
         emulator._single = True
-        bottom_text.config(text=emulator._last_message)
+
+    def end():
+        emulator._stepping = False
 
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
@@ -38,8 +41,8 @@ def overlay(emulator:EmulatorStub):
     bottom_frame = TK.LabelFrame(master, text="Inputs")
     bottom_frame.pack(side=TK.TOP)
     step_button = TK.Button(bottom_frame, text="Step", command=step)
-    step_button.pack(side=TK.TOP)
-    bottom_text = TK.Label(bottom_frame, text="last message")
-    bottom_text.pack(side=TK.TOP)
+    step_button.pack(side=TK.LEFT)
+    end_button = TK.Button(bottom_frame, text="End", command=end)
+    end_button.pack(side=TK.LEFT)
     master.resizable(False,False)
     master.mainloop()

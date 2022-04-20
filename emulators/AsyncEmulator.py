@@ -17,7 +17,6 @@ class AsyncEmulator(EmulatorStub):
         self._terminated = 0
         self._messages = {}
         self._messages_sent = 0
-        overlay(self)
 
     def run(self):
         self._progress.acquire()
