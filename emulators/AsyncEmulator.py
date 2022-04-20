@@ -7,6 +7,7 @@ from typing import Optional
 
 from emulators.EmulatorStub import EmulatorStub
 from emulators.MessageStub import MessageStub
+from emulators.exercise_overlay import overlay
 
 
 class AsyncEmulator(EmulatorStub):
@@ -16,6 +17,7 @@ class AsyncEmulator(EmulatorStub):
         self._terminated = 0
         self._messages = {}
         self._messages_sent = 0
+        overlay(self)
 
     def run(self):
         self._progress.acquire()
