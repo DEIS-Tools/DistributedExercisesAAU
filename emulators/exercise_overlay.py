@@ -1,6 +1,8 @@
 from random import randint
 import tkinter as  TK
 
+from platformdirs import os
+
 from emulators.EmulatorStub import EmulatorStub
 
 def overlay(emulator:EmulatorStub):
@@ -28,7 +30,10 @@ def overlay(emulator:EmulatorStub):
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
     for device in range(len(emulator._devices)):
-        device_size = 100
+        if os.name == 'posix':
+            device_size=150
+        else:
+            device_size = 100
         x = randint(device_size, width-device_size)
         y = randint(device_size, height-device_size)
         canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
