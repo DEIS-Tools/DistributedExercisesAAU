@@ -1,9 +1,9 @@
 from random import randint
 import tkinter as  TK
 
-from emulators.EmulatorStub import EmulatorStub
+from emulators.SteppingEmulator import SteppingEmulator
 
-def overlay(emulator:EmulatorStub):
+def overlay(emulator:SteppingEmulator):
     # top is planned to be reserved for a little description of controls in stepper
     # if stepper is not chosen, this will not be displayed
     master = TK.Tk()
@@ -16,7 +16,7 @@ def overlay(emulator:EmulatorStub):
         data = TK.Label(window, text="___placeholder___")
         data.pack(side=TK.TOP)
         for device in emulator._devices:
-            pass
+            data_label = TK.Label()
 
     def step():
         #insert stepper function
@@ -45,4 +45,3 @@ def overlay(emulator:EmulatorStub):
     end_button = TK.Button(bottom_frame, text="End", command=end)
     end_button.pack(side=TK.LEFT)
     master.resizable(False,False)
-    master.mainloop()

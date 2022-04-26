@@ -1,5 +1,7 @@
 import argparse
 import inspect
+from threading import Thread
+from emulators.exercise_overlay import overlay
 
 import exercises.exercise1
 import exercises.exercise2
@@ -49,17 +51,19 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
     else:
         alg = fetch_alg(f'exercise{lecture_no}', algorithm)
         instance = emulator(number_of_devices, alg)
-
-    if instance is not None:
-        instance.run()
-        print(f'Execution Complete')
-        instance.print_result()
-        print('Statistics')
-        instance.print_statistics()
-    else:
-        raise NotImplementedError(
-            f'You are trying to run an exercise ({algorithm}) of a lecture ({lecture_no}) which has not yet been released')
-
+    def run_instance():
+        if instance is not None:
+            instance.run()
+            print(f'Execution Complete')
+            instance.print_result()
+            print('Statistics')
+            instance.print_statistics()
+        else:
+            raise NotImplementedError(
+                f'You are trying to run an exercise ({algorithm}) of a lecture ({lecture_no}) which has not yet been released')
+    Thread(target=run_instance).start()
+    if isinstance(instance, SteppingEmulator):
+        overlay(instance)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
