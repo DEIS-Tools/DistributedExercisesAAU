@@ -7,7 +7,6 @@ from typing import Optional
 
 from emulators.EmulatorStub import EmulatorStub
 from emulators.MessageStub import MessageStub
-from emulators.exercise_overlay import overlay
 
 
 class AsyncEmulator(EmulatorStub):

@@ -17,8 +17,19 @@ def overlay(emulator:SteppingEmulator):
         window.resizable(False, False)
         data = TK.Label(window, text="___placeholder___")
         data.pack(side=TK.TOP)
+        frames = list()
         for device in emulator._devices:
-            data_label = TK.Label()
+            dev_frame = TK.Frame(window)
+            dev_frame.pack(side=TK.LEFT)
+            frames.append(dev_frame)
+            dev_name = TK.Label(dev_frame, text=f'Device id: {device._id}')
+            dev_name.pack(side=TK.TOP)
+        for data in emulator._last_messages:
+            device_id = data[5]
+            data_label = TK.Label(frames[device_id], text=data)
+            data_label.pack(side=TK.BOTTOM)
+
+            
 
     def step():
         #insert stepper function
