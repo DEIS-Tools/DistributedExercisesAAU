@@ -1,7 +1,9 @@
 from random import randint
 import tkinter as  TK
+from os import name
 
 from emulators.SteppingEmulator import SteppingEmulator
+
 
 def overlay(emulator:SteppingEmulator):
     # top is planned to be reserved for a little description of controls in stepper
@@ -28,7 +30,10 @@ def overlay(emulator:SteppingEmulator):
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
     for device in range(len(emulator._devices)):
-        device_size = 100
+        if name == 'posix':
+            device_size = 150
+        else:
+            device_size = 100
         x = randint(device_size, width-device_size)
         y = randint(device_size, height-device_size)
         canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
