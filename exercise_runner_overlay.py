@@ -1,10 +1,11 @@
 import tkinter as TK
+import tkinter.ttk as TTK
 from exercise_runner import run_exercise
 
 def input_builder(master, title:str, entry_content:str):
     frame = TK.Frame(master)
-    text = TK.Label(frame, text=title)
-    entry = TK.Entry(frame)
+    text = TTK.Label(frame, text=title)
+    entry = TTK.Entry(frame)
     entry.insert(TK.END, entry_content)
     frame.pack(side=TK.LEFT)
     text.pack(side=TK.TOP)
@@ -32,9 +33,10 @@ algorithm_frame, algorithm_entry = input_builder(input_area, "Algorithm", "PingP
 type_frame,      type_entry      = input_builder(input_area, "Type",      "stepping")
 devices_frame,   devices_entry   = input_builder(input_area, "Devices",   3)
 
-start_button = TK.Button(master, text="Start", command=run)
+start_button = TTK.Button(master, text="Start", command=run)
 start_button.pack(side=TK.TOP)
 
 master.resizable(False,False)
 
+master.title("Distributed Exercises AAU")
 master.mainloop()

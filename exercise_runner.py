@@ -63,7 +63,7 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
                 f'You are trying to run an exercise ({algorithm}) of a lecture ({lecture_no}) which has not yet been released')
     Thread(target=run_instance).start()
     if isinstance(instance, SteppingEmulator):
-        overlay(instance)
+        overlay(instance, lambda: run_exercise(lecture_no, algorithm, network_type, number_of_devices))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
