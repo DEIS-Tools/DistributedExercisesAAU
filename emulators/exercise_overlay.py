@@ -1,4 +1,3 @@
-from copy import copy
 from random import randint
 import tkinter as  TK
 import tkinter.ttk as TTK
@@ -23,29 +22,38 @@ def overlay(emulator:SteppingEmulator, run_function):
             dev_frame = TK.LabelFrame(window, text=f'Device {emulator._devices.index(device)}')
             dev_frame.pack(side=TK.LEFT)
             frames.append(dev_frame)
-            dev_name = TTK.Label(dev_frame, text=f'Device id: {device._id}')
-            dev_name.pack(side=TK.TOP)
         for data in emulator._list_messages_received:
             device_id = data._destination
             data_label = TTK.Label(frames[device_id], text=data)
             data_label.pack(side=TK.BOTTOM)
 
     def show_data(device_id):
-        def _window():
-            window = TK.Toplevel(master, width=width/5, height=height/5)
-            window.title(f'Device {device_id}')
-            received_frame = TK.LabelFrame(window, text="Received")
-            received_frame.pack(side=TK.LEFT)
-            for data in emulator._list_messages_received:
-                if data._destination == device_id:
-                    TTK.Label(received_frame, text=data).pack(side=TK.TOP)
-            sent_frame = TK.LabelFrame(window, text="Sent")
-            sent_frame.pack(side=TK.LEFT)
-            for data in emulator._list_messages_sent:
-                if data._source == device_id:
-                    TTK.Label(sent_frame, text=data).pack(side=TK.TOP)
-        return _window
+        def _show_data():
+            if len(emulator._list_messages_received) > 0:
+                window = TK.Toplevel(master)
+                window.title(f'Device {device_id}')
+                received_frame = TK.LabelFrame(window, text="Received")
+                received_frame.pack(side=TK.LEFT)
+                for data in emulator._list_messages_received:
+                    if data._destination == device_id:
+                        TTK.Label(received_frame, text=data).pack(side=TK.TOP)
+                sent_frame = TK.LabelFrame(window, text="Sent")
+                sent_frame.pack(side=TK.LEFT)
+                for data in emulator._list_messages_sent:
+                    if data._source == device_id:
+                        TTK.Label(sent_frame, text=data).pack(side=TK.TOP)
+            else:
+                return
+        return _show_data
 
+    def build_device(master:TK.Canvas, device_id, x, y, device_size):
+        circle = canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
+        frame = TTK.Frame(master)
+        frame.place(x=x+(device_size/5), y=y+(device_size/5))
+        button = TTK.Button(frame, command=show_data(device_id), text="Show data")
+        button.pack(side=TK.BOTTOM)
+        text = TTK.Label(frame, text=f'Device #{device_id}')
+        text.pack(side=TK.BOTTOM)
             
 
     def step():
@@ -65,13 +73,7 @@ def overlay(emulator:SteppingEmulator, run_function):
     for device in range(len(emulator._devices)):
         x = randint(device_size, width-device_size)
         y = randint(device_size, height-device_size)
-        canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
-        device_frame = TTK.Frame(canvas)
-        device_frame.place(x=x+(device_size/5), y=y+(device_size/5))
-        device_button = TTK.Button(device_frame, text="Show data", command=show_data(device))
-        device_button.pack(side=TK.BOTTOM)
-        device_text = TTK.Label(device_frame, text=f'Device #{device}')
-        device_text.pack(side=TK.BOTTOM)
+        build_device(canvas, device, x, y, device_size)
     bottom_frame = TK.LabelFrame(master, text="Inputs")
     bottom_frame.pack(side=TK.TOP)
     step_button = TTK.Button(bottom_frame, text="Step", command=step)
