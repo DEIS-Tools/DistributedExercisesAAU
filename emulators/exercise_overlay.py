@@ -4,28 +4,31 @@ import tkinter.ttk as TTK
 from os import name
 
 from emulators.SteppingEmulator import SteppingEmulator
-
+from emulators.table import table
 
 def overlay(emulator:SteppingEmulator, run_function):
     # top is planned to be reserved for a little description of controls in stepper
-    # if stepper is not chosen, this will not be displayed
     master = TK.Tk()
     height = 500
     width = 1000
 
+    
     def show_all_data():
         window = TK.Toplevel(master)
-        window.title("All data")
-        window.resizable(False, False)
-        frames = list()
-        for device in emulator._devices:
-            dev_frame = TK.LabelFrame(window, text=f'Device {emulator._devices.index(device)}')
-            dev_frame.pack(side=TK.LEFT)
-            frames.append(dev_frame)
-        for data in emulator._list_messages_received:
-            device_id = data._destination
-            data_label = TTK.Label(frames[device_id], text=data)
-            data_label.pack(side=TK.BOTTOM)
+        content:list[list] = []
+        messages = emulator._list_messages_sent
+        header = TK.Frame(window)
+        header.pack(side=TK.TOP)
+        TK.Label(header, text="Source | ").pack(side=TK.LEFT)
+        TK.Label(header, text="Destination | ").pack(side=TK.LEFT)
+        TK.Label(header, text="Message | ").pack(side=TK.LEFT)
+        TK.Label(header, text="Sequence number").pack(side=TK.LEFT)
+
+        content = [[messages[i].source, messages[i].destination, messages[i], i] for i in range(len(messages))]
+        
+
+        tab = table(window, content, width=15, scrollable="y")
+        tab.pack(side=TK.BOTTOM)
 
     def show_data(device_id):
         def _show_data():
@@ -35,12 +38,12 @@ def overlay(emulator:SteppingEmulator, run_function):
                 received_frame = TK.LabelFrame(window, text="Received")
                 received_frame.pack(side=TK.LEFT)
                 for data in emulator._list_messages_received:
-                    if data._destination == device_id:
+                    if data.destination == device_id:
                         TTK.Label(received_frame, text=data).pack(side=TK.TOP)
                 sent_frame = TK.LabelFrame(window, text="Sent")
                 sent_frame.pack(side=TK.LEFT)
                 for data in emulator._list_messages_sent:
-                    if data._source == device_id:
+                    if data.source == device_id:
                         TTK.Label(sent_frame, text=data).pack(side=TK.TOP)
             else:
                 return
@@ -76,13 +79,9 @@ def overlay(emulator:SteppingEmulator, run_function):
         build_device(canvas, device, x, y, device_size)
     bottom_frame = TK.LabelFrame(master, text="Inputs")
     bottom_frame.pack(side=TK.TOP)
-    step_button = TTK.Button(bottom_frame, text="Step", command=step)
-    step_button.pack(side=TK.LEFT)
-    end_button = TTK.Button(bottom_frame, text="End", command=end)
-    end_button.pack(side=TK.LEFT)
-    start_new_button = TK.Button(bottom_frame, text="Restart algorithm", command=run_function)
-    start_new_button.pack(side=TK.LEFT)
-    show_all_data_button = TK.Button(bottom_frame, text="show all data", command=show_all_data)
-    show_all_data_button.pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="Step", command=step).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="End", command=end).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="Restart algorithm", command=run_function).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="show all data", command=show_all_data).pack(side=TK.LEFT)
     master.resizable(False,False)
     master.title("Stepping algorithm")
