@@ -1,4 +1,4 @@
-from math import cos, pi
+from math import sin, cos, pi
 from random import randint
 import tkinter as  TK
 import tkinter.ttk as TTK
@@ -10,8 +10,8 @@ from emulators.table import table
 def overlay(emulator:SteppingEmulator, run_function):
     # top is planned to be reserved for a little description of controls in stepper
     master = TK.Tk()
-    height = 360
-    width = 360
+    height = 500
+    width = 500
     spacing = 10
 
     
@@ -51,22 +51,9 @@ def overlay(emulator:SteppingEmulator, run_function):
                 return
         return _show_data
 
-    def get_coordinates_from_index(center:tuple[int,int], r:int, device:int, n:int) -> tuple[int, int]:
-        # for index 0 we have values: center = (180, 180), r = 170, device = 0, n = 3 
-        # length should be 2pi/3 = ~2
-        # x should be 2*0 = 0
-        # y should be 1
-        # function should return 180-(170*0), 180-(170*1)
-        # for index 1 we have values: center = (180, 180), r = 170, device = 1, n = 3
-        # length should be 2pi/3 = ~2
-        # x should be 2*1 = 2
-        # y should be ~-0.4
-        # function should return  180-(170*-2), 180-(170*-0.4)
-        length = (2*pi)/n
-        x = length*device
-        y = cos(x)
-        x = x/(2*pi)
-        print(x,y)
+    def get_coordinates_from_index(center:tuple[int,int], r:int, i:int, n:int) -> tuple[int, int]:
+        x = sin((i*2*pi)/n)
+        y = cos((i*2*pi)/n)
         if x < pi:
             return int(center[0]-(r*x)), int(center[1]-(r*y))
         else:
@@ -97,8 +84,7 @@ def overlay(emulator:SteppingEmulator, run_function):
         device_size = 100
 
     for device in range(len(emulator._devices)):
-        x,y = get_coordinates_from_index((int(width/2), int(width/2)), (int(width/2))-spacing, device, len(emulator._devices))
-        print(x,y)
+        x,y = get_coordinates_from_index((int((width/2)-(device_size/2)), int((width/2)-(device_size/2))), (int((width/2)-(device_size/2)))-spacing, device, len(emulator._devices))
         build_device(canvas, device, x, y, device_size)
     bottom_frame = TK.LabelFrame(master, text="Inputs")
     bottom_frame.pack(side=TK.TOP)
