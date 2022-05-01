@@ -9,7 +9,7 @@ from emulators.table import table
 
 def overlay(emulator:SteppingEmulator, run_function):
     # top is planned to be reserved for a little description of controls in stepper
-    master = TK.Tk()
+    master = TK.Toplevel()
     height = 500
     width = 500
     spacing = 10
@@ -19,34 +19,49 @@ def overlay(emulator:SteppingEmulator, run_function):
         window = TK.Toplevel(master)
         content:list[list] = []
         messages = emulator._list_messages_sent
+        message_content = list()
+        for message in messages:
+            temp = str(message)
+            temp = temp.replace(f'{message.source} -> {message.destination} : ', "")
+            temp = temp.replace(f'{message.source}->{message.destination} : ', "")
+            message_content.append(temp)
         header = TK.Frame(window)
-        header.pack(side=TK.TOP)
-        TK.Label(header, text="Source | ").pack(side=TK.LEFT)
-        TK.Label(header, text="Destination | ").pack(side=TK.LEFT)
-        TK.Label(header, text="Message | ").pack(side=TK.LEFT)
-        TK.Label(header, text="Sequence number").pack(side=TK.LEFT)
+        header.pack(side=TK.TOP, anchor=TK.NW)
+        TK.Label(header, text="Source", width=15).pack(side=TK.LEFT)
+        TK.Label(header, text="Destination", width=15).pack(side=TK.LEFT)
+        TK.Label(header, text="Message", width=15).pack(side=TK.LEFT)
+        TK.Label(header, text="Sequence number", width=15).pack(side=TK.LEFT)
 
-        content = [[messages[i].source, messages[i].destination, messages[i], i] for i in range(len(messages))]
+        content = [[messages[i].source, messages[i].destination, message_content[i], i] for i in range(len(messages))]
         
 
-        tab = table(window, content, width=15, scrollable="y")
-        tab.pack(side=TK.BOTTOM)
+        table(window, content, width=15, scrollable="y", title="All messages").pack(side=TK.BOTTOM)
 
     def show_data(device_id):
         def _show_data():
             if len(emulator._list_messages_received) > 0:
                 window = TK.Toplevel(master)
                 window.title(f'Device {device_id}')
-                received_frame = TK.LabelFrame(window, text="Received")
-                received_frame.pack(side=TK.LEFT)
-                for data in emulator._list_messages_received:
-                    if data.destination == device_id:
-                        TTK.Label(received_frame, text=data).pack(side=TK.TOP)
-                sent_frame = TK.LabelFrame(window, text="Sent")
-                sent_frame.pack(side=TK.LEFT)
-                for data in emulator._list_messages_sent:
-                    if data.source == device_id:
-                        TTK.Label(sent_frame, text=data).pack(side=TK.TOP)
+                header = TK.Frame(window)
+                header.pack(side=TK.TOP, anchor=TK.NW)
+                TK.Label(header, text="Received", width=15).pack(side=TK.LEFT)
+                TK.Label(header, text="Sent", width=15).pack(side=TK.LEFT)
+                received = list()
+                sent = list()
+                for message in emulator._list_messages_received:
+                    if message.destination == device_id:
+                        received.append(str(message))
+                    if message.source == device_id:
+                        sent.append(str(message))
+                if len(received) > len(sent):
+                    for _ in range(len(received)-len(sent)):
+                        sent.append("")
+                elif len(sent) > len(received):
+                    for _ in range(len(sent) - len(received)):
+                        received.append("")
+                content = [[received[i], sent[i]] for i in range(len(received))]
+
+                table(window, content, width=15, scrollable="y", title=f'Device {device_id}').pack(side=TK.BOTTOM)
             else:
                 return
         return _show_data
@@ -62,7 +77,7 @@ def overlay(emulator:SteppingEmulator, run_function):
     def build_device(master:TK.Canvas, device_id, x, y, device_size):
         circle = canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
         frame = TTK.Frame(master)
-        frame.place(x=x+(device_size/5), y=y+(device_size/5))
+        frame.place(x=x+(device_size/8), y=y+(device_size/4))
         button = TTK.Button(frame, command=show_data(device_id), text="Show data")
         button.pack(side=TK.BOTTOM)
         text = TTK.Label(frame, text=f'Device #{device_id}')
@@ -91,6 +106,6 @@ def overlay(emulator:SteppingEmulator, run_function):
     TTK.Button(bottom_frame, text="Step", command=step).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="End", command=end).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="Restart algorithm", command=run_function).pack(side=TK.LEFT)
-    TTK.Button(bottom_frame, text="show all data", command=show_all_data).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="show all Messages", command=show_all_data).pack(side=TK.LEFT)
     master.resizable(False,False)
     master.title("Stepping algorithm")
