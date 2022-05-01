@@ -1,3 +1,4 @@
+from math import cos, pi
 from random import randint
 import tkinter as  TK
 import tkinter.ttk as TTK
@@ -9,8 +10,9 @@ from emulators.table import table
 def overlay(emulator:SteppingEmulator, run_function):
     # top is planned to be reserved for a little description of controls in stepper
     master = TK.Tk()
-    height = 500
-    width = 1000
+    height = 360
+    width = 360
+    spacing = 10
 
     
     def show_all_data():
@@ -49,6 +51,27 @@ def overlay(emulator:SteppingEmulator, run_function):
                 return
         return _show_data
 
+    def get_coordinates_from_index(center:tuple[int,int], r:int, device:int, n:int) -> tuple[int, int]:
+        # for index 0 we have values: center = (180, 180), r = 170, device = 0, n = 3 
+        # length should be 2pi/3 = ~2
+        # x should be 2*0 = 0
+        # y should be 1
+        # function should return 180-(170*0), 180-(170*1)
+        # for index 1 we have values: center = (180, 180), r = 170, device = 1, n = 3
+        # length should be 2pi/3 = ~2
+        # x should be 2*1 = 2
+        # y should be ~-0.4
+        # function should return  180-(170*-2), 180-(170*-0.4)
+        length = (2*pi)/n
+        x = length*device
+        y = cos(x)
+        x = x/(2*pi)
+        print(x,y)
+        if x < pi:
+            return int(center[0]-(r*x)), int(center[1]-(r*y))
+        else:
+            return int(center[0]-(r*-x)), int(center[1]-(r*y))
+
     def build_device(master:TK.Canvas, device_id, x, y, device_size):
         circle = canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
         frame = TTK.Frame(master)
@@ -74,8 +97,8 @@ def overlay(emulator:SteppingEmulator, run_function):
         device_size = 100
 
     for device in range(len(emulator._devices)):
-        x = randint(device_size, width-device_size)
-        y = randint(device_size, height-device_size)
+        x,y = get_coordinates_from_index((int(width/2), int(width/2)), (int(width/2))-spacing, device, len(emulator._devices))
+        print(x,y)
         build_device(canvas, device, x, y, device_size)
     bottom_frame = TK.LabelFrame(master, text="Inputs")
     bottom_frame.pack(side=TK.TOP)
