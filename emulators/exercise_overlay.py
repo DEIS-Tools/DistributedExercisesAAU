@@ -78,10 +78,7 @@ def overlay(emulator:SteppingEmulator, run_function):
 
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
-    if name == "posix":
-        device_size = 150
-    else:
-        device_size = 100
+    device_size = 100
 
     for device in range(len(emulator._devices)):
         x,y = get_coordinates_from_index((int((width/2)-(device_size/2)), int((width/2)-(device_size/2))), (int((width/2)-(device_size/2)))-spacing, device, len(emulator._devices))
