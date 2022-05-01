@@ -1,5 +1,6 @@
 from math import sin, cos, pi
 from random import randint
+from threading import Thread
 import tkinter as  TK
 import tkinter.ttk as TTK
 from os import name
@@ -87,9 +88,16 @@ def overlay(emulator:SteppingEmulator, run_function):
     def step():
         #insert stepper function
         emulator._single = True
+        if emulator.all_terminated():
+            bottom_label.config(text="Finished running", fg="green")
+        else:
+            bottom_label.config(text=f'Step {emulator._messages_sent}')
 
     def end():
         emulator._stepping = False
+        while not emulator.all_terminated():
+            pass
+        bottom_label.config(text="Finished running", fg="green")
 
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
@@ -98,11 +106,14 @@ def overlay(emulator:SteppingEmulator, run_function):
     for device in range(len(emulator._devices)):
         x,y = get_coordinates_from_index((int((width/2)-(device_size/2)), int((width/2)-(device_size/2))), (int((width/2)-(device_size/2)))-spacing, device, len(emulator._devices))
         build_device(canvas, device, x, y, device_size)
+
     bottom_frame = TK.LabelFrame(master, text="Inputs")
-    bottom_frame.pack(side=TK.TOP)
+    bottom_frame.pack(side=TK.BOTTOM)
     TTK.Button(bottom_frame, text="Step", command=step).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="End", command=end).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="Restart algorithm", command=run_function).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="show all Messages", command=show_all_data).pack(side=TK.LEFT)
+    bottom_label = TK.Label(master, text="Status")
+    bottom_label.pack(side=TK.BOTTOM)
     master.resizable(False,False)
     master.title("Stepping algorithm")
