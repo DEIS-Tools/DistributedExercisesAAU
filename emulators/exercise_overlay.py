@@ -76,36 +76,53 @@ def overlay(emulator:SteppingEmulator, run_function):
             return int(center[0]-(r*-x)), int(center[1]-(r*y))
 
     def build_device(master:TK.Canvas, device_id, x, y, device_size):
-        circle = canvas.create_oval(x, y, x+device_size, y+device_size, outline="black")
+        canvas.create_oval(x, y, x+device_size, y+device_size, outline="black", fill="gray")
         frame = TTK.Frame(master)
         frame.place(x=x+(device_size/8), y=y+(device_size/4))
-        button = TTK.Button(frame, command=show_data(device_id), text="Show data")
-        button.pack(side=TK.BOTTOM)
-        text = TTK.Label(frame, text=f'Device #{device_id}')
-        text.pack(side=TK.BOTTOM)
+        TTK.Label(frame, text=f'Device #{device_id}').pack(side=TK.TOP)
+        TTK.Button(frame, command=show_data(device_id), text="Show data").pack(side=TK.TOP)
+        data_frame = TTK.Frame(frame)
+        data_frame.pack(side=TK.BOTTOM)
+
             
+
+    def stop_emulator():
+        emulator.listener.stop()
+        emulator.listener.join()
+        bottom_label.config(text="Finished running", fg="green")
 
     def step():
         #insert stepper function
         emulator._single = True
         if emulator.all_terminated():
-            bottom_label.config(text="Finished running", fg="green")
-        else:
-            bottom_label.config(text=f'Step {emulator._messages_sent}')
-
+            bottom_label.config(text="Finished running, kill keyboard listener?... (press any key)")
+            Thread(target=stop_emulator).start()
+            
+        if len(emulator._list_messages_sent) != 0:
+            message = emulator._list_messages_sent[len(emulator._list_messages_sent)-1]
+            canvas.delete("line")
+            canvas.create_line(coordinates[message.source][0]+(device_size/2), coordinates[message.source][1]+(device_size/2), coordinates[message.destination][0]+(device_size/2), coordinates[message.destination][1]+(device_size/2), tags="line")
+            msg = str(message)
+            msg = msg.replace(f'{message.source} -> {message.destination} : ', "")
+            msg = msg.replace(f'{message.source}->{message.destination} : ', "")
+            bottom_label.config(text=f'Last message sent: from {message.source} to {message.destination}, content: {msg}')
     def end():
         emulator._stepping = False
         while not emulator.all_terminated():
             pass
-        bottom_label.config(text="Finished running", fg="green")
+        bottom_label.config(text="Finished running, kill keyboard listener?... (press any key)")
+        Thread(target=stop_emulator).start()
 
     canvas = TK.Canvas(master, height=height, width=width)
     canvas.pack(side=TK.TOP)
     device_size = 100
-
+    canvas.create_line(0,0,0,0, tags="line") #create dummy lines
+    coordinates:list[tuple[TTK.Label]] = list()
     for device in range(len(emulator._devices)):
-        x,y = get_coordinates_from_index((int((width/2)-(device_size/2)), int((width/2)-(device_size/2))), (int((width/2)-(device_size/2)))-spacing, device, len(emulator._devices))
+        x, y = get_coordinates_from_index((int((width/2)-(device_size/2)), int((width/2)-(device_size/2))), (int((width/2)-(device_size/2)))-spacing, device, len(emulator._devices))
         build_device(canvas, device, x, y, device_size)
+        coordinates.append((x,y))
+
 
     bottom_frame = TK.LabelFrame(master, text="Inputs")
     bottom_frame.pack(side=TK.BOTTOM)
