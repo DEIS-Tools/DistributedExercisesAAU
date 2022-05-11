@@ -26,27 +26,25 @@ def overlay(emulator:SteppingEmulator, run_function):
             temp = temp.replace(f'{message.source} -> {message.destination} : ', "")
             temp = temp.replace(f'{message.source}->{message.destination} : ', "")
             message_content.append(temp)
-        header = TK.Frame(window)
-        header.pack(side=TK.TOP, anchor=TK.NW)
-        TK.Label(header, text="Source", width=15).pack(side=TK.LEFT)
-        TK.Label(header, text="Destination", width=15).pack(side=TK.LEFT)
-        TK.Label(header, text="Message", width=15).pack(side=TK.LEFT)
-        TK.Label(header, text="Sequence number", width=15).pack(side=TK.LEFT)
 
         content = [[messages[i].source, messages[i].destination, message_content[i], i] for i in range(len(messages))]
         
 
-        table(window, content, width=15, scrollable="y", title="All messages").pack(side=TK.BOTTOM)
+        tab = table(window, content, width=15, scrollable="y", title="All messages")
+        tab.pack(side=TK.BOTTOM)
+
+        header = TK.Frame(window)
+        header.pack(side=TK.TOP, anchor=TK.NW)
+        TK.Label(header, text="Source", width=tab.column_width[0]).pack(side=TK.LEFT)
+        TK.Label(header, text="Destination", width=tab.column_width[1]).pack(side=TK.LEFT)
+        TK.Label(header, text="Message", width=tab.column_width[2]).pack(side=TK.LEFT)
+        TK.Label(header, text="Sequence number", width=tab.column_width[3]).pack(side=TK.LEFT)
 
     def show_data(device_id):
         def _show_data():
             if len(emulator._list_messages_received) > 0:
                 window = TK.Toplevel(master)
                 window.title(f'Device {device_id}')
-                header = TK.Frame(window)
-                header.pack(side=TK.TOP, anchor=TK.NW)
-                TK.Label(header, text="Received", width=15).pack(side=TK.LEFT)
-                TK.Label(header, text="Sent", width=15).pack(side=TK.LEFT)
                 received = list()
                 sent = list()
                 for message in emulator._list_messages_received:
@@ -62,9 +60,16 @@ def overlay(emulator:SteppingEmulator, run_function):
                         received.append("")
                 content = [[received[i], sent[i]] for i in range(len(received))]
 
-                table(window, content, width=15, scrollable="y", title=f'Device {device_id}').pack(side=TK.BOTTOM)
+                tab = table(window, content, width=15, scrollable="y", title=f'Device {device_id}')
+                tab.pack(side=TK.BOTTOM)
+
+                header = TK.Frame(window)
+                header.pack(side=TK.TOP, anchor=TK.NW)
+                TK.Label(header, text="Received", width=tab.column_width[0]).pack(side=TK.LEFT)
+                TK.Label(header, text="Sent", width=tab.column_width[1]).pack(side=TK.LEFT)
             else:
                 return
+                
         return _show_data
 
     def get_coordinates_from_index(center:tuple[int,int], r:int, i:int, n:int) -> tuple[int, int]:

@@ -4,8 +4,13 @@ class table(TK.Frame):
     rows:list[TK.Frame]
     labels:list[list[TK.Label]]
     master:TK.Toplevel
+    column_width:list[int]
 
     def __init__(self, master = None, content:list[list]=[], width=2, height=2, title="", icon="", scrollable = "None"):
+        if not len(content) > 0 or not len(content[0]) > 0:
+            print("failed to make table: bad list")
+            return
+        
         if master == None:
             master = TK.Toplevel()
         self.master = master
@@ -18,11 +23,17 @@ class table(TK.Frame):
                     self.master.iconbitmap(icon)
                 except:
                     print("failed to set window icon")
-        if not len(content) > 0 or not len(content[0]) > 0:
-            print("failed to make table: bad list")
-            return
         rows = len(content)
         cols = len(content[0])
+        self.column_width = [width for _ in range(cols)]
+        for j in range(cols):
+            for i in range(rows):
+                if type(content[i][j]) == str:
+                    if len(content[i][j]) > self.column_width[j]:
+                        self.column_width[j] = len(content[i][j])
+                elif width > self.column_width[j]:
+                    self.column_width[j] = width
+                    
         if scrollable == "None":
             container = self
         elif scrollable == "x":
@@ -30,7 +41,7 @@ class table(TK.Frame):
                 mod = 10
             else:
                 mod = len(content)
-            __container = ScrollableFrame_X(self, width=width*7.5*len(content[0]), height=height*mod*20)
+            __container = ScrollableFrame_X(self, width=sum(self.column_width), height=height*mod*20)
             container = __container.scrollable_frame
             __container.pack(side=TK.LEFT)
         elif scrollable == "y":
@@ -38,13 +49,14 @@ class table(TK.Frame):
                 mod = 10
             else:
                 mod = len(content)
-            __container = ScrollableFrame_Y(self, width=width*7.5*len(content[0]), height=height*mod*20)
+            __container = ScrollableFrame_Y(self, width=sum(self.column_width)*7.5, height=height*mod*20)
             container = __container.scrollable_frame
             __container.pack(side=TK.LEFT)
         self.rows = [TK.LabelFrame(container) for i in range(rows)]
         [self.rows[i].pack(side=TK.TOP) for i in range(len(self.rows))]
-        self.labels = [[TK.Label(self.rows[i], text=content[i][j], width=width, height=height).pack(side=TK.LEFT) for i in range(rows)] for j in range(cols)]
-
+        for j in range(cols):
+            for i in range(rows):
+                TK.Label(self.rows[i], text=content[i][j], width=self.column_width[j], height=height).pack(side=TK.LEFT)
 class ScrollableFrame_Y(TK.Frame):
     ###source: https://blog.teclado.com/tkinter-scrollable-frames/
     def __init__(self, container, width=300, height=300, *args, **kwargs):
