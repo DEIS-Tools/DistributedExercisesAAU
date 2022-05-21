@@ -45,7 +45,7 @@ class SteppingEmulator(Emulator):
         self._progress.release()
         return super().queue(message)
 
-    def _step(self, message:str = "Step?", index=0):
+    def _step(self, message:str = "Step?", index=-1):
         if not self._single:
             print(f'\t{self._messages_sent}: {message}')
         while self._stepping: #run while waiting for input
@@ -53,19 +53,20 @@ class SteppingEmulator(Emulator):
                 self._single = False
                 break
             elif self._pick:
-                self._pick = False
-                try:
-                    print("Press return to proceed")
-                    while self._stepper.is_alive():
-                        pass
-                    index = int(input("Specify index of the next element to send: "))
-                except:
-                    print("Invalid element!")
-                if not self._stepper.is_alive():
-                    self._stepper = Thread(target=lambda: getpass(""), daemon=True)
-                    self._stepper.start()
-                self._stepping = True
-                print(message)
+                if index != -1:
+                    self._pick = False
+                    try:
+                        print("Press return to proceed")
+                        while self._stepper.is_alive():
+                            pass
+                        index = int(input("Specify index of the next element to send: ")) - 1
+                    except:
+                        print("Invalid element!")
+                    if not self._stepper.is_alive():
+                        self._stepper = Thread(target=lambda: getpass(""), daemon=True)
+                        self._stepper.start()
+                    self._stepping = True
+                    print(message)
         return index
 
 
