@@ -17,7 +17,8 @@ class SteppingEmulator(Emulator):
         self._stepping = True
         self._single = False
         self._keyheld = False
-        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+        self._pick = False
+        self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
         msg = """
         keyboard input:
@@ -33,26 +34,42 @@ class SteppingEmulator(Emulator):
     def dequeue(self, index: int) -> Optional[MessageStub]:
         self._progress.acquire()
         if index in self._messages and not len(self._messages[index]) == 0 and self._stepping and self._stepper.is_alive():
-            self._step("step?")
+            index = self._step(index=index)
         self._progress.release()
         return super().dequeue(index)
     
     def queue(self, message: MessageStub):
         self._progress.acquire()
         if self._stepping and self._stepper.is_alive():
-            self._step("step?")
+            self._step()
         self._progress.release()
         return super().queue(message)
 
-    def _step(self, message:str = ""):
+    def _step(self, message:str = "Step?", index=0):
         if not self._single:
             print(f'\t{self._messages_sent}: {message}')
         while self._stepping: #run while waiting for input
             if self._single:  #break while if the desired action is a single message
                 self._single = False
                 break
+            elif self._pick:
+                self._pick = False
+                try:
+                    print("Press return to proceed")
+                    while self._stepper.is_alive():
+                        pass
+                    index = int(input("Specify index of the next element to send: "))
+                except:
+                    print("Invalid element!")
+                if not self._stepper.is_alive():
+                    self._stepper = Thread(target=lambda: getpass(""), daemon=True)
+                    self._stepper.start()
+                self._stepping = True
+                print(message)
+        return index
 
-    def on_press(self, key:keyboard.KeyCode):
+
+    def _on_press(self, key:keyboard.KeyCode):
         try:
             #for keycode class
             key = key.char
@@ -71,25 +88,10 @@ class SteppingEmulator(Emulator):
                     index+=1
                     print(f'{index}: {message}')
         elif key == "s":
-            try:
-                print("press return to proceed")
-                while self._stepper.is_alive():
-                    pass
-                _in = int(input("Specify index of which element to transmit next element to send next: "))
-                index = 0
-                for messages in self._messages.values():
-                    for message in messages:
-                        index+=1
-                        if _in == index:
-                            self.dequeue(message.destination)
-            except:
-                print("Invalid element")
-            if not self._stepper.is_alive():
-                self._stepper = Thread(target=lambda: getpass(""), daemon=True)
-                self._stepper.start()
+            self._pick = True
         self._keyheld = True
 
-    def on_release(self, key:keyboard.KeyCode):
+    def _on_release(self, key:keyboard.KeyCode):
         try:
             #for key class
             key = key.char
