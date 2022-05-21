@@ -1,16 +1,15 @@
-import copy
-import random
-import time
-from emulators.AsyncEmulator import AsyncEmulator
+if True:
+    from emulators.AsyncEmulator import AsyncEmulator as Emulator
+else:
+    from emulators.SyncEmulator import SyncEmulator as Emulator
 from typing import Optional
 from emulators.MessageStub import MessageStub
 from pynput import keyboard
-from os import system
 from getpass import getpass #getpass to hide input, cleaner terminal
 from threading import Thread #run getpass in seperate thread
 
 
-class SteppingEmulator(AsyncEmulator):
+class SteppingEmulator(Emulator):
     def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
         super().__init__(number_of_devices, kind)
         self._stepper = Thread(target=lambda: getpass(""), daemon=True)
@@ -32,35 +31,18 @@ class SteppingEmulator(AsyncEmulator):
         print(msg)
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
-        #return super().dequeue(index) #uncomment to run as a normal async emulator (debug)
         self._progress.acquire()
-        if index not in self._messages:
-            self._progress.release()
-            return None
-        elif len(self._messages[index]) == 0:
-            self._progress.release()
-            return None
-        else:
-            if self._stepping and self._stepper.is_alive(): #first expression for printing a reasonable amount, second to hide user input
-                index = self._step("step?", index)
-            m = self._messages[index].pop()
-            print(f'\tRecieve {m}')
-            self._progress.release()
-            return m
+        if index in self._messages and not len(self._messages[index]) == 0 and self._stepping and self._stepper.is_alive():
+            self._step("step?")
+        self._progress.release()
+        return super().dequeue(index)
     
     def queue(self, message: MessageStub):
-        #return super().queue(message) #uncomment to run as normal queue (debug)
         self._progress.acquire()
         if self._stepping and self._stepper.is_alive():
             self._step("step?")
-        self._messages_sent += 1
-        print(f'\tSend {message}')
-        if message.destination not in self._messages:
-            self._messages[message.destination] = []
-        self._messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
-        random.shuffle(self._messages[message.destination]) # shuffle to emulate changes in order
-        time.sleep(random.uniform(0.01, 0.1)) # try to obfuscate delays and emulate network delays
         self._progress.release()
+        return super().queue(message)
 
     def _step(self, message:str = ""):
         if not self._single:
