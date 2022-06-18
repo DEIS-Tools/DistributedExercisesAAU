@@ -1,5 +1,19 @@
 # Exercises for Distributed Systems
 This repository contains a small framework written in python for emulating *asynchronous* and *synchronous* distributed systems.
+## Install
+The stepping emulator requires the following packages to run
+*  tkinter
+*  pynput
+
+These packages can be installed using pip as shown below:
+```bash
+pip3.10 install --user tk
+pip3.10 install --user pynput
+```
+For the development environment used for this framework (Arch Linux), tkinter also requires the following package installed via pacman
+```bash
+pacman -Sy tk
+```
 
 ## General
 Exercises will be described later in this document.
@@ -12,18 +26,21 @@ I will provide new templates as the course progresses.
 
 You should be able to execute your solution to exercise 1 using the following lines:
 ```bash
-python3.9 exercise_runner.py --lecture 1 --algorithm Gossip --type sync --devices 3
-python3.9 exercise_runner.py --lecture 1 --algorithm Gossip --type async --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm Gossip --type sync --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm Gossip --type async --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm Gossip --type stepping --devices 3
 ```
 
 The first line will execute your implementation of the `Gossip` algorithm in a synchronous setting with three devices, 
 while the second line will execute in an asynchronous setting.
+The third line will execute your implementation in a synchronous setting, launching a GUI to visualize your implementation, the setting can be adjusted during execution.
 
 For usage of the framework, see `exercises/demo.py` for a lightweight example.
 The example can be run with:
 ```bash
-python3.9 exercise_runner.py --lecture 0 --algorithm PingPong --type async --devices 3
+python3.10 exercise_runner.py --lecture 0 --algorithm PingPong --type async --devices 3
 ```
+
 
 ## Pull Requests
 If you have any extensions or improvements you are welcome to create a pull request.
@@ -56,7 +73,7 @@ Your tasks are as follows:
 You can have several copies of the `Gossip` class, just give the class another name in the `exercise1.py` document, for instance `ImprovedGossip`.
 You should then be able to call the framework with your new class via:
 ```bash
-python3.9 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async --devices 3
 ```
 
 # Exercise 2
@@ -186,7 +203,7 @@ For all exercises today, you can use the `sync` network type - but most algorith
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3.9 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devices 7
+python3.10 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devices 7
 ```
 
 # Exercise 9
@@ -200,7 +217,7 @@ python3.9 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --d
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async --devices 6
+python10 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async --devices 6
 ```
 
 # Exercise 10
@@ -213,7 +230,7 @@ python3 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
+python3.10 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
 ```
 
 
@@ -227,7 +244,7 @@ python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type asy
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
+python3.10 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
 ```
 
 
@@ -240,5 +257,5 @@ python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type asy
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
+python3.10 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
 ```
