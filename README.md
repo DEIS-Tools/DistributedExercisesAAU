@@ -5,15 +5,18 @@ The stepping emulator requires the following packages to run
 *  tkinter
 *  pynput
 
-These packages can be installed using pip as shown below:
+These packages can be installed using `pip` as shown below:
 ```bash
 pip3.10 install --user tk
 pip3.10 install --user pynput
 ```
-For the development environment used for this framework (Arch Linux), tkinter also requires the following package installed via pacman
+For the development environment used for this framework (Arch Linux), tkinter also requires the following package installed via `pacman`:
 ```bash
 pacman -Sy tk
 ```
+Installation steps may vary depending on the operating system, for windows, installing tkinter through `pip` should be enough.
+
+The framework is tested in both `python3.9` and `python3.10`, both versions should work.
 
 ## General
 Exercises will be described later in this document.
