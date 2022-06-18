@@ -62,8 +62,9 @@ python3.10 exercise_runner_overlay.py
 Where your solution can be executed through this GUI. 
 
 ### Stepping emulator GUI
-If the stepping emulator is chosen, the framework will launch with a GUI visualising some different aspects of your algorithm, an example of the windows this GUI will open is shown below:
+If the stepping emulator is chosen, the framework will launch with a GUI visualising some different aspects of your algorithm, an example of the Stepping GUI is shown below:
 
+![](figures/main_window.png)
 
 
 ## Pull Requests
