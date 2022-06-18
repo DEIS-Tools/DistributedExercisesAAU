@@ -44,6 +44,27 @@ The example can be run with:
 python3.10 exercise_runner.py --lecture 0 --algorithm PingPong --type async --devices 3
 ```
 
+## Stepping emulator
+The stepping emulator can be used to run the algorithm in steps where one message is sent or received for each step in this emulator. The Stepping emulator can be controlled with the following keyboard input:
+```
+space:   Step a single time through messages
+f:       Fast-forward through messages
+enter:   Kill stepper daemon and finish algorithm
+tab:     Show all messages currently waiting tobe transmitted
+s:       Pick the next message waiting to be transmitted to transmit next
+e:       Toggle between sync and async emulation
+```
+## GUI
+The framework can also be launched with an interface by executing the following line:
+```
+python3.10 exercise_runner_overlay.py
+```
+Where your solution can be executed through this GUI. 
+
+### Stepping emulator GUI
+If the stepping emulator is chosen, the framework will launch with a GUI visualising some different aspects of your algorithm, an example of the windows this GUI will open is shown below:
+
+
 
 ## Pull Requests
 If you have any extensions or improvements you are welcome to create a pull request.
