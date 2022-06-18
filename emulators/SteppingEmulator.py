@@ -1,15 +1,14 @@
-if True:
-    from emulators.AsyncEmulator import AsyncEmulator as Emulator
-else:
-    from emulators.SyncEmulator import SyncEmulator as Emulator
 from typing import Optional
+from emulators.AsyncEmulator import AsyncEmulator
+from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
 from pynput import keyboard
 from getpass import getpass #getpass to hide input, cleaner terminal
 from threading import Thread #run getpass in seperate thread
 
 
-class SteppingEmulator(Emulator):
+
+class SteppingEmulator(SyncEmulator, AsyncEmulator):
     def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
         super().__init__(number_of_devices, kind)
         self._stepper = Thread(target=lambda: getpass(""), daemon=True)
@@ -18,13 +17,15 @@ class SteppingEmulator(Emulator):
         self._single = False
         self._keyheld = False
         self._pick = False
+        self.current_parent = SyncEmulator
+        self.next_index = -1
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
         msg = """
         keyboard input:
             space:              Step a single time through messages
             f:                  Fast-forward through messages
-            enter:              Kill stepper daemon and run as an async emulator
+            enter:              Kill stepper daemon finish algorithm
             tab:                Show all messages currently waiting to be transmitted
             s:                  Pick the next message waiting to be transmitted to transmit next
             e:                  Toggle between sync and async emulation
@@ -32,18 +33,20 @@ class SteppingEmulator(Emulator):
         print(msg)
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
+        result = self.current_parent.dequeue(self, index)
         self._progress.acquire()
-        if index in self._messages and not len(self._messages[index]) == 0 and self._stepping and self._stepper.is_alive():
+        if result != None and self._stepping and self._stepper.is_alive():
             index = self._step(index=index)
         self._progress.release()
-        return super().dequeue(index)
+        return result
     
     def queue(self, message: MessageStub):
         self._progress.acquire()
         if self._stepping and self._stepper.is_alive():
             self._step()
         self._progress.release()
-        return super().queue(message)
+        
+        return self.current_parent.queue(self, message)
 
     def _step(self, message:str = "Step?", index=-1):
         if not self._single:
@@ -59,7 +62,7 @@ class SteppingEmulator(Emulator):
                         print("Press return to proceed")
                         while self._stepper.is_alive():
                             pass
-                        index = int(input("Specify index of the next element to send: ")) - 1
+                        index = int(input("Specify index of the next element to send: "))
                     except:
                         print("Invalid element!")
                     if not self._stepper.is_alive():
@@ -67,7 +70,7 @@ class SteppingEmulator(Emulator):
                         self._stepper.start()
                     self._stepping = True
                     print(message)
-        return index
+                self.next_index = index
 
 
     def _on_press(self, key:keyboard.KeyCode):
@@ -86,10 +89,16 @@ class SteppingEmulator(Emulator):
             index = 0
             for messages in self._messages.values():
                 for message in messages:
-                    index+=1
                     print(f'{index}: {message}')
+                    index+=1
         elif key == "s":
             self._pick = True
+        elif key == "e":
+            if self.current_parent is AsyncEmulator:
+                self.current_parent = SyncEmulator
+            elif self.current_parent is SyncEmulator:
+                self.current_parent = AsyncEmulator
+            print(f'Changed emulator to {self.current_parent.__name__}')
         self._keyheld = True
 
     def _on_release(self, key:keyboard.KeyCode):
@@ -102,3 +111,5 @@ class SteppingEmulator(Emulator):
         if key == "f":
             self._stepping = True
         self._keyheld = False
+
+    
