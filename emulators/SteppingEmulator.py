@@ -17,7 +17,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._single = False
         self._keyheld = False
         self._pick = False
-        self.parent = SyncEmulator
+        self.parent = AsyncEmulator
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
         msg = """
@@ -61,16 +61,26 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                     while self._stepper.is_alive():
                         pass
                     self._print_transit()
+                    keys = []
                     if self.parent is AsyncEmulator:
-                        print(f'Available devices: {self._messages.keys()}')
+                        for key in self._messages.keys():
+                            keys.append(key)
                     elif self.parent is SyncEmulator:
-                        print(f'Available devices: {self._last_round_messages.keys()}')
+                        for key in self._last_round_messages.keys():
+                            keys.append(key)
+                    print(f'Available devices: {keys}')
                     device = int(input(f'Specify device to send to: '))
                     self._print_transit_for_device(device)
                     index = int(input(f'Specify index of the next element to send: '))
+                    if self.parent is AsyncEmulator:
+                        item = self._messages[device].pop(index)
+                        self._messages[device].append(item)
+                        
+                        pass
+                    elif self.parent is SyncEmulator:
+                        pass
                 except Exception as e:
                     print(e)
-                    print("Invalid element!")
                 if not self._stepper.is_alive():
                     self._stepper = Thread(target=lambda: getpass(""), daemon=True)
                     self._stepper.start()
@@ -123,15 +133,12 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         print(f'Messages in transit to device #{device}')
         index = 0
         if self.parent is AsyncEmulator:
-            for messages in self._messages.get(device):
-                for message in messages:
-                    print(f'{index}: {message}')
-                    index+=1
+            messages:list[MessageStub] = self._messages.get(device)
         elif self.parent is SyncEmulator:
-            for messages in self._last_round_messages.get(device):
-                for message in messages:
-                    print(f'{index}: {message}')
-                    index+=1
+            messages:list[MessageStub] = self._last_round_messages.get(device)
+        for message in messages:
+            print(f'{index}: {message}')
+            index+=1
     
     def swap_emulator(self):
         if self.parent is AsyncEmulator:
