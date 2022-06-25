@@ -14,7 +14,7 @@ class AsyncEmulator(EmulatorStub):
     def __init__(self, number_of_devices: int, kind):
         super().__init__(number_of_devices, kind)
         self._terminated = 0
-        self._messages = {}
+        self._messages:dict[int, list[MessageStub]] = {}
         self._messages_sent = 0
 
     def run(self):
