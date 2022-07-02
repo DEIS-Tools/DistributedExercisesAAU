@@ -1,0 +1,180 @@
+from math import sin, cos, pi
+from threading import Thread
+import tkinter as  TK
+import tkinter.ttk as TTK
+from emulators.MessageStub import MessageStub
+
+from emulators.SteppingEmulator import SteppingEmulator
+from emulators.table import table
+
+def overlay(emulator:SteppingEmulator, run_function):
+    #master config
+    master = TK.Toplevel()
+    master.resizable(False,False)
+    master.title("Stepping algorithm")
+    pages = TTK.Notebook(master)
+    main_page = TTK.Frame(pages)
+    controls_page = TTK.Frame(pages)
+    pages.add(main_page, text="Emulator")
+    pages.add(controls_page, text="Controls")
+    pages.pack(expand= 1, fill=TK.BOTH)
+    height = 500
+    width = 500
+    spacing = 10
+    #end of master config
+
+    
+    def show_all_data():
+        window = TK.Toplevel()
+        content:list[list] = []
+        messages = emulator._list_messages_sent
+        message_content = list()
+        for message in messages:
+            temp = str(message)
+            temp = temp.replace(f'{message.source} -> {message.destination} : ', "")
+            temp = temp.replace(f'{message.source}->{message.destination} : ', "")
+            message_content.append(temp)
+
+        content = [[messages[i].source, messages[i].destination, message_content[i], i] for i in range(len(messages))]
+        
+
+        tab = table(window, content, width=15, scrollable="y", title="All messages")
+        tab.pack(side=TK.BOTTOM)
+
+        header = TK.Frame(window)
+        header.pack(side=TK.TOP, anchor=TK.NW)
+        TK.Label(header, text="Source", width=tab.column_width[0]).pack(side=TK.LEFT)
+        TK.Label(header, text="Destination", width=tab.column_width[1]).pack(side=TK.LEFT)
+        TK.Label(header, text="Message", width=tab.column_width[2]).pack(side=TK.LEFT)
+        TK.Label(header, text="Sequence number", width=tab.column_width[3]).pack(side=TK.LEFT)
+
+    def show_data(device_id):
+        def _show_data():
+            if len(emulator._list_messages_received) > 0:
+                window = TK.Toplevel(main_page)
+                window.title(f'Device {device_id}')
+                received:list[MessageStub] = list()
+                sent:list[MessageStub] = list()
+                for message in emulator._list_messages_received:
+                    if message.destination == device_id:
+                        received.append(message)
+                    if message.source == device_id:
+                        sent.append(message)
+                if len(received) > len(sent):
+                    for _ in range(len(received)-len(sent)):
+                        sent.append("")
+                elif len(sent) > len(received):
+                    for _ in range(len(sent) - len(received)):
+                        received.append("")
+                content = list()
+                for i in range(len(received)):
+                    if received[i] == "":
+                        msg = str(sent[i]).replace(f'{sent[i].source} -> {sent[i].destination} : ', "").replace(f'{sent[i].source}->{sent[i].destination} : ', "")
+                        content.append(["", received[i], sent[i].destination, msg])
+                    elif sent[i] == "":
+                        msg = str(received[i]).replace(f'{received[i].source} -> {received[i].destination} : ', "").replace(f'{received[i].source}->{received[i].destination} : ', "")
+                        content.append([received[i].source, msg, "", sent[i]])
+                    else:
+                        sent_msg = str(sent[i]).replace(f'{sent[i].source} -> {sent[i].destination} : ', "").replace(f'{sent[i].source}->{sent[i].destination} : ', "")
+                        received_msg = str(received[i]).replace(f'{received[i].source} -> {received[i].destination} : ', "").replace(f'{received[i].source}->{received[i].destination} : ', "")
+                        content.append([received[i].source, received_msg, sent[i].destination, sent_msg])
+
+                tab = table(window, content, width=15, scrollable="y", title=f'Device {device_id}')
+                tab.pack(side=TK.BOTTOM)
+
+                header = TK.Frame(window)
+                header.pack(side=TK.TOP, anchor=TK.NW)
+                TK.Label(header, text="Source", width=tab.column_width[0]).pack(side=TK.LEFT)
+                TK.Label(header, text="Message", width=tab.column_width[1]).pack(side=TK.LEFT)
+                TK.Label(header, text="Destination", width=tab.column_width[2]).pack(side=TK.LEFT)
+                TK.Label(header, text="Message", width=tab.column_width[3]).pack(side=TK.LEFT)
+            else:
+                return
+                
+        return _show_data
+
+    def get_coordinates_from_index(center:tuple[int,int], r:int, i:int, n:int) -> tuple[int, int]:
+        x = sin((i*2*pi)/n)
+        y = cos((i*2*pi)/n)
+        if x < pi:
+            return int(center[0]-(r*x)), int(center[1]-(r*y))
+        else:
+            return int(center[0]-(r*-x)), int(center[1]-(r*y))
+
+    def build_device(main_page:TK.Canvas, device_id, x, y, device_size):
+        canvas.create_oval(x, y, x+device_size, y+device_size, outline="black", fill="gray")
+        frame = TTK.Frame(main_page)
+        frame.place(x=x+(device_size/8), y=y+(device_size/4))
+        TTK.Label(frame, text=f'Device #{device_id}').pack(side=TK.TOP)
+        TTK.Button(frame, command=show_data(device_id), text="Show data").pack(side=TK.TOP)
+        data_frame = TTK.Frame(frame)
+        data_frame.pack(side=TK.BOTTOM)
+
+            
+
+    def stop_emulator():
+        emulator.listener.stop()
+        emulator.listener.join()
+        bottom_label.config(text="Finished running", fg="green")
+
+    def step():
+        #insert stepper function
+        emulator._single = True
+        if emulator.all_terminated():
+            bottom_label.config(text="Finished running, kill keyboard listener?... (press any key)")
+            Thread(target=stop_emulator).start()
+            
+        elif emulator._last_message[0] != "init":
+            message = emulator._last_message[1]
+            canvas.delete("line")
+            canvas.create_line(coordinates[message.source][0]+(device_size/2), coordinates[message.source][1]+(device_size/2), coordinates[message.destination][0]+(device_size/2), coordinates[message.destination][1]+(device_size/2), tags="line")
+            msg = str(message)
+            msg = msg.replace(f'{message.source} -> {message.destination} : ', "")
+            msg = msg.replace(f'{message.source}->{message.destination} : ', "")
+            if emulator._last_message[0] == "sent":
+                bottom_label.config(text=f'Device {message.source} sent "{msg}" to {message.destination}')
+            elif emulator._last_message[0] == "received":
+                bottom_label.config(text=f'Device {message.destination} received {msg} from {message.source}')
+    def end():
+        emulator._stepping = False
+        while not emulator.all_terminated():
+            pass
+        bottom_label.config(text="Finished running, kill keyboard listener?... (press any key)")
+        Thread(target=stop_emulator).start()
+    
+    #Emulator page stuff
+    canvas = TK.Canvas(main_page, height=height, width=width)
+    canvas.pack(side=TK.TOP)
+    device_size = 100
+    canvas.create_line(0,0,0,0, tags="line") #create dummy lines
+    coordinates:list[tuple[TTK.Label]] = list()
+    for device in range(len(emulator._devices)):
+        x, y = get_coordinates_from_index((int((width/2)-(device_size/2)), int((width/2)-(device_size/2))), (int((width/2)-(device_size/2)))-spacing, device, len(emulator._devices))
+        build_device(canvas, device, x, y, device_size)
+        coordinates.append((x,y))
+
+
+    bottom_frame = TK.LabelFrame(main_page, text="Inputs")
+    bottom_frame.pack(side=TK.BOTTOM)
+    TTK.Button(bottom_frame, text="Step", command=step).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="End", command=end).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="Restart algorithm", command=run_function).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="show all Messages", command=show_all_data).pack(side=TK.LEFT)
+    bottom_label = TK.Label(main_page, text="Status")
+    bottom_label.pack(side=TK.BOTTOM)
+
+    #controls page stuff
+
+    TTK.Label(controls_page, text="Controls", font=("Arial", 25)).pack(side=TK.TOP)
+    controls_frame = TTK.Frame(controls_page)
+    controls_frame.pack(side=TK.TOP)
+    name_frame = TTK.Frame(controls_frame)
+    name_frame.pack(side=TK.LEFT)
+    value_frame = TTK.Frame(controls_frame)
+    value_frame.pack(side=TK.RIGHT)
+    TTK.Label(name_frame, text="Space", width=15).pack(side=TK.TOP)
+    TTK.Label(value_frame, text="Step a single time through messages").pack(side=TK.BOTTOM, anchor=TK.NW)
+    TTK.Label(name_frame, text="f", width=15).pack(side=TK.TOP)
+    TTK.Label(value_frame, text="Fast-forward through messages").pack(side=TK.BOTTOM, anchor=TK.NW)
+    TTK.Label(name_frame, text="Enter", width=15).pack(side=TK.TOP)
+    TTK.Label(value_frame, text="Kill stepper daemon and run as an async emulator").pack(side=TK.BOTTOM, anchor=TK.NW)
