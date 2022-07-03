@@ -17,7 +17,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._single = False
         self._list_messages_received:list[MessageStub] = list()
         self._list_messages_sent:list[MessageStub] = list()
-        self._last_message:tuple[str, MessageStub] = ("init") #type(received or sent), message
+        self._last_message:tuple[str, MessageStub] = tuple() #type(received or sent), message
         self._keyheld = False
         self._pick = False
         self.parent = AsyncEmulator
@@ -159,4 +159,3 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self._stepper.start()
         self._stepping = True
         print(f'\t{self._messages_sent}: Step?')
-

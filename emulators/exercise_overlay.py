@@ -2,9 +2,11 @@ from math import sin, cos, pi
 from threading import Thread
 import tkinter as  TK
 import tkinter.ttk as TTK
+from emulators.AsyncEmulator import AsyncEmulator
 from emulators.MessageStub import MessageStub
 
 from emulators.SteppingEmulator import SteppingEmulator
+from emulators.SyncEmulator import SyncEmulator
 from emulators.table import table
 
 def overlay(emulator:SteppingEmulator, run_function):
@@ -124,7 +126,7 @@ def overlay(emulator:SteppingEmulator, run_function):
             bottom_label.config(text="Finished running, kill keyboard listener?... (press any key)")
             Thread(target=stop_emulator).start()
             
-        elif emulator._last_message[0] != "init":
+        elif emulator._last_message != tuple():
             message = emulator._last_message[1]
             canvas.delete("line")
             canvas.create_line(coordinates[message.source][0]+(device_size/2), coordinates[message.source][1]+(device_size/2), coordinates[message.destination][0]+(device_size/2), coordinates[message.destination][1]+(device_size/2), tags="line")
@@ -153,11 +155,69 @@ def overlay(emulator:SteppingEmulator, run_function):
         build_device(canvas, device, x, y, device_size)
         coordinates.append((x,y))
 
+    def swap_emulator(button:TTK.Button):
+        emulator.swap_emulator()
+        button.configure(text=emulator.parent.__name__)
+
+    def show_queue():
+        pass
+
+    def pick_gui():
+        def execute():
+            device = int(device_entry.get())
+            index = int(message_entry.get())
+            if emulator.parent is AsyncEmulator:
+                emulator._messages[device].append(emulator._messages[device].pop(index))
+            elif emulator.parent is SyncEmulator:
+                emulator._last_round_messages[device].append(emulator._last_round_messages[device].pop(index))
+            window.destroy()
+
+        emulator.print_transit()
+        keys = []
+        if emulator.parent is AsyncEmulator:
+            messages = emulator._messages
+        else:
+            messages = emulator._last_round_messages
+        for item in messages.items():
+            keys.append(item[0])
+        keys.sort()
+        window = TK.Toplevel(main_page)
+        header = TTK.Frame(window)
+        header.pack(side=TK.TOP)
+        TTK.Label(header, text=f'Pick a message to be transmitted next').pack(side=TK.LEFT)
+        max_size = 0
+        for m in messages.values():
+            if len(m) > max_size:
+                max_size = len(m)
+        content = [[messages[key][i] if len(messages[key]) > i else " " for key in keys] for i in range(max_size)]
+        content.insert(0, keys)
+        content[0].insert(0, "Message #")
+        for i in range(max_size):
+            content[i+1].insert(0, i)
+        tab = table(window, content, width=15, scrollable="y", title="Pick a message to be transmitted next")
+        tab.pack(side=TK.TOP)
+        footer = TTK.Frame(window)
+        footer.pack(side=TK.BOTTOM)
+        device_frame = TTK.Frame(footer)
+        device_frame.pack(side=TK.TOP)
+        TTK.Button(footer, text="Confirm", command=execute).pack(side=TK.BOTTOM)
+        message_frame = TTK.Frame(footer)
+        message_frame.pack(side=TK.BOTTOM)
+        TTK.Label(device_frame, text="Device: ").pack(side=TK.LEFT)
+        device_entry = TTK.Entry(device_frame)
+        device_entry.pack(side=TK.RIGHT)
+        TTK.Label(message_frame, text="Message: ").pack(side=TK.LEFT)
+        message_entry = TTK.Entry(message_frame)
+        message_entry.pack(side=TK.RIGHT)
 
     bottom_frame = TK.LabelFrame(main_page, text="Inputs")
     bottom_frame.pack(side=TK.BOTTOM)
     TTK.Button(bottom_frame, text="Step", command=step).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="End", command=end).pack(side=TK.LEFT)
+    emulator_button = TTK.Button(bottom_frame, text=emulator.parent.__name__, command=lambda: swap_emulator(emulator_button))
+    emulator_button.pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="Message queue", command=show_queue).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="Pick", command=pick_gui).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="Restart algorithm", command=run_function).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="show all Messages", command=show_all_data).pack(side=TK.LEFT)
     bottom_label = TK.Label(main_page, text="Status")
