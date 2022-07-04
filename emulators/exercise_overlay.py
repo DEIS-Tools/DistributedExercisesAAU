@@ -160,7 +160,18 @@ def overlay(emulator:SteppingEmulator, run_function):
         button.configure(text=emulator.parent.__name__)
 
     def show_queue():
-        pass
+        window = TK.Toplevel(main_page)
+        content = [["Source", "Destination", "Message"]]
+        if emulator.parent is AsyncEmulator:
+            queue = emulator._messages.values()
+        else:
+            queue = emulator._last_round_messages.values()
+        for messages in queue:
+            for message in messages:
+                message_stripped = str(message).replace(f'{message.source} -> {message.destination} : ', "").replace(f'{message.source}->{message.destination} : ', "")
+                content.append([message.source, message.destination, message_stripped])
+        tab = table(window, content, width=15, scrollable="y", title="Message queue")
+        tab.pack(side=TK.LEFT)
 
     def pick_gui():
         def execute():
@@ -190,7 +201,8 @@ def overlay(emulator:SteppingEmulator, run_function):
             if len(m) > max_size:
                 max_size = len(m)
         content = [[messages[key][i] if len(messages[key]) > i else " " for key in keys] for i in range(max_size)]
-        content.insert(0, keys)
+        head = [f'Device {key}' for key in keys]
+        content.insert(0, head)
         content[0].insert(0, "Message #")
         for i in range(max_size):
             content[i+1].insert(0, i)
@@ -219,7 +231,7 @@ def overlay(emulator:SteppingEmulator, run_function):
     TTK.Button(bottom_frame, text="Message queue", command=show_queue).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="Pick", command=pick_gui).pack(side=TK.LEFT)
     TTK.Button(bottom_frame, text="Restart algorithm", command=run_function).pack(side=TK.LEFT)
-    TTK.Button(bottom_frame, text="show all Messages", command=show_all_data).pack(side=TK.LEFT)
+    TTK.Button(bottom_frame, text="Delivered messages", command=show_all_data).pack(side=TK.LEFT)
     bottom_label = TK.Label(main_page, text="Status")
     bottom_label.pack(side=TK.BOTTOM)
 
@@ -238,3 +250,9 @@ def overlay(emulator:SteppingEmulator, run_function):
     TTK.Label(value_frame, text="Fast-forward through messages").pack(side=TK.BOTTOM, anchor=TK.NW)
     TTK.Label(name_frame, text="Enter", width=15).pack(side=TK.TOP)
     TTK.Label(value_frame, text="Kill stepper daemon and run as an async emulator").pack(side=TK.BOTTOM, anchor=TK.NW)
+    TTK.Label(name_frame, text="tab", width=15).pack(side=TK.TOP)
+    TTK.Label(value_frame, text="Show all messages currently waiting to be transmitted").pack(side=TK.BOTTOM, anchor=TK.NW)
+    TTK.Label(name_frame, text="s", width=15).pack(side=TK.TOP)
+    TTK.Label(value_frame, text="Pick the next message waiting to be transmitteed to transmit next").pack(side=TK.BOTTOM, anchor=TK.NW)
+    TTK.Label(name_frame, text="e", width=15).pack(side=TK.TOP)
+    TTK.Label(value_frame, text="Toggle between sync and async emulation").pack(side=TK.BOTTOM, anchor=TK.NW)
