@@ -9,8 +9,8 @@ from emulators.MessageStub import MessageStub
 
 class SyncEmulator(EmulatorStub):
 
-    def __init__(self, number_of_devices: int, kind):
-        super().__init__(number_of_devices, kind)
+    def __init__(self, number_of_devices: int, kind, is_test, lecture):
+        super().__init__(number_of_devices, kind, is_test, lecture)
         self._round_lock = threading.Lock()
         self._done = [False for _ in self.ids()]
         self._awaits = [threading.Lock() for _ in self.ids()]

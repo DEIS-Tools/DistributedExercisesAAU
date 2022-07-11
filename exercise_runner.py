@@ -30,7 +30,7 @@ def fetch_alg(lecture: str, algorithm: str):
     return alg
 
 
-def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int):
+def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int, is_test):
     print(
         f'Running Lecture {lecture_no} Algorithm {algorithm} in a network of type [{network_type}] using {number_of_devices} devices')
     if number_of_devices < 2:
@@ -71,6 +71,7 @@ if __name__ == "__main__":
                         help='whether to use [async] or [sync] network', required=True, choices=['async', 'sync', 'stepping'])
     parser.add_argument('--devices', metavar='N', type=int, nargs=1,
                         help='Number of devices to run', required=True)
+    parser.add_argument('--istest', metavar='is_test', type=bool, nargs=1, help='run using unit test framework', required=False)
     args = parser.parse_args()
 
     run_exercise(args.lecture[0], args.algorithm[0], args.type[0], args.devices[0])

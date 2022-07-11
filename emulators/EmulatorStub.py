@@ -2,12 +2,13 @@ import random
 import threading
 
 from emulators.Medium import Medium
+from emulators.UnitTestMedium import UnitTestMedium
 from emulators.MessageStub import MessageStub
 
 
 class EmulatorStub:
 
-    def __init__(self, number_of_devices: int, kind):
+    def __init__(self, number_of_devices: int, kind, is_test = False, lecture = ""):
         self._nids = number_of_devices
         self._devices = []
         self._threads = []
@@ -15,7 +16,10 @@ class EmulatorStub:
         self._progress = threading.Lock()
 
         for index in self.ids():
-            self._media.append(Medium(index, self))
+            if is_test:
+                self._media.append(UnitTestMedium(index, self, f'tests/{lecture}.csv'))
+            else:
+                self._media.append(Medium(index, self))
             self._devices.append(kind(index, number_of_devices, self._media[-1]))
             self._threads.append(threading.Thread(target=self._run_thread, args=[index]))
 

@@ -10,8 +10,8 @@ from threading import Thread #run getpass in seperate thread
 
 
 class SteppingEmulator(AsyncEmulator):
-    def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
-        super().__init__(number_of_devices, kind)
+    def __init__(self, number_of_devices: int, kind, is_test, lecture): #default init, add stuff here to run when creating object
+        super().__init__(number_of_devices, kind, is_test, lecture)
         self._stepper = Thread(target=lambda: getpass(""), daemon=True)
         self._stepper.start()
         self._stepping = True
