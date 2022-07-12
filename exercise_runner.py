@@ -30,7 +30,7 @@ def fetch_alg(lecture: str, algorithm: str):
     return alg
 
 
-def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int, is_test):
+def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int, is_test=False):
     print(
         f'Running Lecture {lecture_no} Algorithm {algorithm} in a network of type [{network_type}] using {number_of_devices} devices')
     if number_of_devices < 2:
@@ -45,10 +45,9 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
     instance = None
     if lecture_no == 0:
         alg = fetch_alg('demo', 'PingPong')
-        instance = emulator(number_of_devices, alg)
     else:
         alg = fetch_alg(f'exercise{lecture_no}', algorithm)
-        instance = emulator(number_of_devices, alg)
+    instance = emulator(number_of_devices, alg, is_test, lecture_no)
 
     if instance is not None:
         instance.run()
@@ -64,14 +63,23 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
     parser.add_argument('--lecture', metavar='N', type=int, nargs=1,
-                        help='Lecture number', required=True, choices=[0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+                        help='Lecture number', required=False, choices=[0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12])
     parser.add_argument('--algorithm', metavar='alg', type=str, nargs=1,
-                        help='Which algorithm from the exercise to run', required=True)
+                        help='Which algorithm from the exercise to run', required=False)
     parser.add_argument('--type', metavar='nw', type=str, nargs=1,
-                        help='whether to use [async] or [sync] network', required=True, choices=['async', 'sync', 'stepping'])
+                        help='whether to use [async] or [sync] network', required=False, choices=['async', 'sync', 'stepping'])
     parser.add_argument('--devices', metavar='N', type=int, nargs=1,
-                        help='Number of devices to run', required=True)
-    parser.add_argument('--istest', metavar='is_test', type=bool, nargs=1, help='run using unit test framework', required=False)
+                        help='Number of devices to run', required=False)
+    parser.add_argument('--test', help='run using unit test framework', required=False, action='store_true')
     args = parser.parse_args()
 
-    run_exercise(args.lecture[0], args.algorithm[0], args.type[0], args.devices[0])
+    myArgs = {'lecture':0,'algorithm':'PingPong','type':'async','devices':3,'test':False}
+    for arg in args._get_kwargs():
+        if not arg[1] == None: 
+            print(arg[1])
+            if arg[1] is list:
+                myArgs[arg[0]] = arg[1][0] 
+            else:
+                myArgs[arg[0]] = arg[1]
+                
+    run_exercise(myArgs['lecture'], myArgs['algorithm'], myArgs['type'], myArgs['devices'], myArgs['test'])

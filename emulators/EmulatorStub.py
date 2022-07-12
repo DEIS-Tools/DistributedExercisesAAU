@@ -2,22 +2,29 @@ import random
 import threading
 
 from emulators.Medium import Medium
-from emulators.UnitTestMedium import UnitTestMedium
+from emulators.UnitTestMedium import UnitTestMedium, load_execution_sequence
 from emulators.MessageStub import MessageStub
 
 
 class EmulatorStub:
 
-    def __init__(self, number_of_devices: int, kind, is_test = False, lecture = ""):
+    def __init__(self, number_of_devices: int, kind, is_test, lecture):
         self._nids = number_of_devices
         self._devices = []
         self._threads = []
         self._media = []
+        self.execution_sequence = []
         self._progress = threading.Lock()
+
 
         for index in self.ids():
             if is_test:
-                self._media.append(UnitTestMedium(index, self, f'tests/{lecture}.csv'))
+                #execute if running a unit test
+                if lecture == 0:
+                    self.execution_sequence = load_execution_sequence(f'tests/demo.csv', kind)
+                else:
+                    self.execution_sequence = load_execution_sequence(f'tests/exercise{lecture}.csv', kind)
+                self._media.append(UnitTestMedium(index, self))
             else:
                 self._media.append(Medium(index, self))
             self._devices.append(kind(index, number_of_devices, self._media[-1]))

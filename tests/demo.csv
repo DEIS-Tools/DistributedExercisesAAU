@@ -1,60 +1,60 @@
-
-send, 		1,	1,	false
-send, 		2,	2,	true
-send, 		0,	1,	true
-receive, 	0,	1,	true
-receive, 	1,	1,	false
-receive, 	2,	2,	true
-send, 		0,	1,	true
-send, 		2,	2,	true
-send, 		1,	0,	false
-receive, 	0,	1,	true
-receive, 	1,	0,	false
-receive, 	2,	2,	true
-send, 		1,	1,	true
-receive, 	1,	1,	true
-send, 		2,	0,	true
-send, 		0,	0,	false
-receive, 	0,	0,	false
-receive, 	2,	0,	true
-send, 		1,	0,	true
-receive, 	1,	0,	true
-send, 		0,	0,	true
-send, 		1,	1,	true
-send, 		2,	0,	true
-receive, 	0,	0,	true
-receive, 	1,	1,	true
-receive, 	2,	0,	true
-send, 		2,	2,	true
-send, 		0,	2,	true
-send, 		1,	1,	true
-receive, 	2,	2,	true
-receive, 	0,	2,	true
-receive, 	1,	1,	true
-send, 		2,	2,	true
-receive, 	2,	2,	true
-send, 		0,	2,	true
-send, 		1,	1,	true
-send, 		2,	1,	true
-receive, 	2,	1,	true
-receive, 	0,	2,	true
-receive, 	1,	1,	true
-send, 		1,	0,	true
-send, 		0,	1,	true
-send, 		2,	1,	true
-receive, 	1,	0,	true
-receive, 	0,	1,	true
-receive, 	2,	1,	true
-send, 		2,	2,	true
-send, 		1,	0,	true
-send, 		0,	1,	true
-receive, 	2,	2,	true
-receive, 	0,	1,	true
-receive, 	1,	0,	true
-send, 		1,	0,	true
-send, 		2,	2,	true
-send, 		0,	0,	true
-receive, 	1,	0,	true
-receive, 	0,	0,	true
-receive, 	2,	2,	true
-send, 		0,	2,	true
+type,source,destination,message
+send,1,1,false
+send,2,2,true
+send,0,1,true
+receive,0,1,true
+receive,1,1,false
+receive,2,2,true
+send,0,1,true
+send,2,2,true
+send,1,0,false
+receive,0,1,true
+receive,1,0,false
+receive,2,2,true
+send,1,1,true
+receive,1,1,true
+send,2,0,true
+send,0,0,false
+receive,0,0,false
+receive,2,0,true
+send,1,0,true
+receive,1,0,true
+send,0,0,true
+send,1,1,true
+send,2,0,true
+receive,0,0,true
+receive,1,1,true
+receive,2,0,true
+send,2,2,true
+send,0,2,true
+send,1,1,true
+receive,2,2,true
+receive,0,2,true
+receive,1,1,true
+send,2,2,true
+receive,2,2,true
+send,0,2,true
+send,1,1,true
+send,2,1,true
+receive,2,1,true
+receive,0,2,true
+receive,1,1,true
+send,1,0,true
+send,0,1,true
+send,2,1,true
+receive,1,0,true
+receive,0,1,true
+receive,2,1,true
+send,2,2,true
+send,1,0,true
+send,0,1,true
+receive,2,2,true
+receive,0,1,true
+receive,1,0,true
+send,1,0,true
+send,2,2,true
+send,0,0,true
+receive,1,0,true
+receive,0,0,true
+receive,2,2,true
+send,0,2,true
