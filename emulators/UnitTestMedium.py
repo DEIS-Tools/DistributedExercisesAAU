@@ -10,25 +10,35 @@ class UnitTestMedium(Medium):
 
 	def send(self, message:MessageStub):
 		while True:
-			if message is self._emulator.execution_sequence[0][1]:
-				self._emulator.execution_sequence.pop(0)
-				super().send(message)
+			try:
+				if not self._id == self._emulator.execution_sequence[0][1].source or not self._emulator.execution_sequence[0][0] == 'send':
+					sleep(.1)
+					self.send(message)
+				else:
+					break
+			except:
+				if not self._id == self._emulator.execution_sequence[0][1].source or not self._emulator.execution_sequence[0][0] == 'send':
+					sleep(.1)
+					self.send(message)
+				else:
+					break
+		self._emulator.execution_sequence.pop(0)
+		super().send(message)
 
 	def receive(self):
-		message = super().receive()
-		while True:
-			if message is self._emulator.execution_sequence[0][1]:
-				self._emulator.execution_sequence.pop(0)
-				return message
+		print(f'{self._id} reached receive function')
+		if self._emulator.execution_sequence[0][1].destination == self._id and self._emulator.execution_sequence[0][0] == 'receive':
+			self._emulator.execution_sequence.pop(0)
+			return super().receive()
 	
 
 
-def load_execution_sequence(path, message_type) -> list[tuple[str, MessageStub]]:
+def load_execution_sequence(path) -> list[tuple[str, MessageStub]]:
 	with open(path) as file:
 		csv_reader = reader(file)
 		execution_sequence:list[tuple[str, MessageStub]] = list()
 		for row in csv_reader:
 			if not row[0] == 'send' and not row[0] == 'receive':
 				continue
-			execution_sequence.append((row[0], message_type(int(row[1]), int(row[2]), row[3])))
+			execution_sequence.append((row[0], MessageStub(int(row[1]), int(row[2]))))
 	return execution_sequence

@@ -76,10 +76,12 @@ if __name__ == "__main__":
     myArgs = {'lecture':0,'algorithm':'PingPong','type':'async','devices':3,'test':False}
     for arg in args._get_kwargs():
         if not arg[1] == None: 
-            print(arg[1])
-            if arg[1] is list:
+            try:
                 myArgs[arg[0]] = arg[1][0] 
-            else:
+            except:
                 myArgs[arg[0]] = arg[1]
-                
+            
+    if myArgs['lecture'] == 0 or myArgs['algorithm'] == 'PingPong':
+        myArgs['lecture'] = 0
+        myArgs['algorithm'] = 'PingPong'
     run_exercise(myArgs['lecture'], myArgs['algorithm'], myArgs['type'], myArgs['devices'], myArgs['test'])

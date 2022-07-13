@@ -14,6 +14,8 @@ class EmulatorStub:
         self._threads = []
         self._media = []
         self.execution_sequence = []
+        self.is_test = is_test
+        self.lecture = lecture
         self._progress = threading.Lock()
 
 
@@ -21,9 +23,9 @@ class EmulatorStub:
             if is_test:
                 #execute if running a unit test
                 if lecture == 0:
-                    self.execution_sequence = load_execution_sequence(f'tests/demo.csv', kind)
+                    self.execution_sequence = load_execution_sequence(f'emulators/tests/demo.csv')
                 else:
-                    self.execution_sequence = load_execution_sequence(f'tests/exercise{lecture}.csv', kind)
+                    self.execution_sequence = load_execution_sequence(f'emulators/tests/exercise{lecture}.csv')
                 self._media.append(UnitTestMedium(index, self))
             else:
                 self._media.append(Medium(index, self))
@@ -55,6 +57,14 @@ class EmulatorStub:
     def print_result(self):
         for d in self._devices:
             d.print_result()
+        if self.is_test:
+            print('Running test on the entire result')
+            from importlib import import_module
+            if self.lecture == 0:
+                module = import_module('emulators.tests.modules.demo')
+            else:
+                module = import_module(f'emulators.tests.modules.exercise{self.lecture}')
+            module.test().run(self._devices)
 
     def run(self):
         raise NotImplementedError(f'Please contact the instructor')
