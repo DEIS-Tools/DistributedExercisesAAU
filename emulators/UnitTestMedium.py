@@ -28,7 +28,6 @@ def load_execution_sequence(path) -> list[int]:
 		csv_reader = reader(file)
 		execution_sequence:list[int] = list()
 		for row in csv_reader:
-			if row[0] == 'source' or row[0] == 'destination':
-				continue
-			execution_sequence.append(int(row[0]))
+			for value in row:
+				execution_sequence.append(int(value))
 	return execution_sequence
