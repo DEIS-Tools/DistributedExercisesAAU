@@ -30,7 +30,7 @@ def fetch_alg(lecture: str, algorithm: str):
     return alg
 
 
-def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int, is_test=False):
+def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int, test_file:str, is_test=False):
     print(
         f'Running Lecture {lecture_no} Algorithm {algorithm} in a network of type [{network_type}] using {number_of_devices} devices')
     if number_of_devices < 2:
@@ -47,7 +47,7 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
         alg = fetch_alg('demo', 'PingPong')
     else:
         alg = fetch_alg(f'exercise{lecture_no}', algorithm)
-    instance = emulator(number_of_devices, alg, is_test, lecture_no)
+    instance = emulator(number_of_devices, alg, is_test, test_file)
 
     if instance is not None:
         instance.run()
@@ -71,17 +71,21 @@ if __name__ == "__main__":
     parser.add_argument('--devices', metavar='N', type=int, nargs=1,
                         help='Number of devices to run', required=False)
     parser.add_argument('--test', help='run using unit test framework', required=False, action='store_true')
+    parser.add_argument('--test_file', help='optional: name of custom test csv', required=False, nargs=1, type=str)
     args = parser.parse_args()
 
-    myArgs = {'lecture':0,'algorithm':'PingPong','type':'async','devices':3,'test':False}
+    myArgs = {'lecture':0,'algorithm':'PingPong','type':'async','devices':3,'test':False, 'test_file':'demo.csv'}
     for arg in args._get_kwargs():
         if not arg[1] == None: 
             try:
                 myArgs[arg[0]] = arg[1][0] 
             except:
                 myArgs[arg[0]] = arg[1]
-            
+    
+    if myArgs['test_file'] == 'demo.csv':
+        myArgs['test_file'] = 'demo.csv' if myArgs['lecture'] == 0 else f'exercise{myArgs["lecture"]}.csv'
+
     if myArgs['lecture'] == 0 or myArgs['algorithm'] == 'PingPong':
         myArgs['lecture'] = 0
         myArgs['algorithm'] = 'PingPong'
-    run_exercise(myArgs['lecture'], myArgs['algorithm'], myArgs['type'], myArgs['devices'], myArgs['test'])
+    run_exercise(myArgs['lecture'], myArgs['algorithm'], myArgs['type'], myArgs['devices'], myArgs['test_file'], myArgs['test'])
