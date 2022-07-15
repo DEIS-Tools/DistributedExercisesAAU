@@ -15,6 +15,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._stepper.start()
         self._stepping = True
         self._single = False
+        self.last_action = ""
         self._list_messages_received:list[MessageStub] = list()
         self._list_messages_sent:list[MessageStub] = list()
         self._last_message:tuple[str, MessageStub] = tuple() #type(received or sent), message
@@ -40,6 +41,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         if result != None and self._stepping and self._stepper.is_alive():
             self.step()
             self._list_messages_received.append(result)
+            self.last_action = "receive"
             self._last_message = ("received", result)
         self._progress.release()
         return result
@@ -48,6 +50,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._progress.acquire()
         if self._stepping and self._stepper.is_alive():
             self.step()
+            self.last_action = "send"
             self._list_messages_sent.append(message)
             self._last_message = ("sent", message)
         self._progress.release()
