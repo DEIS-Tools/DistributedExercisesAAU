@@ -1,5 +1,6 @@
 from random import randint
 from threading import Thread
+from time import sleep
 from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, QLabel
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
@@ -10,14 +11,14 @@ from emulators.MessageStub import MessageStub
 from emulators.table import Table
 from emulators.SteppingEmulator import SteppingEmulator
 
-def circle_button_style(size):
+def circle_button_style(size, color = "black"):
 	return f'''
 	QPushButton {{
 		background-color: transparent; 
 		border-style: solid; 
 		border-width: 2px; 
 		border-radius: {int(size/2)}px; 
-		border-color: black; 
+		border-color: {color}; 
 		max-width: {size}px; 
 		max-height: {size}px; 
 		min-width: {size}px; 
@@ -37,6 +38,8 @@ class Window(QWidget):
 	h = 600
 	w = 600
 	device_size = 80
+	last_message = None
+	buttons:dict[int, QPushButton] = {}
 	windows = list()
 
 	def __init__(self, elements, restart_function, emulator:SteppingEmulator):
@@ -49,7 +52,7 @@ class Window(QWidget):
 		tabs.addTab(self.controls(), 'controls')
 		layout.addWidget(tabs)
 		self.setLayout(layout)
-		self.setWindowTitle("Test")
+		self.setWindowTitle("Stepping Emulator")
 		self.setWindowIcon(QIcon("icon.ico"))
 
 	def coordinates(self, center, r, i, n):
@@ -120,16 +123,47 @@ class Window(QWidget):
 	def end(self):
 		self.emulator._stepping = False
 		while not self.emulator.all_terminated():
-			pass
+			self.set_device_color()
 		Thread(target=self.stop_stepper, daemon=True).start()
 	
+	def set_device_color(self):
+		sleep(.1)
+		messages = self.emulator._list_messages_sent if self.emulator.last_action == "send" else self.emulator._list_messages_received
+		if len(messages) != 0:
+			last_message = messages[len(messages)-1]
+			if not last_message == self.last_message:
+				for button in self.buttons.values():
+					button.setStyleSheet(circle_button_style(self.device_size))
+				if last_message.source == last_message.destination:
+					self.buttons[last_message.source].setStyleSheet(circle_button_style(self.device_size, 'yellow'))
+				else:
+					self.buttons[last_message.source].setStyleSheet(circle_button_style(self.device_size, 'green'))
+					self.buttons[last_message.destination].setStyleSheet(circle_button_style(self.device_size, 'red'))
+				self.last_message = last_message
+
 	def step(self):
 		self.emulator._single = True
 		if self.emulator.all_terminated():
 			Thread(target=self.stop_stepper, daemon=True).start()
+		self.set_device_color()
+
+	def restart_algorithm(self, function):
+		self.windows.append(function())
 
 	def main(self, num_devices, restart_function):
 		main_tab = QWidget()
+		green = QLabel("green: source", main_tab)
+		green.setStyleSheet("color: green;")
+		green.move(5, 0)
+		green.show()
+		red = QLabel("red: destination", main_tab)
+		red.setStyleSheet("color: red;")
+		red.move(5, 20)
+		red.show()
+		yellow = QLabel("yellow: same device", main_tab)
+		yellow.setStyleSheet("color: yellow;")
+		yellow.move(5, 40)
+		yellow.show()
 		layout = QVBoxLayout()
 		device_area = QWidget()
 		device_area.setFixedSize(500, 500)
@@ -142,8 +176,9 @@ class Window(QWidget):
 			button.setStyleSheet(circle_button_style(self.device_size))
 			button.move(x, int(y - (self.device_size/2)))
 			button.clicked.connect(self.show_device_data(i))
+			self.buttons[i] = button
 		
-		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': restart_function, 'Show all messages': self.show_all_data}
+		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data}
 		inner_layout = QHBoxLayout()
 		for action in button_actions.items():
 			button = QPushButton(action[0])
@@ -168,6 +203,10 @@ class Window(QWidget):
 			main.addLayout(inner)
 		controls_tab.setLayout(main)
 		return controls_tab
+	
+	def closeEvent(self, event):
+		Thread(target=self.end).start()
+		event.accept()
 
 if __name__ == "__main__":
 	app = QApplication(argv)
