@@ -2,17 +2,15 @@
 This repository contains a small framework written in python for emulating *asynchronous* and *synchronous* distributed systems.
 ## Install
 The stepping emulator requires the following packages to run
-*  tkinter
+*  PyQt6
 *  pynput
+*  cryptography
 
 These packages can be installed using `pip` as shown below:
 ```bash
-pip3.10 install --user tk
+pip3.10 install --user pyqt6
 pip3.10 install --user pynput
-```
-For the development environment used for this framework (Arch Linux), tkinter also requires the following package installed via `pacman`:
-```bash
-pacman -Sy tk
+pip3.10 install --user cryptography
 ```
 Installation steps may vary depending on the operating system, for windows, installing tkinter through `pip` should be enough.
 
