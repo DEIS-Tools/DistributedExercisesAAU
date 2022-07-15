@@ -1,42 +1,36 @@
-import tkinter as TK
-import tkinter.ttk as TTK
 from exercise_runner import run_exercise
+from PyQt6.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QPushButton, QHBoxLayout, QLabel
+from PyQt6.QtGui import QIcon
+from sys import argv
+app = QApplication(argv)
 
-def input_builder(master, title:str, entry_content:str):
-    frame = TK.Frame(master)
-    text = TTK.Label(frame, text=title)
-    entry = TTK.Entry(frame)
-    entry.insert(TK.END, entry_content)
-    frame.pack(side=TK.LEFT)
-    text.pack(side=TK.TOP)
-    entry.pack(side=TK.BOTTOM)
-    return frame, entry
-
-def run():
-    lecture = int(lecture_entry.get())
-    algorithm = algorithm_entry.get()
-    type = type_entry.get()
-    devices = int(devices_entry.get())
-    print("running exercise")
-    print(f'with data: {lecture, algorithm, type, devices}')
-    run_exercise(lecture, algorithm, type, devices)
+windows = list()
 
 
-master = TK.Tk()
+window = QWidget()
+window.setWindowIcon(QIcon('icon.ico'))
+main = QVBoxLayout()
+window.setFixedSize(500, 100)
+start_button = QPushButton("start")
+main.addWidget(start_button)
+input_area_labels = QHBoxLayout()
+input_area_areas = QHBoxLayout()
+actions = {'Lecture':[print, 0], 'Algorithm': [print, 'PingPong'], 'Type': [print, 'stepping'], 'Devices': [print, 3]}
+
+for action in actions.items():
+    input_area_labels.addWidget(QLabel(action[0]))
+    field = QLineEdit()
+    input_area_areas.addWidget(field)
+    field.setText(str(action[1][1]))
+    actions[action[0]][0] = field.text
+main.addLayout(input_area_labels)
+main.addLayout(input_area_areas)
 
 
-input_area = TK.LabelFrame(text="Input")
-input_area.pack(side=TK.BOTTOM)
+def start_exercise():
+    windows.append(run_exercise(int(actions['Lecture'][0]()), actions['Algorithm'][0](), actions['Type'][0](), int(actions['Devices'][0]())))
 
-lecture_frame,   lecture_entry   = input_builder(input_area, "Lecture",   0)
-algorithm_frame, algorithm_entry = input_builder(input_area, "Algorithm", "PingPong")
-type_frame,      type_entry      = input_builder(input_area, "Type",      "stepping")
-devices_frame,   devices_entry   = input_builder(input_area, "Devices",   3)
-
-start_button = TTK.Button(master, text="Start", command=run)
-start_button.pack(side=TK.TOP)
-
-master.resizable(False,False)
-
-master.title("Distributed Exercises AAU")
-master.mainloop()
+start_button.clicked.connect(start_exercise)
+window.setLayout(main)
+window.show()
+app.exec()
