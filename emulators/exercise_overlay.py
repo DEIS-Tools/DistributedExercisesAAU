@@ -1,11 +1,12 @@
 from random import randint
 from threading import Thread
 from time import sleep
-from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, QLabel
+from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, QLabel, QLineEdit
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from sys import argv
 from math import cos, sin, pi
+from emulators.AsyncEmulator import AsyncEmulator
 from emulators.MessageStub import MessageStub
 
 from emulators.table import Table
@@ -35,7 +36,7 @@ def circle_button_style(size, color = "black"):
 	'''
 
 class Window(QWidget):
-	h = 600
+	h = 640
 	w = 600
 	device_size = 80
 	last_message = None
@@ -116,6 +117,75 @@ class Window(QWidget):
 		table.show()
 		return table
 
+	def show_queue(self):
+		content = [["Source", "Destination", "Message"]]
+		if self.emulator.parent is AsyncEmulator:
+			queue = self.emulator._messages.values()
+		elif self.emulator:
+			queue = self.emulator._last_round_messages.values()
+		for messages in queue:
+			for message in messages:
+				message_stripped = str(message).replace(f'{message.source} -> {message.destination} : ', "").replace(f'{message.source}->{message.destination} : ', "")
+				content.append([str(message.source), str(message.destination), message_stripped])
+		table = Table(content, "Message queue")
+		self.windows.append(table)
+		table.setFixedSize(500, 500)
+		table.show()
+		return table
+
+	def pick(self):
+		def execute():
+			device = int(footer_content['Device: '].text())
+			index = int(footer_content['Message: '].text())
+			if self.emulator.parent is AsyncEmulator:
+				self.emulator._messages[device].append(self.emulator._messages[device].pop(index))
+			else:
+				self.emulator._last_round_messages[device].append(self.emulator._last_round_messages[device].pop(index))
+			window.destroy(True, True)
+
+		self.emulator.print_transit()
+		keys = []
+		if self.emulator.parent is AsyncEmulator:
+			messages = self.emulator._messages
+		else:
+			messages = self.emulator._last_round_messages
+		if len(messages) == 0:
+			return
+		for item in messages.items():
+			keys.append(item[0])
+		keys.sort()
+		window = QWidget()
+		layout = QVBoxLayout()
+		header = QLabel("Pick a message to be transmitted next")
+		layout.addWidget(header)
+		max_size = 0
+		for m in messages.values():
+			if len(m) > max_size:
+				max_size = len(m)
+		content = [[str(messages[key][i]) if len(messages[key]) > i else " " for key in keys] for i in range(max_size)]
+		content.insert(0, [f'Device {key}' for key in keys])
+		content[0].insert(0, "Message #")
+		for i in range(max_size):
+			content[i+1].insert(0, str(i))
+		table = Table(content, "Pick a message to be transmitted next")
+		layout.addWidget(table)
+		footer_content = {"Device: ": QLineEdit(), "Message: ": QLineEdit()}
+		for entry in footer_content.items():
+			frame = QHBoxLayout()
+			frame.addWidget(QLabel(entry[0]))
+			frame.addWidget(entry[1])
+			layout.addLayout(frame)
+
+		button = QPushButton('Confirm')
+		button.clicked.connect(execute)
+		layout.addWidget(button)
+
+		window.setLayout(layout)
+		window.show()
+		self.windows.append(window)
+		
+
+
 	def stop_stepper(self):
 		self.emulator.listener.stop()
 		self.emulator.listener.join()
@@ -178,9 +248,14 @@ class Window(QWidget):
 			button.clicked.connect(self.show_device_data(i))
 			self.buttons[i] = button
 		
-		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data}
+		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data, 'Show queue': self.show_queue, 'Switch emulator': self.emulator.swap_emulator, 'Pick': self.pick}
 		inner_layout = QHBoxLayout()
+		index = 0
 		for action in button_actions.items():
+			index+=1
+			if index == 4:
+				layout.addLayout(inner_layout)
+				inner_layout = QHBoxLayout()
 			button = QPushButton(action[0])
 			button.clicked.connect(action[1])
 			inner_layout.addWidget(button)
@@ -190,17 +265,28 @@ class Window(QWidget):
 
 	def controls(self):
 		controls_tab = QWidget()
-		content = {'Space': 'Step a single time through messages', 'f': 'Fast forward through messages', 'Enter': 'Kill stepper daemon and run as an async emulator'}
+		content = {
+			'Space': 	'Step a single time through messages', 
+			'f': 		'Fast forward through messages', 
+			'Enter': 	'Kill stepper daemon and run as an async emulator',
+			'tab': 		'Show all messages currently waiting to be transmitted',
+			's':		'Pick the next message waiting to be transmitted to transmit next',
+			'e':		'Toggle between sync and async emulation'
+		}
 		main = QVBoxLayout()
 		main.setAlignment(Qt.AlignmentFlag.AlignTop)
 		controls = QLabel("Controls")
 		controls.setAlignment(Qt.AlignmentFlag.AlignCenter)
 		main.addWidget(controls)
-		for item in content.items():
-			inner = QHBoxLayout()
-			inner.addWidget(QLabel(item[0]))
-			inner.addWidget(QLabel(item[1]))
-			main.addLayout(inner)
+		top = QHBoxLayout()
+		key_layout = QVBoxLayout()
+		value_layout = QVBoxLayout()
+		for key in content.keys():
+			key_layout.addWidget(QLabel(key))
+			value_layout.addWidget(QLabel(content[key]))
+		top.addLayout(key_layout)
+		top.addLayout(value_layout)
+		main.addLayout(top)
 		controls_tab.setLayout(main)
 		return controls_tab
 	

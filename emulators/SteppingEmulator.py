@@ -36,8 +36,8 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         print(msg)
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
-        result = self.parent.dequeue(self, index)
         self._progress.acquire()
+        result = self.parent.dequeue(self, index, True)
         if result != None and self._stepping and self._stepper.is_alive():
             self.step()
             self._list_messages_received.append(result)
@@ -53,9 +53,9 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self.last_action = "send"
             self._list_messages_sent.append(message)
             self._last_message = ("sent", message)
-        self._progress.release()
         
-        return self.parent.queue(self, message)
+        self.parent.queue(self, message, True)
+        self._progress.release()
 
     #the main program to stop execution
     def step(self):
