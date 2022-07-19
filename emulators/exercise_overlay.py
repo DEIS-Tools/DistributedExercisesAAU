@@ -8,6 +8,7 @@ from sys import argv
 from math import cos, sin, pi
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.MessageStub import MessageStub
+from emulators.SyncEmulator import SyncEmulator
 
 from emulators.table import Table
 from emulators.SteppingEmulator import SteppingEmulator
@@ -55,6 +56,7 @@ class Window(QWidget):
 		self.setLayout(layout)
 		self.setWindowTitle("Stepping Emulator")
 		self.setWindowIcon(QIcon("icon.ico"))
+		self.set_device_color()
 
 	def coordinates(self, center, r, i, n):
 		x = sin((i*2*pi)/n)
@@ -121,7 +123,7 @@ class Window(QWidget):
 		content = [["Source", "Destination", "Message"]]
 		if self.emulator.parent is AsyncEmulator:
 			queue = self.emulator._messages.values()
-		elif self.emulator:
+		else:
 			queue = self.emulator._last_round_messages.values()
 		for messages in queue:
 			for message in messages:
@@ -179,6 +181,7 @@ class Window(QWidget):
 		button = QPushButton('Confirm')
 		button.clicked.connect(execute)
 		layout.addWidget(button)
+		window.setFixedSize(150*len(self.emulator._devices)+1, 400)
 
 		window.setLayout(layout)
 		window.show()
@@ -248,7 +251,7 @@ class Window(QWidget):
 			button.clicked.connect(self.show_device_data(i))
 			self.buttons[i] = button
 		
-		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data, 'Show queue': self.show_queue, 'Switch emulator': self.emulator.swap_emulator, 'Pick': self.pick}
+		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data, 'Switch emulator': self.emulator.swap_emulator, 'Show queue': self.show_queue, 'Pick': self.pick}
 		inner_layout = QHBoxLayout()
 		index = 0
 		for action in button_actions.items():
