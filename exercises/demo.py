@@ -18,7 +18,10 @@ class PingMessage(MessageStub):
 
     # remember to implement the __str__ method such that the debug of the framework works!
     def __str__(self):
-        return f'{self.source} -> {self.destination} : ping? {self.is_ping}'
+        if self.is_ping:
+            return f'{self.source} -> {self.destination} : Ping'
+        else:
+            return f'{self.source} -> {self.destination} : Pong'
 
 
 # This class extends on the basic Device class. We will implement the protocol in the run method

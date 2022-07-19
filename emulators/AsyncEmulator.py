@@ -14,7 +14,7 @@ class AsyncEmulator(EmulatorStub):
     def __init__(self, number_of_devices: int, kind):
         super().__init__(number_of_devices, kind)
         self._terminated = 0
-        self._messages = {}
+        self._messages:dict[int, list[MessageStub]] = {}
         self._messages_sent = 0
 
     def run(self):
@@ -34,8 +34,9 @@ class AsyncEmulator(EmulatorStub):
             t.join()
         return
 
-    def queue(self, message: MessageStub):
-        self._progress.acquire()
+    def queue(self, message: MessageStub, stepper=False):
+        if not stepper:
+            self._progress.acquire()
         self._messages_sent += 1
         print(f'\tSend {message}')
         if message.destination not in self._messages:
@@ -43,20 +44,25 @@ class AsyncEmulator(EmulatorStub):
         self._messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
         random.shuffle(self._messages[message.destination]) # shuffle to emulate changes in order
         time.sleep(random.uniform(0.01, 0.1)) # try to obfuscate delays and emulate network delays
-        self._progress.release()
-
-    def dequeue(self, index: int) -> Optional[MessageStub]:
-        self._progress.acquire()
-        if index not in self._messages:
+        if not stepper:
             self._progress.release()
+
+    def dequeue(self, index: int, stepper=False) -> Optional[MessageStub]:
+        if not stepper:
+            self._progress.acquire()
+        if index not in self._messages:
+            if not stepper:
+                self._progress.release()
             return None
         elif len(self._messages[index]) == 0:
-            self._progress.release()
+            if not stepper:
+                self._progress.release()
             return None
         else:
             m = self._messages[index].pop()
             print(f'\tRecieve {m}')
-            self._progress.release()
+            if not stepper:
+                self._progress.release()
             return m
 
     def done(self, index: int):

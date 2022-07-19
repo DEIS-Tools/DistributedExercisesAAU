@@ -14,7 +14,7 @@ class SyncEmulator(EmulatorStub):
         self._round_lock = threading.Lock()
         self._done = [False for _ in self.ids()]
         self._awaits = [threading.Lock() for _ in self.ids()]
-        self._last_round_messages = {}
+        self._last_round_messages:dict[int, list[MessageStub]] = {}
         self._current_round_messages = {}
         self._messages_sent = 0
         self._rounds = 0
@@ -62,27 +62,33 @@ class SyncEmulator(EmulatorStub):
             t.join()
         return
 
-    def queue(self, message: MessageStub):
-        self._progress.acquire()
+    def queue(self, message: MessageStub, stepper=False):
+        if not stepper:
+            self._progress.acquire()
         self._messages_sent += 1
         print(f'\tSend {message}')
         if message.destination not in self._current_round_messages:
             self._current_round_messages[message.destination] = []
         self._current_round_messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
-        self._progress.release()
-
-    def dequeue(self, index: int) -> Optional[MessageStub]:
-        self._progress.acquire()
-        if index not in self._last_round_messages:
+        if not stepper:
             self._progress.release()
+
+    def dequeue(self, index: int, stepper=False) -> Optional[MessageStub]:
+        if not stepper:
+            self._progress.acquire()
+        if index not in self._last_round_messages:
+            if not stepper:
+                self._progress.release()
             return None
         elif len(self._last_round_messages[index]) == 0:
-            self._progress.release()
+            if not stepper:
+                self._progress.release()
             return None
         else:
             m = self._last_round_messages[index].pop()
             print(f'\tReceive {m}')
-            self._progress.release()
+            if not stepper:
+                self._progress.release()
             return m
 
     def done(self, index: int):
