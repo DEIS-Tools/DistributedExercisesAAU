@@ -282,3 +282,21 @@ NOTICE: To execute the code, issue for example:
 ```bash
 python3.10 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
 ```
+
+
+## Frequently Asked Questions
+
+# How do I install it under Ubuntu
+
+Since this software needs python 3.10, it is necessary to install it, at least in a virtual environment.
+
+I would suggest to perform the following commands, prior to the commands under the [Install](#Install) section:
+
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get install python3.10-dev
+sudo apt-get install python3.10-venv 
+python3.10 -m venv ds
+source ds/bin/activate
+```
+
