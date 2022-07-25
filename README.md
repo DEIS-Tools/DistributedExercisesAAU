@@ -14,7 +14,7 @@ pip3.10 install --user cryptography
 ```
 Installation steps may vary depending on the operating system, for windows, installing tkinter through `pip` should be enough.
 
-The framework is tested in both `python3.9` and `python3.10`, both versions should work.
+The framework is tested under `python3.10`.
 
 ## General
 Exercises will be described later in this document.
