@@ -8,15 +8,13 @@ The stepping emulator requires the following packages to run
 
 These packages can be installed using `pip` as shown below:
 ```bash
-pip3.10 install --user pyqt6
-pip3.10 install --user pynput
-pip3.10 install --user cryptography
+pip install --user -r requirements.txt
 ```
-Installation steps may vary depending on the operating system, for windows, installing tkinter through `pip` should be enough.
 
-The framework is tested under `python3.10`.
-
+The framework is tested under `python3.10` in Arch Linux, Ubuntu and Windows.
 ## General
+A FAQ can be found [here](https://github.com/DEIS-Tools/DistributedExercisesAAU/wiki)
+
 Exercises will be described later in this document.
 
 In general avoid changing any of the files in the `emulators` subdirectory.
@@ -281,22 +279,5 @@ python3.10 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type 
 NOTICE: To execute the code, issue for example:
 ```bash
 python3.10 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
-```
-
-
-## Frequently Asked Questions
-
-# How do I install it under Ubuntu
-
-Since this software needs python 3.10, it is necessary to install it, at least in a virtual environment.
-
-I would suggest to perform the following commands, prior to the commands under the [Install](#Install) section:
-
-```bash
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt-get install python3.10-dev
-sudo apt-get install python3.10-venv 
-python3.10 -m venv ds
-source ds/bin/activate
 ```
 
