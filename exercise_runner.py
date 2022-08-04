@@ -47,7 +47,7 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
         alg = fetch_alg('demo', 'PingPong')
     else:
         alg = fetch_alg(f'exercise{lecture_no}', algorithm)
-    instance = emulator(number_of_devices, alg, is_test, test_file)
+    instance = emulator(number_of_devices, alg, is_test, test_file, lecture_no)
 
     if instance is not None:
         instance.run()

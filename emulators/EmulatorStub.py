@@ -8,7 +8,7 @@ from emulators.MessageStub import MessageStub
 
 class EmulatorStub:
 
-    def __init__(self, number_of_devices: int, kind, is_test, test_file):
+    def __init__(self, number_of_devices: int, kind, is_test, test_file, lecture):
         self._nids = number_of_devices
         self._devices = []
         self._threads = []
@@ -16,6 +16,7 @@ class EmulatorStub:
         self.sending_execution_sequence = []
         self.receiving_execution_sequence = []
         self.is_test = is_test
+        self.lecture = lecture
         self._progress = threading.Lock()
 
 
@@ -24,7 +25,7 @@ class EmulatorStub:
                 #execute if running a unit test
                 self.sending_execution_sequence = load_execution_sequence(f'emulators/tests/sending/{test_file}')
                 self.receiving_execution_sequence = load_execution_sequence(f'emulators/tests/receiving/{test_file}')
-                self._media.append(UnitTestMedium(index, self))
+                self._media.append(UnitTestMedium(index, self, lecture))
             else:
                 self._media.append(Medium(index, self))
             self._devices.append(kind(index, number_of_devices, self._media[-1]))

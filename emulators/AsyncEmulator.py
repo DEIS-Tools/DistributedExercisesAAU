@@ -11,8 +11,8 @@ from emulators.MessageStub import MessageStub
 
 class AsyncEmulator(EmulatorStub):
 
-    def __init__(self, number_of_devices: int, kind, is_test, test_file):
-        super().__init__(number_of_devices, kind, is_test, test_file)
+    def __init__(self, number_of_devices: int, kind, is_test, test_file, lecture):
+        super().__init__(number_of_devices, kind, is_test, test_file, lecture)
         self._terminated = 0
         self._messages = {}
         self._messages_sent = 0
