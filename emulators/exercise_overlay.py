@@ -135,7 +135,7 @@ class Window(QWidget):
 		table.show()
 		return table
 
-	def pick(self):
+	def old_pick(self):
 		def execute():
 			device = int(footer_content['Device: '].text())
 			index = int(footer_content['Message: '].text())
@@ -143,6 +143,8 @@ class Window(QWidget):
 				self.emulator._messages[device].append(self.emulator._messages[device].pop(index))
 			else:
 				self.emulator._last_round_messages[device].append(self.emulator._last_round_messages[device].pop(index))
+			self.emulator.is_pick = True
+			self.emulator.pick_device = device
 			window.destroy(True, True)
 
 		self.emulator.print_transit()
@@ -186,6 +188,61 @@ class Window(QWidget):
 		window.setLayout(layout)
 		window.show()
 		self.windows.append(window)
+
+	def pick(self):
+		def execute(device, index):
+			def inner_execute():
+				if self.emulator.parent is AsyncEmulator:
+					message = self.emulator._messages[device][index]
+				else:
+					message = self.emulator._last_round_messages[device][index]
+					
+				self.emulator.next_message = message
+				window.destroy(True, True)
+				while not self.emulator.last_action == "receive" and not self.last_message == message:
+					self.step()
+
+			return inner_execute
+
+		self.emulator.print_transit()
+		keys = []
+		if self.emulator.parent is AsyncEmulator:
+			messages = self.emulator._messages
+		else:
+			messages = self.emulator._last_round_messages
+		if len(messages) == 0:
+			return
+		for item in messages.items():
+			keys.append(item[0])
+		keys.sort()
+		max_size = 0
+		for m in messages.values():
+			if len(m) > max_size:
+				max_size = len(m)
+
+		window = QWidget()
+		layout = QVBoxLayout()
+
+		content = []
+		for i in range(max_size):
+			for key in keys:
+				content.append([])
+				if len(messages[key]) > i:
+					button = QPushButton(str(messages[key][i]))
+					function_reference = execute(key, i)
+					button.clicked.connect(function_reference)
+					content[i].append(button)
+		content.insert(0, [f'Device {key}' for key in keys])
+		content[0].insert(0, "Message #")
+		for i in range(max_size):
+			content[i+1].insert(0, str(i))
+		table = Table(content, "Pick a message to be transmitted next to a device")
+		layout.addWidget(table)
+		window.setLayout(layout)
+		window.show()
+		self.windows.append(window)
+		
+
 		
 
 

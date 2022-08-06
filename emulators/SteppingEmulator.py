@@ -4,7 +4,7 @@ from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
 from pynput import keyboard
 from getpass import getpass #getpass to hide input, cleaner terminal
-from threading import Thread #run getpass in seperate thread
+from threading import Lock, Thread #run getpass in seperate thread
 
 
 
@@ -20,6 +20,8 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._list_messages_sent:list[MessageStub] = list()
         self._keyheld = False
         self._pick = False
+        self.next_message:MessageStub = None
+        self.wait_lock = Lock()
         self.parent = AsyncEmulator
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
@@ -36,7 +38,30 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
         self._progress.acquire()
-        result = self.parent.dequeue(self, index, True)
+        init = False
+        while not self.next_message == None and not index == self.next_message.destination:
+            if not init:
+                #print(f'Device #{index} entered dequeue loop')
+                init = True
+                self._progress.release()
+                self.wait_lock.acquire()
+
+        if init:
+            #print(f'Device #{index} exited dequeue loop')
+            self.wait_lock.release()
+            self._progress.acquire()
+
+        if not self.next_message == None:
+            if self.parent == AsyncEmulator:
+                result = self._messages[index].pop(self._messages[index].index(self.next_message))
+            else:
+                result = self._last_round_messages[index].pop(self._last_round_messages[index].index(self.next_message))
+            print(f'\tRecieve {result}')
+
+            self.next_message = None
+        else:
+            result = self.parent.dequeue(self, index, True)
+
         if result != None:
             self._list_messages_received.append(result)
             self.last_action = "receive"
@@ -48,6 +73,18 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     
     def queue(self, message: MessageStub):
         self._progress.acquire()
+        init = False
+        while not self.next_message == None and not message.source == self.next_message.destination:
+            if not init:
+                #print(f'Device #{message.source} entered queue loop')
+                init = True
+                self._progress.release()
+                self.wait_lock.acquire()
+        if init:
+            #print(f'Device #{message.source} exited queue loop')
+            self.wait_lock.release()
+            self._progress.acquire()
+
         self.parent.queue(self, message, True)
         self.last_action = "send"
         self._list_messages_sent.append(message)

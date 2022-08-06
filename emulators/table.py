@@ -1,9 +1,10 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QScrollArea
+from typing import Any
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QScrollArea, QPushButton
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 
 class Table(QScrollArea):
-	def __init__(self, content:list[list[str]], title="table"):
+	def __init__(self, content:list[list[str | QWidget]], title="table"):
 		super().__init__()
 		widget = QWidget()
 		self.setWindowIcon(QIcon('icon.ico'))
@@ -13,8 +14,11 @@ class Table(QScrollArea):
 		for row in content:
 			column = QHBoxLayout()
 			for element in row:
-				label = QLabel(element)
-				label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+				if type(element) is str:
+					label = QLabel(element)
+					label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+				else:
+					label = element
 				column.addWidget(label)
 			columns.addLayout(column)
 		widget.setLayout(columns)
