@@ -135,60 +135,6 @@ class Window(QWidget):
 		table.show()
 		return table
 
-	def old_pick(self):
-		def execute():
-			device = int(footer_content['Device: '].text())
-			index = int(footer_content['Message: '].text())
-			if self.emulator.parent is AsyncEmulator:
-				self.emulator._messages[device].append(self.emulator._messages[device].pop(index))
-			else:
-				self.emulator._last_round_messages[device].append(self.emulator._last_round_messages[device].pop(index))
-			self.emulator.is_pick = True
-			self.emulator.pick_device = device
-			window.destroy(True, True)
-
-		self.emulator.print_transit()
-		keys = []
-		if self.emulator.parent is AsyncEmulator:
-			messages = self.emulator._messages
-		else:
-			messages = self.emulator._last_round_messages
-		if len(messages) == 0:
-			return
-		for item in messages.items():
-			keys.append(item[0])
-		keys.sort()
-		window = QWidget()
-		layout = QVBoxLayout()
-		header = QLabel("Pick a message to be transmitted next")
-		layout.addWidget(header)
-		max_size = 0
-		for m in messages.values():
-			if len(m) > max_size:
-				max_size = len(m)
-		content = [[str(messages[key][i]) if len(messages[key]) > i else " " for key in keys] for i in range(max_size)]
-		content.insert(0, [f'Device {key}' for key in keys])
-		content[0].insert(0, "Message #")
-		for i in range(max_size):
-			content[i+1].insert(0, str(i))
-		table = Table(content, "Pick a message to be transmitted next")
-		layout.addWidget(table)
-		footer_content = {"Device: ": QLineEdit(), "Message: ": QLineEdit()}
-		for entry in footer_content.items():
-			frame = QHBoxLayout()
-			frame.addWidget(QLabel(entry[0]))
-			frame.addWidget(entry[1])
-			layout.addLayout(frame)
-
-		button = QPushButton('Confirm')
-		button.clicked.connect(execute)
-		layout.addWidget(button)
-		window.setFixedSize(150*len(self.emulator._devices)+1, 400)
-
-		window.setLayout(layout)
-		window.show()
-		self.windows.append(window)
-
 	def pick(self):
 		def execute(device, index):
 			def inner_execute():
@@ -196,9 +142,9 @@ class Window(QWidget):
 					message = self.emulator._messages[device][index]
 				else:
 					message = self.emulator._last_round_messages[device][index]
-					
+
 				self.emulator.next_message = message
-				window.destroy(True, True)
+				table.destroy(True, True)
 				while not self.emulator.last_action == "receive" and not self.last_message == message:
 					self.step()
 
@@ -220,27 +166,26 @@ class Window(QWidget):
 			if len(m) > max_size:
 				max_size = len(m)
 
-		window = QWidget()
-		layout = QVBoxLayout()
-
 		content = []
 		for i in range(max_size):
+			content.append([])
 			for key in keys:
-				content.append([])
 				if len(messages[key]) > i:
 					button = QPushButton(str(messages[key][i]))
 					function_reference = execute(key, i)
 					button.clicked.connect(function_reference)
 					content[i].append(button)
+				else:
+					content[i].append("")
 		content.insert(0, [f'Device {key}' for key in keys])
 		content[0].insert(0, "Message #")
 		for i in range(max_size):
 			content[i+1].insert(0, str(i))
+
 		table = Table(content, "Pick a message to be transmitted next to a device")
-		layout.addWidget(table)
-		window.setLayout(layout)
-		window.show()
-		self.windows.append(window)
+		table.setFixedSize(150*len(self.emulator._devices)+1, 400)
+		table.show()
+		self.windows.append(table)
 		
 
 		
