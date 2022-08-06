@@ -150,7 +150,6 @@ class Window(QWidget):
 
 			return inner_execute
 
-		self.emulator.print_transit()
 		keys = []
 		if self.emulator.parent is AsyncEmulator:
 			messages = self.emulator._messages
