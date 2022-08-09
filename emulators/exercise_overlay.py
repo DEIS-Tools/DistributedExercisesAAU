@@ -14,7 +14,7 @@ from emulators.table import Table
 from emulators.SteppingEmulator import SteppingEmulator
 
 def circle_button_style(size, color = "black"):
-	return f'''
+    return f'''
 	QPushButton {{
 		background-color: transparent; 
 		border-style: solid; 
@@ -129,10 +129,14 @@ class Window(QWidget):
 			for message in messages:
 				message_stripped = str(message).replace(f'{message.source} -> {message.destination} : ', "").replace(f'{message.source}->{message.destination} : ', "")
 				content.append([str(message.source), str(message.destination), message_stripped])
+		window = QWidget()
+		layout = QVBoxLayout()
 		table = Table(content, "Message queue")
-		self.windows.append(table)
-		table.setFixedSize(500, 500)
-		table.show()
+		layout.addWidget(table)
+		window.setLayout(layout)
+		self.windows.append(window)
+		window.setFixedSize(500, 500)
+		window.show()
 		return table
 
 	def pick(self):
@@ -143,10 +147,12 @@ class Window(QWidget):
 				else:
 					message = self.emulator._last_round_messages[device][index]
 
+				self.emulator.pick_device = device
 				self.emulator.next_message = message
 				table.destroy(True, True)
-				while not self.emulator.last_action == "receive" and not self.last_message == message:
+				while not self.emulator.next_message == None:
 					self.step()
+					sleep(.1)
 
 			return inner_execute
 

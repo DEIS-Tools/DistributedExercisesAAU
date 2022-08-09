@@ -22,6 +22,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._pick = False
         self.next_message:MessageStub = None
         self.wait_lock = Lock()
+        self.pick_device = -1
         self.parent = AsyncEmulator
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
@@ -37,28 +38,20 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         print(msg)
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
+
+        if self.next_message == None or not index == self.pick_device:
+            while not self.next_message == None:
+                pass
         self._progress.acquire()
-        init = False
-        while not self.next_message == None and not index == self.next_message.destination:
-            if not init:
-                #print(f'Device #{index} entered dequeue loop')
-                init = True
-                self._progress.release()
-                self.wait_lock.acquire()
-
-        if init:
-            #print(f'Device #{index} exited dequeue loop')
-            self.wait_lock.release()
-            self._progress.acquire()
-
-        if not self.next_message == None:
+        if not self.next_message == None and index == self.pick_device:
+            print(f"Device {index} is receiving through pick")
             if self.parent == AsyncEmulator:
                 result = self._messages[index].pop(self._messages[index].index(self.next_message))
             else:
                 result = self._last_round_messages[index].pop(self._last_round_messages[index].index(self.next_message))
-            print(f'\tRecieve {result}')
-
             self.next_message = None
+            
+            print(f'\tRecieve {result}')
         else:
             result = self.parent.dequeue(self, index, True)
 
@@ -67,22 +60,15 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self.last_action = "receive"
             if self._stepping and self._stepper.is_alive():
                 self.step()
-
+        
         self._progress.release()
         return result
     
     def queue(self, message: MessageStub):
-        self._progress.acquire()
-        init = False
-        while not self.next_message == None and not message.source == self.next_message.destination:
-            if not init:
-                #print(f'Device #{message.source} entered queue loop')
-                init = True
-                self._progress.release()
-                self.wait_lock.acquire()
-        if init:
-            #print(f'Device #{message.source} exited queue loop')
-            self.wait_lock.release()
+
+        if self.next_message == None or not message.source == self.pick_device:
+            while not self.next_message == None:
+                pass
             self._progress.acquire()
 
         self.parent.queue(self, message, True)
@@ -92,8 +78,8 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         if self._stepping and self._stepper.is_alive():
             self.step()
         
-        
-        self._progress.release()
+        if self.next_message == None or not self.next_message == self.pick_device:
+            self._progress.release()
 
     #the main program to stop execution
     def step(self):
