@@ -43,9 +43,6 @@ class Window(QWidget):
 	last_message = None
 	buttons:dict[int, QPushButton] = {}
 	windows = list()
-	pick_window = False
-	queue_window = False
-	all_data_window = False
 
 	def __init__(self, elements, restart_function, emulator:SteppingEmulator):
 		super().__init__()
@@ -73,7 +70,7 @@ class Window(QWidget):
 		def show():
 			received:list[MessageStub] = list()
 			sent:list[MessageStub] = list()
-			for message in self.emulator.messages_received:
+			for message in self.emulator._list_messages_received:
 				if message.destination == device_id:
 					received.append(message)
 				if message.source == device_id:
@@ -105,11 +102,8 @@ class Window(QWidget):
 		return show
 	
 	def show_all_data(self):
-		if self.all_data_window:
-			return
-		self.all_data_window = True
 		content = []
-		messages = self.emulator.messages_sent
+		messages = self.emulator._list_messages_sent
 		message_content = []
 		for message in messages:
 			temp = str(message)
@@ -119,21 +113,13 @@ class Window(QWidget):
 
 		content = [[str(messages[i].source), str(messages[i].destination), message_content[i], str(i)] for i in range(len(messages))]
 		content.insert(0, ['Source', 'Destination', 'Message', 'Sequence number'])
-		parent = self
-		class MyTable(Table):
-			def closeEvent(self, event):
-				parent.all_data_window = False
-				return super().closeEvent(event)
-		table = MyTable(content, title=f'All data')
+		table = Table(content, title=f'All data')
 		self.windows.append(table)
 		table.setFixedSize(500, 500)
 		table.show()
 		return table
 
 	def show_queue(self):
-		if self.queue_window:
-			return
-		self.queue_window = True
 		content = [["Source", "Destination", "Message"]]
 		if self.emulator.parent is AsyncEmulator:
 			queue = self.emulator._messages.values()
@@ -143,12 +129,7 @@ class Window(QWidget):
 			for message in messages:
 				message_stripped = str(message).replace(f'{message.source} -> {message.destination} : ', "").replace(f'{message.source}->{message.destination} : ', "")
 				content.append([str(message.source), str(message.destination), message_stripped])
-		parent = self
-		class MyWidget(QWidget):
-			def closeEvent(self, event):
-				parent.queue_window = False
-				return super().closeEvent(event)
-		window = MyWidget()
+		window = QWidget()
 		layout = QVBoxLayout()
 		table = Table(content, "Message queue")
 		layout.addWidget(table)
@@ -156,29 +137,22 @@ class Window(QWidget):
 		self.windows.append(window)
 		window.setFixedSize(500, 500)
 		window.show()
+		return table
 
 	def pick(self):
-		if self.pick_window:
-			return
-		self.pick_window = True
 		def execute(device, index):
 			def inner_execute():
 				if self.emulator.parent is AsyncEmulator:
 					message = self.emulator._messages[device][index]
 				else:
 					message = self.emulator._last_round_messages[device][index]
-					
 
 				self.emulator.pick_device = device
 				self.emulator.next_message = message
 				table.destroy(True, True)
-				self.pick_window = False
-				size = len(self.emulator.messages_received)
 				while not self.emulator.next_message == None:
 					self.step()
 					#sleep(.1)
-				
-				assert len(self.emulator.messages_received) == size+1
 
 			return inner_execute
 
@@ -213,12 +187,7 @@ class Window(QWidget):
 		for i in range(max_size):
 			content[i+1].insert(0, str(i))
 
-		parent = self
-		class MyTable(Table):
-			def closeEvent(self, event):
-				parent.pick_window = False
-				return super().closeEvent(event)
-		table = MyTable(content, "Pick a message to be transmitted next to a device")
+		table = Table(content, "Pick a message to be transmitted next to a device")
 		table.setFixedSize(150*len(self.emulator._devices)+1, 400)
 		table.show()
 		self.windows.append(table)
@@ -239,7 +208,7 @@ class Window(QWidget):
 	
 	def set_device_color(self):
 		sleep(.1)
-		messages = self.emulator.messages_sent if self.emulator.last_action == "send" else self.emulator.messages_received
+		messages = self.emulator._list_messages_sent if self.emulator.last_action == "send" else self.emulator._list_messages_received
 		if len(messages) != 0:
 			last_message = messages[len(messages)-1]
 			if not last_message == self.last_message:

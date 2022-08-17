@@ -25,6 +25,7 @@ input_area_labels.addWidget(QLabel('Lecture'))
 combobox = QComboBox()
 combobox.addItems([str(i) for i in range(13) if i != 3])
 input_area_areas.addWidget(combobox)
+starting_exercise = False
 
 for action in actions.items():
     input_area_labels.addWidget(QLabel(action[0]))
@@ -61,7 +62,11 @@ def text_changed(text):
 combobox.currentTextChanged.connect(text_changed)
 
 def start_exercise():
-    windows.append(run_exercise(int(actions['Lecture'][0].currentText()), actions['Algorithm'][0].text(), actions['Type'][0].text(), int(actions['Devices'][0].text())))
+    global starting_exercise
+    if not starting_exercise:
+        starting_exercise = True
+        windows.append(run_exercise(int(actions['Lecture'][0].currentText()), actions['Algorithm'][0].text(), actions['Type'][0].text(), int(actions['Devices'][0].text())))
+        starting_exercise = False
 
 def advanced():
     global is_disabled
