@@ -175,7 +175,10 @@ class Window(QWidget):
 				self.pick_window = False
 				size = len(self.emulator.messages_received)
 				while not self.emulator.next_message == None:
+					self.emulator.pick_running = True
 					self.step()
+					while self.emulator.pick_running:
+						pass
 					#sleep(.1)
 				
 				assert len(self.emulator.messages_received) == size+1
@@ -307,7 +310,7 @@ class Window(QWidget):
 	def controls(self):
 		controls_tab = QWidget()
 		content = {
-			'Space': 	'Step a single time through messages', 
+			'shift': 	'Step a single time through messages', 
 			'f': 		'Fast forward through messages', 
 			'Enter': 	'Kill stepper daemon and run as an async emulator',
 			'tab': 		'Show all messages currently waiting to be transmitted',

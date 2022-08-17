@@ -17,8 +17,9 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     messages_sent:list[MessageStub] = []
     keyheld = False
     pick = False
-    next_message = None
     pick_device = -1
+    pick_running = False
+    next_message = None
     parent:EmulatorStub = AsyncEmulator
 
     def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
@@ -30,7 +31,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.listener.start()
         msg = """
         keyboard input:
-            space:              Step a single time through messages
+            shift:              Step a single time through messages
             f:                  Fast-forward through messages
             enter:              Kill stepper daemon finish algorithm
             tab:                Show all messages currently waiting to be transmitted
@@ -40,20 +41,16 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         print(msg)
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
-
-        #if self.next_message == None or not index == self.pick_device:
-        #    while not self.next_message == None:
-        #        pass
-        #self._progress.acquire()
-
+        
         self._progress.acquire()
+        #release the lock if there has been specified which message to be delivered next
         if not self.next_message == None and not index == self.pick_device:
             self._progress.release()
-            while not self.next_message == None:
-                pass
+            self.pick_running = False
+            #restart this function to make sure all devices are at the correct position in the execution
             return self.dequeue(index)
-        #print(f'Device {index} has the lock')
 
+        #if the current thread is meant to receive a specific message, dequeue here instead of through the parent function
         if not self.next_message == None and index == self.pick_device:
             print(f"Device {index} is receiving through pick")
             if self.parent == AsyncEmulator:
@@ -66,36 +63,35 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         else:
             result = self.parent.dequeue(self, index, True)
 
+        if self.pick_running:
+            self.pick_running = False
         if result != None:
             self.messages_received.append(result)
             self.last_action = "receive"
             if self._stepping and self._stepper.is_alive():
                 self.step()
 
-        #print(f'Device {index} is releasing the lock')
         self._progress.release()
         return result
     
     def queue(self, message: MessageStub):
-
-        if self.next_message == None or not message.source == self.pick_device:
-            while not self.next_message == None:
-                pass
         self._progress.acquire()
-        #print(f'Device {message.source} has the lock')
+        if not self.next_message == None and not message.source == self.pick_device:
+            self._progress.release()
+            self.pick_running = False
+            return self.queue(message)
             
         self.parent.queue(self, message, True)
         self.last_action = "send"
         self.messages_sent.append(message)
 
+        if self.pick_running:
+            self.pick_running = False
         if self._stepping and self._stepper.is_alive():
             self.step()
-        
-        if self.next_message == None or not self.next_message == self.pick_device:
-            #print(f'Device {message.source} is releasing the lock')
-            self._progress.release()
+        self._progress.release()
 
-    #the main program to stop execution
+    #the main function to stop execution
     def step(self):
         if not self._single:
             print(f'\t{self._messages_sent}: Step?')
@@ -117,7 +113,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             key = key.name
         if key == "f" or key == "enter":
             self._stepping = False
-        elif key == "space" and not self._keyheld:
+        elif key == "shift" and not self.keyheld:
             self._single = True
         elif key == "tab":
             self.print_transit()
@@ -125,7 +121,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self.pick = True
         elif key == "e":
             self.swap_emulator()
-        self._keyheld = True
+        self.keyheld = True
 
     #listen for released keys
     def _on_release(self, key:keyboard.KeyCode | keyboard.Key):
@@ -137,7 +133,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             key = key.name
         if key == "f":
             self._stepping = True
-        self._keyheld = False
+        self.keyheld = False
 
     #print all messages in transit
     def print_transit(self):
