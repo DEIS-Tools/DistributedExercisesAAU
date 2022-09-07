@@ -16,6 +16,10 @@ class SteppingEmulator(AsyncEmulator):
         self._stepper.start()
         self._stepping = True
         self._single = False
+        self.last_action = ""
+        self._list_messages_received:list[MessageStub] = list()
+        self._list_messages_sent:list[MessageStub] = list()
+        self._last_message:tuple[str, MessageStub] = ("init") #type(received or sent), message
         self._keyheld = False
         self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
         self.listener.start()
@@ -40,8 +44,11 @@ class SteppingEmulator(AsyncEmulator):
         else:
             if self._stepping and self._stepper.is_alive(): #first expression for printing a reasonable amount, second to hide user input
                 self._step("step?")
+                self.last_action = "receive"
             m = self._messages[index].pop()
             print(f'\tRecieve {m}')
+            self._list_messages_received.append(m)
+            self._last_message = ("received", m)
             self._progress.release()
             return m
     
@@ -50,8 +57,11 @@ class SteppingEmulator(AsyncEmulator):
         self._progress.acquire()
         if self._stepping and self._stepper.is_alive():
             self._step("step?")
+            self.last_action = "send"
         self._messages_sent += 1
         print(f'\tSend {message}')
+        self._list_messages_sent.append(message)
+        self._last_message = ("sent", message)
         if message.destination not in self._messages:
             self._messages[message.destination] = []
         self._messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
