@@ -8,6 +8,8 @@ from typing import Optional
 from emulators.EmulatorStub import EmulatorStub
 from emulators.MessageStub import MessageStub
 
+RESET = "\u001B[0m"
+GREEN = "\u001B[32m"
 
 class AsyncEmulator(EmulatorStub):
 
@@ -22,7 +24,6 @@ class AsyncEmulator(EmulatorStub):
         self._start_threads()
         self._progress.release()
 
-        # make sure the round_lock is locked initially
         while True:
             time.sleep(0.1)
             self._progress.acquire()
@@ -38,7 +39,7 @@ class AsyncEmulator(EmulatorStub):
         if not stepper:
             self._progress.acquire()
         self._messages_sent += 1
-        print(f'\tSend {message}')
+        print(f'\t{GREEN}Send{RESET} {message}')
         if message.destination not in self._messages:
             self._messages[message.destination] = []
         self._messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
@@ -60,7 +61,7 @@ class AsyncEmulator(EmulatorStub):
             return None
         else:
             m = self._messages[index].pop()
-            print(f'\tRecieve {m}')
+            print(f'\t{GREEN}Recieve{RESET} {m}')
             if not stepper:
                 self._progress.release()
             return m

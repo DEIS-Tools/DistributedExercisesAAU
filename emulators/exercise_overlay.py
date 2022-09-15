@@ -13,6 +13,10 @@ from emulators.SyncEmulator import SyncEmulator
 from emulators.table import Table
 from emulators.SteppingEmulator import SteppingEmulator
 
+RESET = "\u001B[0m"
+CYAN = "\u001B[36m"
+RED = "\u001B[31m"
+
 def circle_button_style(size, color = "black"):
     return f'''
 	QPushButton {{
@@ -163,11 +167,16 @@ class Window(QWidget):
 		self.pick_window = True
 		def execute(device, index):
 			def inner_execute():
+				if self.emulator._devices[device]._finished == True:
+					table.destroy(True, True)
+					print(f'{RED}The selected device has already finished execution!{RESET}')
+					return
 				if self.emulator.parent is AsyncEmulator:
 					message = self.emulator._messages[device][index]
 				else:
 					message = self.emulator._last_round_messages[device][index]
-					
+				
+				print(f'{CYAN}Choice from pick command{RESET}: {message}')
 
 				self.emulator.pick_device = device
 				self.emulator.next_message = message
@@ -177,9 +186,9 @@ class Window(QWidget):
 				while not self.emulator.next_message == None:
 					self.emulator.pick_running = True
 					self.step()
-					while self.emulator.pick_running:
+					while self.emulator.pick_running and not self.emulator.all_terminated():
 						pass
-					#sleep(.1)
+					sleep(.1)
 				
 				assert len(self.emulator.messages_received) == size+1
 

@@ -6,6 +6,8 @@ from typing import Optional
 from emulators.EmulatorStub import EmulatorStub
 from emulators.MessageStub import MessageStub
 
+RESET = "\u001B[0m"
+GREEN = "\u001B[32m"
 
 class SyncEmulator(EmulatorStub):
 
@@ -35,7 +37,7 @@ class SyncEmulator(EmulatorStub):
             self._round_lock.acquire()
             # check if everyone terminated
             self._progress.acquire()
-            print(f'## ROUND {self._rounds} ##')
+            print(f'## {GREEN}ROUND {self._rounds}{RESET} ##')
             if self.all_terminated():
                 self._progress.release()
                 break
@@ -66,7 +68,7 @@ class SyncEmulator(EmulatorStub):
         if not stepper:
             self._progress.acquire()
         self._messages_sent += 1
-        print(f'\tSend {message}')
+        print(f'\t{GREEN}Send{RESET} {message}')
         if message.destination not in self._current_round_messages:
             self._current_round_messages[message.destination] = []
         self._current_round_messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
@@ -86,7 +88,7 @@ class SyncEmulator(EmulatorStub):
             return None
         else:
             m = self._last_round_messages[index].pop()
-            print(f'\tReceive {m}')
+            print(f'\t{GREEN}Receive{RESET} {m}')
             if not stepper:
                 self._progress.release()
             return m

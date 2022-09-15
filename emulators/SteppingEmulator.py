@@ -1,3 +1,6 @@
+import copy
+import random
+from time import sleep
 from typing import Optional
 from emulators.AsyncEmulator import AsyncEmulator
 from .EmulatorStub import EmulatorStub
@@ -5,8 +8,11 @@ from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
 from pynput import keyboard
 from getpass import getpass #getpass to hide input, cleaner terminal
-from threading import Lock, Thread #run getpass in seperate thread
+from threading import Barrier, Lock, Thread #run getpass in seperate thread
 
+RESET = "\u001B[0m"
+CYAN = "\u001B[36m"
+GREEN = "\u001B[32m"
 
 
 class SteppingEmulator(SyncEmulator, AsyncEmulator):
@@ -26,45 +32,44 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         super().__init__(number_of_devices, kind)
         self._stepper = Thread(target=lambda: getpass(""), daemon=True)
         self._stepper.start()
+        self.barrier = Barrier(parties=number_of_devices)
         self.wait_lock = Lock()
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
-        msg = """
-        keyboard input:
-            shift:              Step a single time through messages
-            f:                  Fast-forward through messages
-            enter:              Kill stepper daemon finish algorithm
-            tab:                Show all messages currently waiting to be transmitted
-            s:                  Pick the next message waiting to be transmitted to transmit next
-            e:                  Toggle between sync and async emulation
+        msg = f"""
+{CYAN}keyboard input{RESET}:
+    {CYAN}shift{RESET}:              Step a single time through messages
+    {CYAN}f{RESET}:                  Fast-forward through messages
+    {CYAN}enter{RESET}:              Kill stepper daemon finish algorithm
+    {CYAN}tab{RESET}:                Show all messages currently waiting to be transmitted
+    {CYAN}s{RESET}:                  Pick the next message waiting to be transmitted to transmit next
+    {CYAN}e{RESET}:                  Toggle between sync and async emulation
         """
         print(msg)
     
     def dequeue(self, index: int) -> Optional[MessageStub]:
-        
         self._progress.acquire()
-        #release the lock if there has been specified which message to be delivered next
-        if not self.next_message == None and not index == self.pick_device:
-            self._progress.release()
-            self.pick_running = False
-            #restart this function to make sure all devices are at the correct position in the execution
-            return self.dequeue(index)
-
-        #if the current thread is meant to receive a specific message, dequeue here instead of through the parent function
-        if not self.next_message == None and index == self.pick_device:
-            print(f"Device {index} is receiving through pick")
-            if self.parent == AsyncEmulator:
-                result = self._messages[index].pop(self._messages[index].index(self.next_message))
+        #print(f'thread {index} is in dequeue')
+        if not self.next_message == None:
+            if not index == self.pick_device:
+                self.collectThread()
+                return self.dequeue(index)
             else:
-                result = self._last_round_messages[index].pop(self._last_round_messages[index].index(self.next_message))
-            self.next_message = None
-            
-            print(f'\tRecieve {result}')
+                if self.parent == AsyncEmulator:
+                    messages = self._messages
+                else:
+                    messages = self._last_round_messages
+                result = messages[index].pop(messages[index].index(self.next_message))
+                self.next_message = None
+                self.pick_device = -1
+                self.barrier.reset()
+                print(f'\t{GREEN}Receive{RESET} {result}')
+                
         else:
             result = self.parent.dequeue(self, index, True)
 
-        if self.pick_running:
-            self.pick_running = False
+        self.pick_running = False
+
         if result != None:
             self.messages_received.append(result)
             self.last_action = "receive"
@@ -76,17 +81,17 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     
     def queue(self, message: MessageStub):
         self._progress.acquire()
+        #print(f'thread {message.source} is in queue')
         if not self.next_message == None and not message.source == self.pick_device:
-            self._progress.release()
-            self.pick_running = False
+            self.collectThread()
             return self.queue(message)
-            
+
         self.parent.queue(self, message, True)
         self.last_action = "send"
         self.messages_sent.append(message)
 
-        if self.pick_running:
-            self.pick_running = False
+        self.pick_running = False
+            
         if self._stepping and self._stepper.is_alive():
             self.step()
         self._progress.release()
@@ -96,6 +101,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         if not self._single:
             print(f'\t{self._messages_sent}: Step?')
         while self._stepping: #run while waiting for input
+            sleep(.1)
             if self._single:  #break while if the desired action is a single message
                 self._single = False
                 break
@@ -133,7 +139,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             key = key.name
         if key == "f":
             self._stepping = True
-        self.keyheld = False
+        self.keyheld = False 
 
     #print all messages in transit
     def print_transit(self):
@@ -196,3 +202,69 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self._stepper.start()
         self._stepping = True
         print(f'\t{self._messages_sent}: Step?')
+
+    def run(self):
+        self._progress.acquire()
+        for index in self.ids():
+            self._awaits[index].acquire()
+        self._start_threads()
+        self._progress.release()
+
+        self._round_lock.acquire()
+        while True:
+            if self.parent is AsyncEmulator:
+                sleep(.1)
+                self._progress.acquire()
+                # check if everyone terminated
+                if self.all_terminated():
+                    break
+                self._progress.release()
+            else:
+                self._round_lock.acquire()
+                # check if everyone terminated
+                self._progress.acquire()
+                print(f'## {GREEN}ROUND {self._rounds}{RESET} ##')
+                if self.all_terminated():
+                    self._progress.release()
+                    break
+                # send messages
+                for index in self.ids():
+                    # intentionally change the order
+                    if index in self._current_round_messages:
+                        nxt = copy.deepcopy(self._current_round_messages[index])
+                        random.shuffle(nxt)
+                        if index in self._last_round_messages:
+                            self._last_round_messages[index] += nxt
+                        else:
+                            self._last_round_messages[index] = nxt
+                self._current_round_messages = {}
+                self.reset_done()
+                self._rounds += 1
+                ids = [x for x in self.ids()] # convert to list to make it shuffleable
+                random.shuffle(ids)
+                for index in ids:
+                    if self._awaits[index].locked():
+                        self._awaits[index].release()
+                self._progress.release()
+                
+        for t in self._threads:
+            t.join()
+
+    def done(self, id):
+        return self.parent.done(self, id)
+
+    def _run_thread(self, index: int):
+        super()._run_thread(index)
+        self._devices[index]._finished = True
+
+
+
+    def collectThread(self):
+        #print("collecting a thread")
+        self.pick_running = False
+        self._progress.release()
+        try:
+            self.barrier.wait()
+        except:
+            pass
+        
