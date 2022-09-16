@@ -1,5 +1,6 @@
 import argparse
 import inspect
+from os import name
 from threading import Thread
 from emulators.exercise_overlay import Window
 
@@ -18,6 +19,15 @@ import exercises.demo
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
 from emulators.SteppingEmulator import SteppingEmulator
+
+if name == "posix":
+    RESET = "\u001B[0m"
+    CYAN = "\u001B[36m"
+    GREEN = "\u001B[32m"
+else:
+    RESET = ""
+    CYAN = ""
+    GREEN = ""
 
 def fetch_alg(lecture: str, algorithm: str):
     if '.' in algorithm or ';' in algorithm:
@@ -53,9 +63,9 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
     def run_instance():
         if instance is not None:
             instance.run()
-            print(f'Execution Complete')
+            print(f'{CYAN}Execution Complete{RESET}')
             instance.print_result()
-            print('Statistics')
+            print(f'{CYAN}Statistics{RESET}')
             instance.print_statistics()
         else:
             raise NotImplementedError(

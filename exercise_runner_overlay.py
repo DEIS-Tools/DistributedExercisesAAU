@@ -1,46 +1,48 @@
 from exercise_runner import run_exercise
 from PyQt6.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QPushButton, QHBoxLayout, QLabel, QComboBox
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import Qt
 from sys import argv
 app = QApplication(argv)
 
 windows = list()
 
-
+#new
 window = QWidget()
 window.setWindowIcon(QIcon('icon.ico'))
 window.setWindowTitle("Distributed Exercises AAU")
 main = QVBoxLayout()
 window.setFixedSize(600, 100)
-button_layout = QHBoxLayout()
 start_button = QPushButton("Start")
-button_layout.addWidget(start_button)
-advanced_button = QPushButton("Advanced")
-advanced_button.setFixedWidth(80)
-button_layout.addWidget(advanced_button)
-main.addLayout(button_layout)
-input_area_labels = QHBoxLayout()
-input_area_areas = QHBoxLayout()
-actions:dict[str, list[QLineEdit, str]] = {'Algorithm': [QLineEdit, 'PingPong'], 'Type': [QLineEdit, 'stepping'], 'Devices': [QLineEdit, 3]}
-input_area_labels.addWidget(QLabel('Lecture'))
-combobox = QComboBox()
-combobox.addItems([str(i) for i in range(13) if i != 3])
-input_area_areas.addWidget(combobox)
+main.addWidget(start_button)
+input_area = QHBoxLayout()
+lecture_layout = QVBoxLayout()
+lecture_layout.addWidget(QLabel("Lecture"), alignment=Qt.AlignmentFlag.AlignCenter)
+lecture_combobox = QComboBox()
+lecture_combobox.addItems([str(i) for i in range(13) if i != 3])
+lecture_layout.addWidget(lecture_combobox)
+input_area.addLayout(lecture_layout)
+type_layout = QVBoxLayout()
+type_layout.addWidget(QLabel("Type"), alignment=Qt.AlignmentFlag.AlignCenter)
+type_combobox = QComboBox()
+type_combobox.addItems(["stepping", "async", "sync"])
+type_layout.addWidget(type_combobox)
+input_area.addLayout(type_layout)
+algorithm_layout = QVBoxLayout()
+algorithm_layout.addWidget(QLabel("Algorithm"), alignment=Qt.AlignmentFlag.AlignCenter)
+algorithm_input = QLineEdit()
+algorithm_input.setText("PingPong")
+algorithm_layout.addWidget(algorithm_input)
+input_area.addLayout(algorithm_layout)
+devices_layout = QVBoxLayout()
+devices_layout.addWidget(QLabel("Devices"), alignment=Qt.AlignmentFlag.AlignCenter)
+devices_input = QLineEdit()
+devices_input.setText("3")
+devices_layout.addWidget(devices_input)
+input_area.addLayout(devices_layout)
+main.addLayout(input_area)
 starting_exercise = False
-
-for action in actions.items():
-    input_area_labels.addWidget(QLabel(action[0]))
-    field = QLineEdit()
-    input_area_areas.addWidget(field)
-    field.setText(str(action[1][1]))
-    actions[action[0]][0] = field
-main.addLayout(input_area_labels)
-main.addLayout(input_area_areas)
-actions['Algorithm'][0].setDisabled(True)
-is_disabled = True
-
-actions['Lecture'] = [combobox]
-
+actions:dict[str, QLineEdit | QComboBox] = {"Lecture":lecture_combobox, "Type":type_combobox, "Algorithm":algorithm_input, "Devices":devices_input}
 
 def text_changed(text):
     exercises = {
@@ -58,28 +60,19 @@ def text_changed(text):
         12:'AodvNode'}
     lecture = int(text)
 
-    actions['Algorithm'][0].setText(exercises[lecture])
+    actions['Algorithm'].setText(exercises[lecture])
 
-combobox.currentTextChanged.connect(text_changed)
+lecture_combobox.currentTextChanged.connect(text_changed)
 
 def start_exercise():
     global starting_exercise
     if not starting_exercise:
         starting_exercise = True
-        windows.append(run_exercise(int(actions['Lecture'][0].currentText()), actions['Algorithm'][0].text(), actions['Type'][0].text(), int(actions['Devices'][0].text())))
+        windows.append(run_exercise(int(actions['Lecture'].currentText()), actions['Algorithm'].text(), actions['Type'].currentText(), int(actions['Devices'].text())))
         starting_exercise = False
 
-def advanced():
-    global is_disabled
-    if is_disabled:
-        actions['Algorithm'][0].setDisabled(False)
-        is_disabled = False
-    else:
-        actions['Algorithm'][0].setDisabled(True)
-        is_disabled = True
 
 start_button.clicked.connect(start_exercise)
-advanced_button.clicked.connect(advanced)
 window.setLayout(main)
 window.show()
 app.exec()

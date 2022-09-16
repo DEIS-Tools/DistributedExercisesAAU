@@ -116,9 +116,9 @@ class SyncEmulator(EmulatorStub):
 
 
     def print_statistics(self):
-        print(f'\tTotal {self._messages_sent} messages')
-        print(f'\tAverage {self._messages_sent/len(self._devices)} messages/device')
-        print(f'\tTotal {self._rounds} rounds')
+        print(f'\t{GREEN}Total:{RESET} {self._messages_sent} messages')
+        print(f'\t{GREEN}Average:{RESET} {self._messages_sent/len(self._devices)} messages/device')
+        print(f'\t{GREEN}Total:{RESET} {self._rounds} rounds')
 
     def terminated(self, index:int):
         self._progress.acquire()

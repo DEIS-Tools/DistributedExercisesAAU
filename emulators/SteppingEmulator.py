@@ -32,6 +32,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     pick_device = -1
     pick_running = False
     next_message = None
+    log = None
     parent:EmulatorStub = AsyncEmulator
 
     def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
@@ -42,6 +43,8 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.wait_lock = Lock()
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
+        self.messages_received:list[MessageStub] = []
+        self.messages_sent:list[MessageStub] = []
         msg = f"""
 {CYAN}keyboard input{RESET}:
     {CYAN}shift{RESET}:              Step a single time through messages
@@ -105,7 +108,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     #the main function to stop execution
     def step(self):
         if not self._single:
-            print(f'\t{self._messages_sent}: Step?')
+            print(f'\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}]')
         while self._stepping: #run while waiting for input
             sleep(.1)
             if self._single:  #break while if the desired action is a single message
@@ -207,7 +210,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self._stepper = Thread(target=lambda: getpass(""), daemon=True)                             #restart stepper daemon
             self._stepper.start()
         self._stepping = True
-        print(f'\t{self._messages_sent}: Step?')
+        print(f'\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}]')
 
     def run(self):
         self._progress.acquire()
@@ -263,7 +266,8 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         super()._run_thread(index)
         self._devices[index]._finished = True
 
-
+    def print_statistics(self):
+        return self.parent.print_statistics(self)
 
     def collectThread(self):
         #print("collecting a thread")

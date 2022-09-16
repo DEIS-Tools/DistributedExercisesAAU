@@ -23,7 +23,7 @@ else:
 	RESET = ""
 	CYAN = ""
 	GREEN = ""
-	RED = "\u001B[31m"
+	RED = ""
 
 def circle_button_style(size, color = "black"):
     return f'''
@@ -65,6 +65,7 @@ class Window(QWidget):
 		self.setFixedSize(self.w, self.h)
 		layout = QVBoxLayout()
 		tabs = QTabWidget()
+		tabs.setFixedSize(self.w-20, self.h-20)
 		tabs.addTab(self.main(elements, restart_function), 'Main')
 		tabs.addTab(self.controls(), 'controls')
 		layout.addWidget(tabs)
