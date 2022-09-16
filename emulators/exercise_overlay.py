@@ -246,6 +246,7 @@ class Window(QWidget):
 		if self.emulator.all_terminated():
 			return
 		self.emulator.is_stepping = False
+		self.emulator.step_barrier.wait()
 		while not self.emulator.all_terminated():
 			self.set_device_color()
 		sleep(.1)
@@ -267,9 +268,11 @@ class Window(QWidget):
 				self.last_message = last_message
 
 	def step(self):
-		self.emulator._single = True
-		if self.emulator.all_terminated():
-			Thread(target=self.stop_stepper, daemon=True).start()
+		if not self.emulator.all_terminated():
+			self.emulator.step_barrier.wait()
+			
+		while self.emulator.step_barrier.n_waiting == 0:
+			pass
 		self.set_device_color()
 		self.emulator.print_prompt()
 

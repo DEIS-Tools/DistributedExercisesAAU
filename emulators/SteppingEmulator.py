@@ -38,6 +38,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         #self._stepper = Thread(target=lambda: getpass(""), daemon=True)
         #self._stepper.start()
         self.barrier = Barrier(parties=number_of_devices)
+        self.step_barrier = Barrier(parties=2)
         self.is_stepping = True
         self.wait_lock = Lock()
         #self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
@@ -108,11 +109,8 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
 
     #the main function to stop execution
     def step(self):
-        while self.is_stepping: #run while waiting for input
-            sleep(.1)
-            if self._single:  #break while if the desired action is a single message
-                self._single = False
-                break
+        if self.is_stepping:
+            self.step_barrier.wait()
 
     def pick(self):
         self.print_transit()
@@ -142,12 +140,13 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.prompt_active = True
         line = ""
         while not line == "exit":
-            sleep(.1)
+            sleep(1)
             line = input(f'\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}] > ')
             args = line.split(" ")
             match args[0]:
                 case "":
-                    self._single = True
+                    if not self.all_terminated():
+                        self.step_barrier.wait()
                 case "queue":
                     if len(args) == 1:
                         self.print_transit()
@@ -155,6 +154,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                         self.print_transit_for_device(int(args[1]))
                 case "exit":
                     self.is_stepping = False
+                    self.step_barrier.wait()
                 case "swap":
                     self.swap_emulator()
                 case "pick":
