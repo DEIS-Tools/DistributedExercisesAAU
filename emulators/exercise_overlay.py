@@ -18,7 +18,7 @@ if name == "posix":
 	RESET = "\u001B[0m"
 	CYAN = "\u001B[36m"
 	GREEN = "\u001B[32m"
-	RED = ""
+	RED = "\u001B[31m"
 else:
 	RESET = ""
 	CYAN = ""
@@ -185,7 +185,7 @@ class Window(QWidget):
 				else:
 					message = self.emulator._last_round_messages[device][index]
 				
-				print(f'{CYAN}Choice from pick command{RESET}: {message}')
+				print(f'\r{CYAN}Choice from pick command{RESET}: {message}')
 
 				self.emulator.pick_device = device
 				self.emulator.next_message = message
@@ -241,20 +241,15 @@ class Window(QWidget):
 		table.setFixedSize(150*len(self.emulator._devices)+1, 400)
 		table.show()
 		self.windows.append(table)
-		
-
-		
-
-
-	def stop_stepper(self):
-		self.emulator.listener.stop()
-		self.emulator.listener.join()
 
 	def end(self):
-		self.emulator._stepping = False
+		if self.emulator.all_terminated():
+			return
+		self.emulator.is_stepping = False
 		while not self.emulator.all_terminated():
 			self.set_device_color()
-		Thread(target=self.stop_stepper, daemon=True).start()
+		sleep(.1)
+		self.emulator.print_prompt()
 	
 	def set_device_color(self):
 		sleep(.1)
@@ -276,8 +271,13 @@ class Window(QWidget):
 		if self.emulator.all_terminated():
 			Thread(target=self.stop_stepper, daemon=True).start()
 		self.set_device_color()
+		self.emulator.print_prompt()
 
 	def restart_algorithm(self, function):
+		if self.emulator.prompt_active:
+			print(f'\r{RED}Please type "exit" in the prompt below{RESET}')
+			self.emulator.print_prompt()
+			return
 		self.windows.append(function())
 
 	def main(self, num_devices, restart_function):
@@ -326,12 +326,12 @@ class Window(QWidget):
 	def controls(self):
 		controls_tab = QWidget()
 		content = {
-			'shift': 	'Step a single time through messages', 
-			'f': 		'Fast forward through messages', 
-			'Enter': 	'Kill stepper daemon and run as an async emulator',
-			'tab': 		'Show all messages currently waiting to be transmitted',
-			's':		'Pick the next message waiting to be transmitted to transmit next',
-			'e':		'Toggle between sync and async emulation'
+			'step(press return)': 	'Step a single time through messages',
+			'exit':					'Finish the execution of the algorithm', 
+			'queue':				'Show all messages currently waiting to be transmitted',
+			'queue <device #>':		'Show all messages currently waiting to be transmitted to a specific device',
+			'pick':					'Pick the next message waiting to be transmitted to transmit next',
+			'swap':					'Toggle between sync and async emulation'
 		}
 		main = QVBoxLayout()
 		main.setAlignment(Qt.AlignmentFlag.AlignTop)
