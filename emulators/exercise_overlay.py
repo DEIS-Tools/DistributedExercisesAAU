@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QPu
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from sys import argv
+from os import name
 from math import cos, sin, pi
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.MessageStub import MessageStub
@@ -13,9 +14,16 @@ from emulators.SyncEmulator import SyncEmulator
 from emulators.table import Table
 from emulators.SteppingEmulator import SteppingEmulator
 
-RESET = "\u001B[0m"
-CYAN = "\u001B[36m"
-RED = "\u001B[31m"
+if name == "posix":
+	RESET = "\u001B[0m"
+	CYAN = "\u001B[36m"
+	GREEN = "\u001B[32m"
+	RED = ""
+else:
+	RESET = ""
+	CYAN = ""
+	GREEN = ""
+	RED = "\u001B[31m"
 
 def circle_button_style(size, color = "black"):
     return f'''
@@ -199,8 +207,6 @@ class Window(QWidget):
 			messages = self.emulator._messages
 		else:
 			messages = self.emulator._last_round_messages
-		if len(messages) == 0:
-			return
 		for item in messages.items():
 			keys.append(item[0])
 		keys.sort()

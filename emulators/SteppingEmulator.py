@@ -9,10 +9,16 @@ from emulators.MessageStub import MessageStub
 from pynput import keyboard
 from getpass import getpass #getpass to hide input, cleaner terminal
 from threading import Barrier, Lock, Thread #run getpass in seperate thread
+from os import name
 
-RESET = "\u001B[0m"
-CYAN = "\u001B[36m"
-GREEN = "\u001B[32m"
+if name == "posix":
+    RESET = "\u001B[0m"
+    CYAN = "\u001B[36m"
+    GREEN = "\u001B[32m"
+else:
+    RESET = ""
+    CYAN = ""
+    GREEN = ""
 
 
 class SteppingEmulator(SyncEmulator, AsyncEmulator):

@@ -1,13 +1,20 @@
 import copy
 import random
 import threading
+from os import name
 from typing import Optional
 
 from emulators.EmulatorStub import EmulatorStub
 from emulators.MessageStub import MessageStub
 
-RESET = "\u001B[0m"
-GREEN = "\u001B[32m"
+if name == "posix":
+    RESET = "\u001B[0m"
+    CYAN = "\u001B[36m"
+    GREEN = "\u001B[32m"
+else:
+    RESET = ""
+    CYAN = ""
+    GREEN = ""
 
 class SyncEmulator(EmulatorStub):
 
