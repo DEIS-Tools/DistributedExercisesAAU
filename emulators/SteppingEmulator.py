@@ -40,7 +40,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.barrier = Barrier(parties=number_of_devices)
         self.step_barrier = Barrier(parties=2)
         self.is_stepping = True
-        self.wait_lock = Lock()
+        self.input_lock = Lock()
         #self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         #self.listener.start()
         self.shell = Thread(target=self.prompt, daemon=True)
@@ -130,7 +130,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.next_message = messages[device][index]
         while not self.next_message == None:
             self.pick_running = True
-            self._single = True
+            self.step_barrier.wait()
             while self.pick_running and not self.all_terminated():
                 pass
             sleep(.1)
@@ -142,6 +142,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         while not line == "exit":
             sleep(1)
             line = input(f'\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}] > ')
+            self.input_lock.acquire()
             args = line.split(" ")
             match args[0]:
                 case "":
@@ -162,6 +163,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                         self.pick()
                     except ValueError:
                         pass
+            self.input_lock.release()
         self.prompt_active = False
 
     def print_prompt(self):

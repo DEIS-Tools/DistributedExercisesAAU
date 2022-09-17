@@ -268,8 +268,10 @@ class Window(QWidget):
 				self.last_message = last_message
 
 	def step(self):
+		self.emulator.input_lock.acquire()
 		if not self.emulator.all_terminated():
 			self.emulator.step_barrier.wait()
+		self.emulator.input_lock.release()
 			
 		while self.emulator.step_barrier.n_waiting == 0:
 			pass
