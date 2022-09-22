@@ -109,7 +109,7 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
                return False
            return True
          ```
-         Does it work? Each routing table should believe it is completed just one. How many times the routing tables appear to be completed?
+         Does it work? Each routing table should believe it is completed just one row short. How many times the routing tables appear to be completed?
    4. Try this other approach, which works better:
       1. ```python
          def routing_table_complete(self):
@@ -122,7 +122,7 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
               return True
          ```
     Is it realistic for a real network?
-3. Send a `RoutableMessage` after the routing tables are ready. Consider the termination problem. Can a node quit right after receiving the `RoutingMessage` for itself? What happens to the rest of the nodes?
+3. Send a `RoutableMessage` after the routing tables are ready. Consider the termination problem. Can a node quit right after receiving the `RoutableMessage` for itself? What happens to the rest of the nodes?
 4. What happens, if a link has a negative cost? How many messages are sent before the `routing_tables` converge?
 
 # Exercise 3
