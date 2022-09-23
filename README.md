@@ -98,7 +98,7 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
 ```
 
 # Exercise 2
-1. Implement the RIP protocol (fill in missing code in merge_tables), described in \[DS, fifth edition\] Page 115-118.
+1. Implement the RIP protocol (fill in missing code in merge_tables), described in \[DS, fifth edition\] Page 115-118. _(NOTICE: To run/debug the protocol, you must first implement the network topology described in "task 2.0" below.)_
 2. In the `__init__` of `RipCommunication`, create a ring topology (that is, set up who are the neighbors of each device). Consider a ring size of 10 devices.
    1. How many messages are sent in total before the routing_tables of all nodes are synchronized?
    2. How can you "know" that the routing tables are complete and you can start using the network to route packets? Consider the general case of internet, and the specific case of our toy ring network. 
@@ -109,7 +109,7 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
                return False
            return True
          ```
-         Does it work? Each routing table should believe it is completed just one row short. How many times the routing tables appear to be completed?
+         Does it work? Each routing table should believe it is completed just one row short. How many times do the routing tables appear to be completed?
    4. Try this other approach, which works better:
       1. ```python
          def routing_table_complete(self):
