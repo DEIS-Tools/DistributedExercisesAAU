@@ -62,6 +62,7 @@ class Window(QWidget):
 		layout = QVBoxLayout()
 		tabs = QTabWidget()
 		tabs.setFixedSize(self.w-20, self.h-20)
+		self.buttons:dict[int, QPushButton] = {}
 		tabs.addTab(self.main(elements, restart_function), 'Main')
 		tabs.addTab(self.controls(), 'controls')
 		layout.addWidget(tabs)
@@ -72,7 +73,6 @@ class Window(QWidget):
 		self.pick_window = False
 		self.queue_window = False
 		self.all_data_window = False
-		self.buttons:dict[int, QPushButton] = {}
 
 	def coordinates(self, center, r, i, n):
 		x = sin((i*2*pi)/n)
