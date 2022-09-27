@@ -240,7 +240,6 @@ class Window(QWidget):
 		table = MyTable(content, "Pick a message to be transmitted next to a device")
 		table.setFixedSize(150*len(self.emulator._devices)+1, 400)
 		table.show()
-		self.windows.append(table)
 
 	def end(self):
 		if self.emulator.all_terminated():
@@ -250,7 +249,7 @@ class Window(QWidget):
 		while not self.emulator.all_terminated():
 			self.set_device_color()
 		sleep(.1)
-		self.emulator.print_prompt()
+		#self.emulator.print_prompt()
 	
 	def set_device_color(self):
 		sleep(.1)
@@ -276,13 +275,13 @@ class Window(QWidget):
 		while self.emulator.step_barrier.n_waiting == 0:
 			pass
 		self.set_device_color()
-		self.emulator.print_prompt()
+		#self.emulator.print_prompt()
 
 	def restart_algorithm(self, function):
-		if self.emulator.prompt_active:
-			print(f'\r{RED}Please type "exit" in the prompt below{RESET}')
-			self.emulator.print_prompt()
-			return
+		#if self.emulator.prompt_active:
+			#print(f'\r{RED}Please type "exit" in the prompt below{RESET}')
+			#self.emulator.print_prompt()
+			#return
 		self.windows.append(function())
 
 	def main(self, num_devices, restart_function):
@@ -313,7 +312,7 @@ class Window(QWidget):
 			button.clicked.connect(self.show_device_data(i))
 			self.buttons[i] = button
 		
-		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data, 'Switch emulator': self.emulator.swap_emulator, 'Show queue': self.show_queue, 'Pick': self.pick}
+		button_actions = {'Step': self.step, 'End': self.end, 'Restart algorithm': lambda: self.restart_algorithm(restart_function), 'Show all messages': self.show_all_data, 'Switch emulator': self.swap_emulator, 'Show queue': self.show_queue, 'Pick': self.pick}
 		inner_layout = QHBoxLayout()
 		index = 0
 		for action in button_actions.items():
@@ -327,6 +326,13 @@ class Window(QWidget):
 		layout.addLayout(inner_layout)
 
 		return main_tab
+	
+	def swap_emulator(self):
+		self.emulator.input_lock.acquire()
+		print()
+		self.emulator.swap_emulator()
+		#self.emulator.print_prompt()
+		self.emulator.input_lock.release()
 
 	def controls(self):
 		controls_tab = QWidget()

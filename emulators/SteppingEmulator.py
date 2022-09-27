@@ -44,7 +44,6 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         #self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         #self.listener.start()
         self.shell = Thread(target=self.prompt, daemon=True)
-        self.shell.start()
         self.messages_received:list[MessageStub] = []
         self.messages_sent:list[MessageStub] = []
         msg = f"""
@@ -172,26 +171,31 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
 
     #print all messages in transit
     def print_transit(self):
-        print("Messages in transit:")
+        print(f"{CYAN}Messages in transit:{RESET}")
         if self.parent is AsyncEmulator:
             for messages in self._messages.values():
                 for message in messages:
-                    print(f'{message}')
+                    print(f'\t{message}')
         elif self.parent is SyncEmulator:
             for messages in self._last_round_messages.values():
                 for message in messages:
-                    print(f'{message}')
+                    print(f'\t{message}')
     
     #print all messages in transit to specified device
     def print_transit_for_device(self, device):
-        print(f'{GREEN}Messages in transit to device #{device}{RESET}')
+        print(f'{CYAN}Messages in transit to device #{device}{RESET}')
+        print(f'\t{CYAN}index{RESET}:     <message>')
         index = 0
         if self.parent is AsyncEmulator:
+            if not device in self._messages.keys():
+                return
             messages:list[MessageStub] = self._messages.get(device)
         elif self.parent is SyncEmulator:
+            if not device in self._last_round_messages.keys():
+                return
             messages:list[MessageStub] = self._last_round_messages.get(device)
         for message in messages:
-            print(f'{CYAN}{index}{RESET}: {message}')
+            print(f'\t{CYAN}{index}{RESET}:         {message}')
             index+=1
     
     #swap between which parent class the program will run in between deliveries
@@ -200,7 +204,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             self.parent = SyncEmulator
         elif self.parent is SyncEmulator:
             self.parent = AsyncEmulator
-        print(f'Changed emulator to {self.parent.__name__}')
+        print(f'Changed emulator to {GREEN}{self.parent.__name__}{RESET}')
 
     def run(self):
         self._progress.acquire()
@@ -222,7 +226,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 self._round_lock.acquire()
                 # check if everyone terminated
                 self._progress.acquire()
-                print(f'## {GREEN}ROUND {self._rounds}{RESET} ##')
+                print(f'\r\t## {GREEN}ROUND {self._rounds}{RESET} ##')
                 if self.all_terminated():
                     self._progress.release()
                     break

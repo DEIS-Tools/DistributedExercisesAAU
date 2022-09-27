@@ -41,7 +41,7 @@ def fetch_alg(lecture: str, algorithm: str):
     return alg
 
 
-def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int):
+def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_devices: int, gui:bool):
     print(
         f'Running Lecture {lecture_no} Algorithm {algorithm} in a network of type [{network_type}] using {number_of_devices} devices')
     if number_of_devices < 2:
@@ -71,10 +71,12 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
             raise NotImplementedError(
                 f'You are trying to run an exercise ({algorithm}) of a lecture ({lecture_no}) which has not yet been released')
     Thread(target=run_instance).start()
-    if isinstance(instance, SteppingEmulator):
-        window = Window(number_of_devices, lambda: run_exercise(lecture_no, algorithm, network_type, number_of_devices), instance)
+    if isinstance(instance, SteppingEmulator) and gui:
+        window = Window(number_of_devices, lambda: run_exercise(lecture_no, algorithm, network_type, number_of_devices, True), instance)
         window.show()
         return window
+    if not gui:
+        instance.shell.start()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='For exercises in Distributed Systems.')
@@ -86,6 +88,14 @@ if __name__ == "__main__":
                         help='whether to use [async] or [sync] network', required=True, choices=['async', 'sync', 'stepping'])
     parser.add_argument('--devices', metavar='N', type=int, nargs=1,
                         help='Number of devices to run', required=True)
+    parser.add_argument("--gui", action="store_true", help="Toggle the gui or cli", required=False)
     args = parser.parse_args()
-
-    run_exercise(args.lecture[0], args.algorithm[0], args.type[0], args.devices[0])
+    import sys
+    if args.gui:
+        from PyQt6.QtWidgets import QApplication
+        app = QApplication(sys.argv)
+        run_exercise(args.lecture[0], args.algorithm[0], args.type[0], args.devices[0], True)
+        app.exec()
+    else:
+        run_exercise(args.lecture[0], args.algorithm[0], args.type[0], args.devices[0], False)
+        

@@ -68,7 +68,7 @@ def start_exercise():
     global starting_exercise
     if not starting_exercise:
         starting_exercise = True
-        windows.append(run_exercise(int(actions['Lecture'].currentText()), actions['Algorithm'].text(), actions['Type'].currentText(), int(actions['Devices'].text())))
+        windows.append(run_exercise(int(actions['Lecture'].currentText()), actions['Algorithm'].text(), actions['Type'].currentText(), int(actions['Devices'].text()), True))
         starting_exercise = False
 
 
