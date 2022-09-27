@@ -1,7 +1,20 @@
 # Exercises for Distributed Systems
 This repository contains a small framework written in python for emulating *asynchronous* and *synchronous* distributed systems.
+## Install
+The stepping emulator requires the following packages to run
+*  PyQt6
+*  pynput
+*  cryptography
 
+These packages can be installed using `pip` as shown below:
+```bash
+pip install --user -r requirements.txt
+```
+
+The framework is tested under `python3.10` in Arch Linux, Ubuntu and Windows.
 ## General
+A FAQ can be found [here](https://github.com/DEIS-Tools/DistributedExercisesAAU/wiki)
+
 Exercises will be described later in this document.
 
 In general avoid changing any of the files in the `emulators` subdirectory.
@@ -12,18 +25,43 @@ I will provide new templates as the course progresses.
 
 You should be able to execute your solution to exercise 1 using the following lines:
 ```bash
-python3.9 exercise_runner.py --lecture 1 --algorithm Gossip --type sync --devices 3
-python3.9 exercise_runner.py --lecture 1 --algorithm Gossip --type async --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm Gossip --type sync --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm Gossip --type async --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm Gossip --type stepping --devices 3
 ```
 
 The first line will execute your implementation of the `Gossip` algorithm in a synchronous setting with three devices, 
 while the second line will execute in an asynchronous setting.
+The third line will execute your implementation in a synchronous setting, launching a GUI to visualize your implementation, the setting can be adjusted during execution.
 
 For usage of the framework, see `exercises/demo.py` for a lightweight example.
 The example can be run with:
 ```bash
-python3.9 exercise_runner.py --lecture 0 --algorithm PingPong --type async --devices 3
+python3.10 exercise_runner.py --lecture 0 --algorithm PingPong --type async --devices 3
 ```
+
+## Stepping emulator
+The stepping emulator can be used to run the algorithm in steps where one message is sent or received for each step in this emulator. The Stepping emulator can be controlled with the following keyboard input:
+```
+space:   Step a single time through messages
+f:       Fast-forward through messages
+enter:   Kill stepper daemon and finish algorithm
+tab:     Show all messages currently waiting tobe transmitted
+s:       Pick the next message waiting to be transmitted to transmit next
+e:       Toggle between sync and async emulation
+```
+## GUI
+The framework can also be launched with an interface by executing the following line:
+```
+python3.10 exercise_runner_overlay.py
+```
+Where your solution can be executed through this GUI. 
+
+### Stepping emulator GUI
+If the stepping emulator is chosen, the framework will launch with a GUI visualising some different aspects of your algorithm, an example of the Stepping GUI is shown below:
+
+![](figures/stepping_gui.png)
+
 
 ## Pull Requests
 If you have any extensions or improvements you are welcome to create a pull request.
@@ -56,11 +94,11 @@ Your tasks are as follows:
 You can have several copies of the `Gossip` class, just give the class another name in the `exercise1.py` document, for instance `ImprovedGossip`.
 You should then be able to call the framework with your new class via:
 ```bash
-python3.9 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async --devices 3
+python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async --devices 3
 ```
 
 # Exercise 2
-1. Implement the RIP protocol (fill in missing code in merge_tables), described in \[DS, fifth edition\] Page 115-118.
+1. Implement the RIP protocol (fill in missing code in merge_tables), described in \[DS, fifth edition\] Page 115-118. _(NOTICE: To run/debug the protocol, you must first implement the network topology described in "task 2.0" below.)_
 2. In the `__init__` of `RipCommunication`, create a ring topology (that is, set up who are the neighbors of each device). Consider a ring size of 10 devices.
    1. How many messages are sent in total before the routing_tables of all nodes are synchronized?
    2. How can you "know" that the routing tables are complete and you can start using the network to route packets? Consider the general case of internet, and the specific case of our toy ring network. 
@@ -71,7 +109,7 @@ python3.9 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async
                return False
            return True
          ```
-         Does it work? Each routing table should believe it is completed just one. How many times the routing tables appear to be completed?
+         Does it work? Each routing table should believe it is completed just one row short. How many times do the routing tables appear to be completed?
    4. Try this other approach, which works better:
       1. ```python
          def routing_table_complete(self):
@@ -84,7 +122,7 @@ python3.9 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type async
               return True
          ```
     Is it realistic for a real network?
-3. Send a `RoutableMessage` after the routing tables are ready. Consider the termination problem. Can a node quit right after receiving the `RoutingMessage` for itself? What happens to the rest of the nodes?
+3. Send a `RoutableMessage` after the routing tables are ready. Consider the termination problem. Can a node quit right after receiving the `RoutableMessage` for itself? What happens to the rest of the nodes?
 4. What happens, if a link has a negative cost? How many messages are sent before the `routing_tables` converge?
 
 # Exercise 3
@@ -186,7 +224,7 @@ For all exercises today, you can use the `sync` network type - but most algorith
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3.9 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devices 7
+python3.10 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devices 7
 ```
 
 # Exercise 9
@@ -200,7 +238,7 @@ python3.9 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --d
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async --devices 6
+python10 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async --devices 6
 ```
 
 # Exercise 10
@@ -213,7 +251,7 @@ python3 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
+python3.10 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
 ```
 
 
@@ -227,7 +265,7 @@ python3 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type asy
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
+python3.10 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
 ```
 
 
@@ -240,5 +278,6 @@ python3 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type asy
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
+python3.10 exercise_runner.py --lecture 12 --algorithm AodvNode --type async --devices 10
 ```
+
