@@ -53,11 +53,7 @@ class Window(QWidget):
 	w = 600
 	device_size = 80
 	last_message = None
-	buttons:dict[int, QPushButton] = {}
 	windows = list()
-	pick_window = False
-	queue_window = False
-	all_data_window = False
 
 	def __init__(self, elements, restart_function, emulator:SteppingEmulator):
 		super().__init__()
@@ -73,6 +69,10 @@ class Window(QWidget):
 		self.setWindowTitle("Stepping Emulator")
 		self.setWindowIcon(QIcon("icon.ico"))
 		self.set_device_color()
+		self.pick_window = False
+		self.queue_window = False
+		self.all_data_window = False
+		self.buttons:dict[int, QPushButton] = {}
 
 	def coordinates(self, center, r, i, n):
 		x = sin((i*2*pi)/n)
