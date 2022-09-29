@@ -91,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--gui", action="store_true", help="Toggle the gui or cli", required=False)
     args = parser.parse_args()
     import sys
-    if args.gui:
+    if args.gui and args.type[0] == 'stepping':
         from PyQt6.QtWidgets import QApplication
         app = QApplication(sys.argv)
         run_exercise(args.lecture[0], args.algorithm[0], args.type[0], args.devices[0], True)
