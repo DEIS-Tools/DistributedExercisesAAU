@@ -158,9 +158,9 @@ For all exercises today, you can use the `sync` network type - but most algorith
    3. Submit a pull-request!
 
 # Exercise 5
-1. Identify two problems with IP-multicast
-   1. What is a practical problem for IP-multicast? 
-   2. What is a theoretical problem for IP-multicast?
+1. Identify two problems with Reliable Multicast over IP
+   1. What is a practical problem for Reliable Multicast over IP? 
+   2. What is a theoretical problem for Reliable Multicast over IP?
    
 2. Identify all the events in the following picture
    1. Compute the lamport clocks for each event
