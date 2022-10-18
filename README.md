@@ -184,16 +184,16 @@ For all exercises today, you can use the `sync` network type - but most algorith
    1. Hint: how (and when) do you identify a tie?
 
 # Exercise 6
-1. Study the pseudo-code in the slides (on moodle) and complete the implement of the `King` Algorithm in `exercise6.py`
+1. Study the pseudo-code in the slides (on Moodle) and complete the implementation of the `King` Algorithm in `exercise6.py`
    1. How does the algorithm deal with a Byzantine king (try f=1, the first king is byzantine)?
    2. Why does the algorithm satisfy Byzantine integrity?
-   3. Sketch/discuss a modification your implementation s.t. the algorithm works in an `async` network, but looses its termination guarantee
+   3. Sketch/discuss a modification of your implementation such that the algorithm works in an `async` network, but looses its termination guarantee
       1. What would happen with a Byzantine king?
       2. What would happen with a slow king?
       3. What about the combination of the above?
    
-2. Bonus Exercise: Implement the Paxos algorithm in `exercise6.py`, see the pseudo-code on moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
-   1. Identify messages send/received by each role
+2. Bonus Exercise: Implement the Paxos algorithm in `exercise6.py`. See the pseudo-code on Moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
+   1. Identify messages sent/received by each role
       1. Investigate `PAXOSNetwork`
    2. Implement each role but the learner
       1. Assume that each device is both a `Proposer` and an `Acceptor` (the `Learner` is provided)
