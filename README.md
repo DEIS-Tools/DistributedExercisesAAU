@@ -184,16 +184,16 @@ For all exercises today, you can use the `sync` network type - but most algorith
    1. Hint: how (and when) do you identify a tie?
 
 # Exercise 6
-1. Study the pseudo-code in the slides (on moodle) and complete the implement of the `King` Algorithm in `exercise6.py`
+1. Study the pseudo-code in the slides (on Moodle) and complete the implementation of the `King` Algorithm in `exercise6.py`
    1. How does the algorithm deal with a Byzantine king (try f=1, the first king is byzantine)?
    2. Why does the algorithm satisfy Byzantine integrity?
-   3. Sketch/discuss a modification your implementation s.t. the algorithm works in an `async` network, but looses its termination guarantee
+   3. Sketch/discuss a modification of your implementation such that the algorithm works in an `async` network, but looses its termination guarantee
       1. What would happen with a Byzantine king?
       2. What would happen with a slow king?
       3. What about the combination of the above?
    
-2. Bonus Exercise: Implement the Paxos algorithm in `exercise6.py`, see the pseudo-code on moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
-   1. Identify messages send/received by each role
+2. Bonus Exercise: Implement the Paxos algorithm in `exercise6.py`. See the pseudo-code on Moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
+   1. Identify messages sent/received by each role
       1. Investigate `PAXOSNetwork`
    2. Implement each role but the learner
       1. Assume that each device is both a `Proposer` and an `Acceptor` (the `Learner` is provided)
@@ -204,14 +204,14 @@ For all exercises today, you can use the `sync` network type - but most algorith
    4. Discuss how you can use Paxos in "continued consensus" where you have to agree on the order of entries in a log-file
 
 # Exercise 7
-1. DS5ed 18.5, 18.13
+1. DS5ed exercises 18.5 and 18.13
 2. Sketch an architecture for the following three systems: A bulletin board (simple reddit), a bank, a version control system (e.g. GIT)
-   1. Identify the system types
-   2. Which replication type is suitable, and for which parts of the system
+   1. Identify the system types (with respect to CAP).
+   2. Which replication type is suitable, and for which parts of the system?
    3. If you go for a gossip solution, what is a suitable update frequency?
 3. BONUS Exercise: Implement the Bully algorithm (DS 5ed, page 660) in `exercise7.py`
    1. In which replication scheme is it useful?
-   2. What is the "extra cost" of a new leader in replication?
+   2. What is the "extra cost" of electing a new leader in replication?
 
 # Exercise 8
 1. Compare GFS and Chubby, and identify use cases that are better for one or the other solution.
