@@ -220,7 +220,7 @@ class GetReqMessage(MessageStub):
     def __str__(self):
         return f'GET REQUEST MESSAGE {self.source} -> {self.destination}: ({self.guid})'
 
-class GetResMessage(MessageStub):
+class GetRspMessage(MessageStub):
     def __init__(self, sender: int, destination: int, guid: int, data: str):
         super().__init__(sender, destination)
         self.guid = guid
