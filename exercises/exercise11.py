@@ -153,7 +153,7 @@ class ChordClient(Device):
 
 
 class ChordNetwork:
-    def init_routing_tables(number_of_devices):
+    def init_routing_tables(number_of_devices: int):
         N = number_of_devices-2 # routing_data 0 will be for device 2, etc
         while len(all_nodes) < N:
             new_chord_id = random.randint(0, pow(2,address_size)-1)
@@ -220,7 +220,7 @@ class GetReqMessage(MessageStub):
     def __str__(self):
         return f'GET REQUEST MESSAGE {self.source} -> {self.destination}: ({self.guid})'
 
-class GetReqMessage(MessageStub):
+class GetResMessage(MessageStub):
     def __init__(self, sender: int, destination: int, guid: int, data: str):
         super().__init__(sender, destination)
         self.guid = guid
