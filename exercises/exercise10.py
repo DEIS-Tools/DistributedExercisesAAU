@@ -38,9 +38,8 @@ class Block:
 
 
 
-class Blockchain():
+class Blockchain:
     def __init__(self):
-        super().__init__()
         self.unconfirmed_transactions = []
         self.chain = []
 
