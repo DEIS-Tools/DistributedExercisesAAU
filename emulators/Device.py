@@ -9,6 +9,7 @@ class Device:
         self._id = index
         self._medium = medium
         self._number_of_devices = number_of_devices
+        self._finished = False
 
     def run(self):
         raise NotImplementedError("You have to implement a run-method!")
