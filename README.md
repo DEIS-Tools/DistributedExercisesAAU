@@ -242,11 +242,11 @@ python10 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type asyn
 ```
 
 # Exercise 10
-1. There are "exercises" (actually, questions) on the moodle. I suggest to start with them.
+1. There are "exercises" (actually, questions) on the Moodle page. I suggest to start with them.
 2. Consider the code in `exercise10.py`, which sketches a blockchain similar to bitcoin. Consider that transactions are just strings and we will do no check on the transactions. I had to add a very "random" termination condition. I associate a miner to each client, the code will never stop if I have an odd number of devices.
-   1. Take a look at the Block and the Blockchain (they are NOT devices) and consider how the blockchain is supposed to grow.
-   2. Design the logic for when a miner sends a blockchain (with its new block) to another miner. What do you do when you receive a new block? What if a fork? Can it happen? How do you manage it to preserve the "longest chain" rule?
-   3. Look for the TODOs, and implement your solution
+   1. Take a look at the Block and the Blockchain classes (they are NOT devices) and consider how the blockchain is supposed to grow.
+   2. Design the logic for when a miner sends a blockchain (with its new block) to another miner. What do you do when you receive a new block? What if there is a fork? Can it happen? How do you manage it to preserve the "longest chain" rule?
+   3. Look for the TODOs, and implement your solution.
    4. Try the code for both sync and async devices. Does it work in both cases?
 
 NOTICE: To execute the code, issue for example:
@@ -256,21 +256,21 @@ python3.10 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type 
 
 
 # Exercise 11
-1. There are "exercises" on the moodle. I suggest to start with them.
+1. There are "exercises" on the Moodle page. I suggest to start with them.
 2. Consider the code in `exercise11.py`, which sets up the finger tables for chord nodes. I have a client, connected always to the same node, which issues some PUTs.
    1. Take a look at how the finger tables are populated, but please use the slides, since the code can be quite cryptic.
    2. Design the logic for the routing process, thus: when do I end the routing process? Who should I send the message to, if I am not the destination?
-   3. Look for the TODOs, and implement your solution
+   3. Look for the TODOs, and implement your solution.
    4. If you have time, implement the JOIN process for device 1.
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3.10 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
+python3.10 exercise_runner.py --lecture 11 --algorithm ChordNetwork --type async --devices 10
 ```
 
 
 # Exercise 12
-1. There are "exercises" on the moodle. I suggest to start with them.
+1. There are "exercises" on the Moodle page. I suggest to start with them.
 2. Consider the code in `exercise12.py`, which creates the topology for your IoT wireless network. The goal is to implement AODV.
    1. Please note that you can self.medium().send() messages only in the nodes in self.neighbors. This simulates a wireless network with limited range.
    2. Design the logic for the Route Request process. What can you use as a broadcast id? Design also the Route Reply, which should be much easier.
