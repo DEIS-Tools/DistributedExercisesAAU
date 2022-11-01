@@ -220,7 +220,7 @@ For all exercises today, you can use the `sync` network type - but most algorith
    2. Sketch a design for the "passive replication" solution of the GFS. Consider how many types of messages you need, when they should be sent, etc
    3. Implement your solution, starting from the handler of RecordAppendReqMessage of the GfsChunkserver class
    4. Try out your solution with a larger number of clients, to have more concurrent changes to the "file"
-3. BONUS Exercise: Consider how to add shadow masters to the system. Clients and chunk servers will still interact with the first master to change the file system, but the shadow master can always work as read-only.
+3. BONUS Exercise: Add shadow masters to the system. Clients and chunk servers will still interact with the first master to change the file system, but the shadow master can take over if the master shuts down.
 
 NOTICE: To execute the code, issue for example:
 ```bash
