@@ -158,9 +158,9 @@ For all exercises today, you can use the `sync` network type - but most algorith
    3. Submit a pull-request!
 
 # Exercise 5
-1. Identify two problems with IP-multicast
-   1. What is a practical problem for IP-multicast? 
-   2. What is a theoretical problem for IP-multicast?
+1. Identify two problems with Reliable Multicast over IP
+   1. What is a practical problem for Reliable Multicast over IP? 
+   2. What is a theoretical problem for Reliable Multicast over IP?
    
 2. Identify all the events in the following picture
    1. Compute the lamport clocks for each event
@@ -184,16 +184,16 @@ For all exercises today, you can use the `sync` network type - but most algorith
    1. Hint: how (and when) do you identify a tie?
 
 # Exercise 6
-1. Study the pseudo-code in the slides (on moodle) and complete the implement of the `King` Algorithm in `exercise6.py`
+1. Study the pseudo-code in the slides (on Moodle) and complete the implementation of the `King` Algorithm in `exercise6.py`
    1. How does the algorithm deal with a Byzantine king (try f=1, the first king is byzantine)?
    2. Why does the algorithm satisfy Byzantine integrity?
-   3. Sketch/discuss a modification your implementation s.t. the algorithm works in an `async` network, but looses its termination guarantee
+   3. Sketch/discuss a modification of your implementation such that the algorithm works in an `async` network, but looses its termination guarantee
       1. What would happen with a Byzantine king?
       2. What would happen with a slow king?
       3. What about the combination of the above?
    
-2. Bonus Exercise: Implement the Paxos algorithm in `exercise6.py`, see the pseudo-code on moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
-   1. Identify messages send/received by each role
+2. Bonus Exercise: Implement the Paxos algorithm in `exercise6.py`. See the pseudo-code on Moodle (use the video for reference when in doubt) for the two interesting roles (proposer and acceptor).
+   1. Identify messages sent/received by each role
       1. Investigate `PAXOSNetwork`
    2. Implement each role but the learner
       1. Assume that each device is both a `Proposer` and an `Acceptor` (the `Learner` is provided)
@@ -204,14 +204,14 @@ For all exercises today, you can use the `sync` network type - but most algorith
    4. Discuss how you can use Paxos in "continued consensus" where you have to agree on the order of entries in a log-file
 
 # Exercise 7
-1. DS5ed 18.5, 18.13
+1. DS5ed exercises 18.5 and 18.13
 2. Sketch an architecture for the following three systems: A bulletin board (simple reddit), a bank, a version control system (e.g. GIT)
-   1. Identify the system types
-   2. Which replication type is suitable, and for which parts of the system
+   1. Identify the system types (with respect to CAP).
+   2. Which replication type is suitable, and for which parts of the system?
    3. If you go for a gossip solution, what is a suitable update frequency?
 3. BONUS Exercise: Implement the Bully algorithm (DS 5ed, page 660) in `exercise7.py`
    1. In which replication scheme is it useful?
-   2. What is the "extra cost" of a new leader in replication?
+   2. What is the "extra cost" of electing a new leader in replication?
 
 # Exercise 8
 1. Compare GFS and Chubby, and identify use cases that are better for one or the other solution.
@@ -242,11 +242,11 @@ python10 exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type asyn
 ```
 
 # Exercise 10
-1. There are "exercises" (actually, questions) on the moodle. I suggest to start with them.
+1. There are "exercises" (actually, questions) on the Moodle page. I suggest to start with them.
 2. Consider the code in `exercise10.py`, which sketches a blockchain similar to bitcoin. Consider that transactions are just strings and we will do no check on the transactions. I had to add a very "random" termination condition. I associate a miner to each client, the code will never stop if I have an odd number of devices.
-   1. Take a look at the Block and the Blockchain (they are NOT devices) and consider how the blockchain is supposed to grow.
-   2. Design the logic for when a miner sends a blockchain (with its new block) to another miner. What do you do when you receive a new block? What if a fork? Can it happen? How do you manage it to preserve the "longest chain" rule?
-   3. Look for the TODOs, and implement your solution
+   1. Take a look at the Block and the Blockchain classes (they are NOT devices) and consider how the blockchain is supposed to grow.
+   2. Design the logic for when a miner sends a blockchain (with its new block) to another miner. What do you do when you receive a new block? What if there is a fork? Can it happen? How do you manage it to preserve the "longest chain" rule?
+   3. Look for the TODOs, and implement your solution.
    4. Try the code for both sync and async devices. Does it work in both cases?
 
 NOTICE: To execute the code, issue for example:
@@ -256,21 +256,21 @@ python3.10 exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type 
 
 
 # Exercise 11
-1. There are "exercises" on the moodle. I suggest to start with them.
+1. There are "exercises" on the Moodle page. I suggest to start with them.
 2. Consider the code in `exercise11.py`, which sets up the finger tables for chord nodes. I have a client, connected always to the same node, which issues some PUTs.
    1. Take a look at how the finger tables are populated, but please use the slides, since the code can be quite cryptic.
    2. Design the logic for the routing process, thus: when do I end the routing process? Who should I send the message to, if I am not the destination?
-   3. Look for the TODOs, and implement your solution
+   3. Look for the TODOs, and implement your solution.
    4. If you have time, implement the JOIN process for device 1.
 
 NOTICE: To execute the code, issue for example:
 ```bash
-python3.10 exercise_runner.py --lecture 11 --algorithm BlockchainNetwork --type async --devices 10
+python3.10 exercise_runner.py --lecture 11 --algorithm ChordNetwork --type async --devices 10
 ```
 
 
 # Exercise 12
-1. There are "exercises" on the moodle. I suggest to start with them.
+1. There are "exercises" on the Moodle page. I suggest to start with them.
 2. Consider the code in `exercise12.py`, which creates the topology for your IoT wireless network. The goal is to implement AODV.
    1. Please note that you can self.medium().send() messages only in the nodes in self.neighbors. This simulates a wireless network with limited range.
    2. Design the logic for the Route Request process. What can you use as a broadcast id? Design also the Route Reply, which should be much easier.
