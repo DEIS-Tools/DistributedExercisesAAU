@@ -46,7 +46,7 @@ class AsyncEmulator(EmulatorStub):
         if not stepper:
             self._progress.acquire()
         self._messages_sent += 1
-        print(f'\r\t{GREEN}Send{RESET} {message}')
+        print(f'\r\t{GREEN}Send{RESET}    {message}')
         if message.destination not in self._messages:
             self._messages[message.destination] = []
         self._messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing

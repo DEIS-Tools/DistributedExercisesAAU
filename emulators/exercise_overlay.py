@@ -1,15 +1,14 @@
 from random import randint
 from threading import Thread
 from time import sleep
-from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, QLabel, QLineEdit
-from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QPushButton, QTabWidget, QLabel, QListWidget, QScrollBar, QListWidgetItem
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter
 from PyQt6.QtCore import Qt
 from sys import argv
 from os import name
 from math import cos, sin, pi
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.MessageStub import MessageStub
-from emulators.SyncEmulator import SyncEmulator
 
 from emulators.table import Table
 from emulators.SteppingEmulator import SteppingEmulator
@@ -58,18 +57,25 @@ class Window(QWidget):
 	def __init__(self, elements, restart_function, emulator:SteppingEmulator):
 		super().__init__()
 		self.emulator = emulator
-		self.setFixedSize(self.w, self.h)
-		layout = QVBoxLayout()
+		self.setFixedSize(self.w+int(self.w/2), self.h)
+		layout = QHBoxLayout()
 		tabs = QTabWidget()
 		tabs.setFixedSize(self.w-20, self.h-20)
 		self.buttons:dict[int, QPushButton] = {}
-		tabs.addTab(self.main(elements, restart_function), 'Main')
+		self.main_tab = self.main(elements, restart_function)
+		tabs.addTab(self.main_tab, 'Main')
 		tabs.addTab(self.controls(), 'controls')
 		layout.addWidget(tabs)
+
+		self.message_list = QListWidget()
+		scrollbar = QScrollBar()
+		self.message_list.setVerticalScrollBar(scrollbar)
+		layout.addWidget(self.message_list)
+
 		self.setLayout(layout)
 		self.setWindowTitle("Stepping Emulator")
 		self.setWindowIcon(QIcon("icon.ico"))
-		self.set_device_color()
+		self.update_display()
 		self.pick_window = False
 		self.queue_window = False
 		self.all_data_window = False
@@ -216,7 +222,7 @@ class Window(QWidget):
 			if len(m) > max_size:
 				max_size = len(m)
 
-		content = []
+		content = [[]]
 		for i in range(max_size):
 			content.append([])
 			for key in keys:
@@ -242,16 +248,12 @@ class Window(QWidget):
 		table.show()
 
 	def end(self):
-		if self.emulator.all_terminated():
-			return
-		self.emulator.is_stepping = False
-		self.emulator.step_barrier.wait()
 		while not self.emulator.all_terminated():
-			self.set_device_color()
-		sleep(.1)
-		#self.emulator.print_prompt()
+			self.emulator.step_barrier.wait()
+			self.update_display()
+			QApplication.processEvents()
 	
-	def set_device_color(self):
+	def update_display(self):
 		sleep(.1)
 		messages = self.emulator.messages_sent if self.emulator.last_action == "send" else self.emulator.messages_received
 		if len(messages) != 0:
@@ -265,6 +267,23 @@ class Window(QWidget):
 					self.buttons[last_message.source].setStyleSheet(circle_button_style(self.device_size, 'green'))
 					self.buttons[last_message.destination].setStyleSheet(circle_button_style(self.device_size, 'red'))
 				self.last_message = last_message
+			
+			#content of the messages
+			content = str(last_message)
+			content = content.replace(f'{last_message.source} -> {last_message.destination} : ', "").replace(f'{last_message.source}->{last_message.destination} : ', "")
+			self.communication_label.setText(f'Sent {content}' if self.emulator.last_action == "send" else f'Received {content}')
+			x = self.buttons[last_message.source].x() if self.emulator.last_action == "send" else self.buttons[last_message.destination].x()
+			y = self.buttons[last_message.source].y() if self.emulator.last_action == "send" else self.buttons[last_message.destination].y()
+			self.communication_label.move(x, y+self.device_size+10)
+
+			#arrows
+			self.main_tab.repaint()
+
+			#add last message to list of messages
+			label = QListWidgetItem()
+			label.setFont(QFont("Monospace"))
+			label.setText(f"[{self.message_list.count()}]\t"+(f'Send    {last_message}' if self.emulator.last_action == "send" else f'Receive {last_message}'))
+			self.message_list.addItem(label)
 
 	def step(self):
 		self.emulator.input_lock.acquire()
@@ -274,18 +293,26 @@ class Window(QWidget):
 			
 		while self.emulator.step_barrier.n_waiting == 0:
 			pass
-		self.set_device_color()
-		#self.emulator.print_prompt()
+
+		self.update_display()
 
 	def restart_algorithm(self, function):
-		#if self.emulator.prompt_active:
-			#print(f'\r{RED}Please type "exit" in the prompt below{RESET}')
-			#self.emulator.print_prompt()
-			#return
 		self.windows.append(function())
 
 	def main(self, num_devices, restart_function):
-		main_tab = QWidget()
+		this = self
+			
+		class MainTab(QWidget):
+			def paintEvent(self, event):
+				painter = QPainter()
+				painter.begin(self)
+				painter.drawLine(
+					this.buttons[this.last_message.source].x() + int(this.device_size/2), 
+					this.buttons[this.last_message.source].y() + int(this.device_size/2), 
+					this.buttons[this.last_message.destination].x() + int(this.device_size/2), 
+					this.buttons[this.last_message.destination].y() + int(this.device_size/2))
+
+		main_tab = MainTab()
 		green = QLabel("green: source", main_tab)
 		green.setStyleSheet("color: green;")
 		green.move(5, 0)
@@ -324,6 +351,8 @@ class Window(QWidget):
 			button.clicked.connect(action[1])
 			inner_layout.addWidget(button)
 		layout.addLayout(inner_layout)
+
+		self.communication_label = QLabel(main_tab)
 
 		return main_tab
 	

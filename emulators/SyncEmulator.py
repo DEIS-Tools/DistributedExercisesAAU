@@ -75,7 +75,7 @@ class SyncEmulator(EmulatorStub):
         if not stepper:
             self._progress.acquire()
         self._messages_sent += 1
-        print(f'\r\t{GREEN}Send{RESET} {message}')
+        print(f'\r\t{GREEN}Send{RESET}    {message}')
         if message.destination not in self._current_round_messages:
             self._current_round_messages[message.destination] = []
         self._current_round_messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing

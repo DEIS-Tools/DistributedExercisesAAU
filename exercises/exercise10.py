@@ -38,8 +38,9 @@ class Block:
 
 
 
-class Blockchain:
+class Blockchain():
     def __init__(self):
+        super().__init__()
         self.unconfirmed_transactions = []
         self.chain = []
 
@@ -165,8 +166,6 @@ class BlockchainMiner(Device):
             # this is used to send the blockchain data to a client requesting them
             message = BlockchainMessage(self.index(), ingoing.source, self.blockchain.chain)
             self.medium().send(message)
-        elif isinstance(ingoing, TransactionMessage):
-            self.blockchain.add_new_transaction(ingoing.transaction)
         elif isinstance(ingoing, QuitMessage):
             return False
         return True

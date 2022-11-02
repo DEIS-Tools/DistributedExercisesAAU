@@ -6,7 +6,6 @@ from emulators.AsyncEmulator import AsyncEmulator
 from .EmulatorStub import EmulatorStub
 from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
-from pynput import keyboard
 from getpass import getpass #getpass to hide input, cleaner terminal
 from threading import Barrier, Lock, Thread #run getpass in seperate thread
 from os import name
