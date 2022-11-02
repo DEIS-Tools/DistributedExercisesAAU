@@ -254,7 +254,9 @@ class Window(QWidget):
 			QApplication.processEvents()
 	
 	def update_display(self):
-		sleep(.1)
+		while self.emulator.step_barrier.n_waiting == 0:
+			if self.emulator.all_terminated():
+				return
 		messages = self.emulator.messages_sent if self.emulator.last_action == "send" else self.emulator.messages_received
 		if len(messages) != 0:
 			last_message = messages[len(messages)-1]
@@ -290,10 +292,6 @@ class Window(QWidget):
 		if not self.emulator.all_terminated():
 			self.emulator.step_barrier.wait()
 		self.emulator.input_lock.release()
-			
-		while self.emulator.step_barrier.n_waiting == 0:
-			pass
-
 		self.update_display()
 
 	def restart_algorithm(self, function):
