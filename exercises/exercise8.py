@@ -134,7 +134,7 @@ class GfsChunkserver(Device):
 
     def print_result(self):
         print("chunk server quit. Currently, my saved chunks are as follows:")
-        for (chunkhandle, contents) in self.localchunks:
+        for chunkhandle, contents in self.localchunks.items():
             print(f"chunk {chunkhandle} : {contents}")
 
 
