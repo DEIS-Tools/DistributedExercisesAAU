@@ -61,7 +61,7 @@ class MapReduceMaster(Device):
             self.result_files.append(ingoing.result_filename)
             if self.number_finished_reducers == self.number_partitions:
                 # I can tell the client that the job is done
-                message = ClientJobCompletedMessage(1, 0, self.result_files)
+                message = ClientJobCompletedMessage(1, MapReduceNetwork.client_index, self.result_files)
                 self.medium().send(message)
         return True
 
@@ -130,7 +130,7 @@ class MapReduceWorker(Device):
                 print(f"Mapper {self.index()}: file '{filename}' processed")
                 if self.M_files_to_process == []:
                     self.mapper_shuffle()
-                    message = MappingDoneMessage(self.index(), 1)
+                    message = MappingDoneMessage(self.index(), MapReduceNetwork.master_index)
                     self.medium().send(message)
         if self.role == Role.REDUCER:
             # not much to do: everything is done when the master tells us about a mapper that completed its task
@@ -197,7 +197,7 @@ class MapReduceClient(Device):
         print(f"I am client {self.index()}")
         books = self.scan_for_books()
 
-        message = ClientJobStartMessage(self.index(), 1, books, 3)  # TODO: experiment with different number of reducers
+        message = ClientJobStartMessage(self.index(), MapReduceNetwork.master_index, books, 3)  # TODO: experiment with different number of reducers
         self.medium().send(message)
 
         while True:
@@ -210,7 +210,7 @@ class MapReduceClient(Device):
         if isinstance(ingoing, ClientJobCompletedMessage):
             # I can tell the master to quit
             # I will print the result later, with the print_result function
-            self.medium().send(QuitMessage(self.index(), 1))
+            self.medium().send(QuitMessage(self.index(), MapReduceNetwork.master_index))
             self.result_files = ingoing.result_files
             return False
         return True
@@ -228,12 +228,14 @@ class MapReduceNetwork:
         # client has index 0
         # master has index 1
         # workers have index 2+
-        if index == 0:
+        if index == MapReduceNetwork.client_index:
             return MapReduceClient(index, number_of_devices, medium)
-        elif index == 1:
+        elif index == MapReduceNetwork.master_index:
             return MapReduceMaster(index, number_of_devices, medium)
         else:
             return MapReduceWorker(index, number_of_devices, medium)
+    client_index = 0
+    master_index = 1
     workers: list[int] = []
 
 
