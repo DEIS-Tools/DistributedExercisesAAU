@@ -130,7 +130,7 @@ class MapReduceWorker(Device):
                 print(f"Mapper {self.index()}: file '{filename}' processed")
                 if self.M_files_to_process == []:
                     self.mapper_shuffle()
-                    message = MappingDoneMessage(self.index(), 0)
+                    message = MappingDoneMessage(self.index(), 1)
                     self.medium().send(message)
         if self.role == Role.REDUCER:
             # not much to do: everything is done when the master tells us about a mapper that completed its task
@@ -166,7 +166,6 @@ class MapReduceWorker(Device):
             self.R_my_partition = ingoing.my_partition
             self.R_number_mappers = ingoing.number_mappers
             # nothing to do until the Master tells us to contact Mappers
-            pass
         elif isinstance(ingoing, ReducerVisitMapperMessage):  # 'ReducerVisitMapperMessage' does not exist by default
             # the master is saying that a mapper is done
             # thus this reducer will:
