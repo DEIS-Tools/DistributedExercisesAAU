@@ -229,12 +229,12 @@ python3.10 exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --
 
 # Exercise 9
 1. Consider the code in `exercise9.py`, which sketches MapReduce, and complete it.
-   1. Unzip the file books.zip in ex9data/books
-   2. The Master is pretty much complete, the same can be said for the client. Take a look at how the Master is supposed to interact with Mappers and Reducers
-   3. Consider how to implement the Reducers. Take into account that we are simulating "local storage in the mappers" using memory
-   4. Look for the TODOs, and implement your solution
+   1. Unzip the file books.zip in ex9data/books.
+   2. The Master is pretty much complete. The same can be said for the client. Take a look at how the Master is supposed to interact with Mappers and Reducers.
+   3. Consider how to implement the Reducers. Take into account that we are simulating "local storage in the mappers" using memory.
+   4. Look for the TODOs, and implement your solution.
    5. Try to change the number of mappers and reducers, and look at the "performance". In particular, look at how many rounds are needed to complete the job with the "sync" simulator.
-2. Compare MapReduce and Spark RDDs, and consider what it would change in terms of architecture, especially to supprt RDDs
+2. Compare MapReduce and Spark RDDs, and consider what it would change in terms of architecture, especially to support RDDs.
 
 NOTICE: To execute the code, issue for example:
 ```bash

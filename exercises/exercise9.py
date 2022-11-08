@@ -9,16 +9,19 @@ from emulators.Medium import Medium
 from emulators.MessageStub import MessageStub
 
 
-
 class Role(Enum):
     # is the Worker a Mapper, a Reducer, or in Idle state?
     IDLE = 1
     MAPPER = 2
     REDUCER = 3
 
+
 class MapReduceMaster(Device):
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
+        self.number_partitions: int = -1
+        self.result_files: list[str] = []
+        self.number_finished_reducers = 0
 
     def run(self):
         # since this is a server, its job is to answer for requests (messages), then do something
@@ -39,7 +42,7 @@ class MapReduceMaster(Device):
                 self.medium().send(message)
             for i in range(0, number_of_mappers):
                 length = len(ingoing.filenames)
-                length = 5 # TODO: comment out this line to process all files, once you think your code is ready
+                length = 5  # TODO: comment out this line to process all files, once you think your code is ready
                 first = int(length * i / number_of_mappers)
                 last = int(length * (i+1) / number_of_mappers)
                 message = MapTaskMessage(self.index(), self.number_partitions + 2 + i, ingoing.filenames[first:last], self.number_partitions)
@@ -50,18 +53,20 @@ class MapReduceMaster(Device):
                 self.medium().send(QuitMessage(self.index(), w))
             return False
         elif isinstance(ingoing, MappingDoneMessage):
-            # TODO:
-            # contact all reducers, telling them that a mapper has completed its job
-            # hint: you need to define a new message type, for example ReducerVisitMapperMessage
+            # TODO: contact all reducers, telling them that a mapper has completed its job
+            #  hint: you need to define a new message type, for example ReducerVisitMapperMessage (see MapReduceWorker)
             pass
         elif isinstance(ingoing, ReducingDoneMessage):
-            # I can tell the client that the job is done
-            message = ClientJobCompletedMessage(1, 0)
-            self.medium().send(message)
+            self.number_finished_reducers += 1
+            self.result_files.append(ingoing.result_filename)
+            if self.number_finished_reducers == self.number_partitions:
+                # I can tell the client that the job is done
+                message = ClientJobCompletedMessage(1, MapReduceNetwork.client_index, self.result_files)
+                self.medium().send(message)
         return True
 
     def print_result(self):
-        print("Master " + str(self.index()) + " quits")
+        print(f"Master {self.index()} quits")
 
 
 class MapReduceWorker(Device):
@@ -72,28 +77,27 @@ class MapReduceWorker(Device):
         # number of partitions (equals to number of reducers)
         self.number_partitions = 0
         # variables if it is a mapper
-        self.M_files_to_process = {} # list of files to process
-        self.M_cached_results = {} # in-memory cache
-        self.M_stored_results = {} # "R" files containing results
+        self.M_files_to_process: list[str] = []  # list of files to process
+        self.M_cached_results: dict[str, int] = {}  # in-memory cache
+        self.M_stored_results: dict[int, dict[str, int]] = {}  # "R" files containing results. partition -> word -> count
         # variables if it is a reducer
-        self.R_my_partition = 0 # the partition I am managing
-        self.R_number_mappers = 0 # how many mappers there are. I need to know it to decide when I can tell the master I am done with the reduce task
+        self.R_my_partition = 0  # the partition I am managing
+        self.R_number_mappers = 0  # how many mappers there are. I need to know it to decide when I can tell the master I am done with the reduce task
 
-
-    def mapper_process_file(self, filename):
+    def mapper_process_file(self, filename: str) -> dict[str, int]:
         # goal: return the occurrences of words in the file
         words = []
         with open("ex9data/books/"+filename) as file:
             for line in file:
-                words+=line.split()
+                words += line.split()
         result = {}
         for word in words:
             result[word.lower()] = 1 + result.get(word.lower(), 0)
         return result
 
-    def mapper_partition_function(self, key):
-        # compute the partition based on the key (see the lecture material)
-        # this function should be supplied by the client We stick to a fixed function for sake of clarity
+    def mapper_partition_function(self, key: str) -> int:
+        # Compute the partition based on the key (see the lecture material)
+        # This function should be supplied by the client, but we stick to a fixed function for sake of clarity
         char = ord(key[0])
         if char < ord('a'):
             char = ord('a')
@@ -102,14 +106,13 @@ class MapReduceWorker(Device):
         partition = (char - ord('a')) * self.number_partitions / (1+ord('z')-ord('a'))
         return int(partition)
 
-
     def mapper_shuffle(self):
         # goal: merge all the data I have in the cache to the stored results WITH SHUFFLE, then flush the cache
         for word in self.M_cached_results:
             p = self.mapper_partition_function(word)
             old_value = self.M_stored_results[p].get(word, 0)
             self.M_stored_results[p][word] = self.M_cached_results[word] + old_value
-        self.M_cached_results = [] # flushing the cache
+        self.M_cached_results = []  # flushing the cache
 
     def do_some_work(self):
         if self.role == Role.IDLE:
@@ -121,19 +124,17 @@ class MapReduceWorker(Device):
             #   if I have no more files, I "store" it locally into partitions and tell the master that I am done
             if self.M_files_to_process != []:
                 filename = self.M_files_to_process.pop()
-                print(f"mapper {self.index()} file {filename} processed")
                 map_result = self.mapper_process_file(filename)
-                for k in map_result:
-                    self.M_cached_results[k] = self.M_cached_results.get(k, 0) + map_result[k]
+                for word in map_result:
+                    self.M_cached_results[word] = self.M_cached_results.get(word, 0) + map_result[word]
+                print(f"Mapper {self.index()}: file '{filename}' processed")
                 if self.M_files_to_process == []:
                     self.mapper_shuffle()
-                    message = MappingDoneMessage(self.index(), 0)
+                    message = MappingDoneMessage(self.index(), MapReduceNetwork.master_index)
                     self.medium().send(message)
         if self.role == Role.REDUCER:
             # not much to do: everything is done when the master tells us about a mapper that completed its task
             pass
-
-
 
     def run(self):
         # since this is a worker, it looks for incoming requests (messages), then it works a little
@@ -146,7 +147,7 @@ class MapReduceWorker(Device):
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, QuitMessage):
-            print("I am Mapper " + str(self.index()) + " and I am quitting")
+            print(f"I am Worker {self.index()} and I am quitting")
             return False
         elif isinstance(ingoing, MapTaskMessage):
             # I was assigned to be a mapper, thus I:
@@ -165,41 +166,38 @@ class MapReduceWorker(Device):
             self.R_my_partition = ingoing.my_partition
             self.R_number_mappers = ingoing.number_mappers
             # nothing to do until the Master tells us to contact Mappers
-            pass
-        elif isinstance(ingoing, ReducerVisitMapperMessage):
+        elif isinstance(ingoing, ReducerVisitMapperMessage):  # 'ReducerVisitMapperMessage' does not exist by default
             # the master is saying that a mapper is done
             # thus this reducer will:
-            #   get the "stored" results for the mapper, for the correct partition
+            #   get the "stored" results from the mapper, for the correct partition (new message type)
             # if it is the last mapper I have to contact, I will:
             #   merge the data
-            #   store it somewhere
+            #   store resulting data in "ex9data/results/{my_partition_file_name}"
             #   tell the master I am done
             # TODO: write the code
             pass
         return True
 
     def print_result(self):
-        print(f"worker quits. It was a {self.Role}")
+        print(f"Worker {self.index()} quits. It was a {self.role}")
 
 
 class MapReduceClient(Device):
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
+        self.result_files: list[str] = []
 
     def scan_for_books(self):
-        books = []
         with os.scandir('ex9data/books/') as entries:
-            for entry in entries:
-                if entry.is_file() and entry.name.endswith(".txt"):
-                    books.append(entry.name)
-        return books
+            return [entry.name for entry in entries
+                    if entry.is_file() and entry.name.endswith(".txt")]
 
     def run(self):
         # being a client, it listens to incoming messages, but it also does something to put the ball rolling
-        print("i am client " + str(self.index()))
+        print(f"I am client {self.index()}")
         books = self.scan_for_books()
-        
-        message = ClientJobStartMessage(self.index(), 1, books, 3) # TODO: experiment with different number of reducers
+
+        message = ClientJobStartMessage(self.index(), MapReduceNetwork.master_index, books, 3)  # TODO: experiment with different number of reducers
         self.medium().send(message)
 
         while True:
@@ -212,17 +210,17 @@ class MapReduceClient(Device):
         if isinstance(ingoing, ClientJobCompletedMessage):
             # I can tell the master to quit
             # I will print the result later, with the print_result function
-            self.medium().send(QuitMessage(self.index(), 1))
+            self.medium().send(QuitMessage(self.index(), MapReduceNetwork.master_index))
+            self.result_files = ingoing.result_files
             return False
         return True
 
     def print_result(self):
         for filename in self.result_files:
-            print("results from file: {self.filename}")
-            with open("ex9data/results/" + filename) as file:
+            print(f"Results from file: {filename}")
+            with open(f"ex9data/results/{filename}") as file:
                 for line in file:
                     print("\t" + line.rstrip())
-
 
 
 class MapReduceNetwork:
@@ -230,15 +228,15 @@ class MapReduceNetwork:
         # client has index 0
         # master has index 1
         # workers have index 2+
-        cls.workers = []
-        if index == 0:
+        if index == MapReduceNetwork.client_index:
             return MapReduceClient(index, number_of_devices, medium)
-        elif index == 1:
+        elif index == MapReduceNetwork.master_index:
             return MapReduceMaster(index, number_of_devices, medium)
         else:
             return MapReduceWorker(index, number_of_devices, medium)
-
-
+    client_index = 0
+    master_index = 1
+    workers: list[int] = []
 
 
 class QuitMessage(MessageStub):
@@ -247,7 +245,6 @@ class QuitMessage(MessageStub):
 
     def __str__(self):
         return f'QUIT REQUEST {self.source} -> {self.destination}'
-
 
 
 class ClientJobStartMessage(MessageStub):
@@ -259,6 +256,7 @@ class ClientJobStartMessage(MessageStub):
     def __str__(self):
         return f'CLIENT START JOB REQUEST {self.source} -> {self.destination}: ({len(self.filenames)} files, {self.number_partitions} partitions)'
 
+
 class ClientJobCompletedMessage(MessageStub):
     def __init__(self, sender: int, destination: int, result_files: list):
         super().__init__(sender, destination)
@@ -266,7 +264,6 @@ class ClientJobCompletedMessage(MessageStub):
 
     def __str__(self):
         return f'CLIENT JOB COMPLETED {self.source} -> {self.destination} ({self.result_files})'
-
 
 
 class MapTaskMessage(MessageStub):
@@ -277,14 +274,14 @@ class MapTaskMessage(MessageStub):
 
     def __str__(self):
         return f'MAP TASK ASSIGNMENT {self.source} -> {self.destination}: ({len(self.filenames)} files, {self.number_partitions} partitions)'
-        
+
+
 class MappingDoneMessage(MessageStub):
     def __init__(self, sender: int, destination: int):
         super().__init__(sender, destination)
 
     def __str__(self):
-        return f'MAP TASK COMKPLETED {self.source} -> {self.destination}'
-
+        return f'MAP TASK COMPLETED {self.source} -> {self.destination}'
 
 
 class ReduceTaskMessage(MessageStub):
@@ -297,12 +294,11 @@ class ReduceTaskMessage(MessageStub):
     def __str__(self):
         return f'REDUCE TASK ASSIGNMENT {self.source} -> {self.destination}: (partition is {self.my_partition}, {self.number_partitions} partitions, {self.number_mappers} mappers)'
 
+
 class ReducingDoneMessage(MessageStub):
-    def __init__(self, sender: int, destination: int):
+    def __init__(self, sender: int, destination: int, result_filename: str):
         super().__init__(sender, destination)
+        self.result_filename = result_filename
 
     def __str__(self):
-        return f'REDUCE TASK COMPLETED {self.source} -> {self.destination}: ()'
-
-
-
+        return f'REDUCE TASK COMPLETED {self.source} -> {self.destination}: result_filename = {self.result_filename}'
