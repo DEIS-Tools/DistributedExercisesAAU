@@ -61,11 +61,11 @@ class ChordNode(Device):
                     return
             self.medium().wait_for_next_round()
 
-    def is_request_for_me(self, guid):
+    def is_request_for_me(self, guid: int) -> bool:
         # TODO: implement this function that checks if the routing process is over
         pass
 
-    def next_hop(self, guid):
+    def next_hop(self, guid: int) -> int:
         # TODO: implement this function with the routing logic
         pass
 
@@ -78,7 +78,7 @@ class ChordNode(Device):
                 # TODO: route the message
                 # you can fill up the next_hop function for this
                 next_hop = self.next_hop(ingoing.guid)
-                message = PutMessage(self.index(), next_hop[0], ingoing.guid, ingoing.data)
+                message = PutMessage(self.index(), next_hop, ingoing.guid, ingoing.data)
                 self.medium().send(message)
         if isinstance(ingoing, GetReqMessage):
             # maybe TODO, but the GET is not very interesting
