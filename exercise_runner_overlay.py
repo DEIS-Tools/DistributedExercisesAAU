@@ -56,7 +56,7 @@ def text_changed(text):
         8:'GfsNetwork',
         9:'MapReduceNetwork',
         10:'BlockchainNetwork',
-        11:'ChordClient',
+        11:'ChordNetwork',
         12:'AodvNode'}
     lecture = int(text)
 

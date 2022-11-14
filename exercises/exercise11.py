@@ -35,7 +35,7 @@ class RoutingData:
         return ret
 
 
-def in_between(candidate, low, high):
+def in_between(candidate: int, low: int, high: int):
     # the function returns False when candidate == low or candidate == high
     # take care of those cases in the calling function
     if low == high:
@@ -164,16 +164,14 @@ class ChordNetwork:
         all_nodes.sort()
 
         for id in range(N):
-            prev_id = id-1
-            if prev_id < 0:
-                prev_id += N
+            prev_id = (id-1) % N
             prev = (prev_id, all_nodes[prev_id])
             new_finger_table = []
             for i in range(address_size):
                 at_least = (all_nodes[id] + pow(2, i)) % pow(2, address_size)
-                candidate = (id+1)%N
+                candidate = (id+1) % N
                 while in_between(all_nodes[candidate], all_nodes[id], at_least):
-                    candidate = (candidate+1)%N
+                    candidate = (candidate+1) % N
                 new_finger_table.append((candidate+2, all_nodes[candidate])) # I added 2 to candidate since routing_data 0 is for device 2, and so on
             all_routing_data.append(RoutingData(id+2, all_nodes[id], prev, new_finger_table))
             print(RoutingData(id+2, all_nodes[id], prev, new_finger_table).to_string())
