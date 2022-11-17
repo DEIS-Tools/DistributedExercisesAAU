@@ -165,7 +165,7 @@ class ChordNetwork:
 
         for id in range(N):
             prev_id = (id-1) % N
-            prev = (prev_id, all_nodes[prev_id])
+            prev = (prev_id+2, all_nodes[prev_id])  # Add 2 to get "message-able" device index
             new_finger_table = []
             for i in range(address_size):
                 at_least = (all_nodes[id] + pow(2, i)) % pow(2, address_size)
@@ -176,8 +176,6 @@ class ChordNetwork:
             all_routing_data.append(RoutingData(id+2, all_nodes[id], prev, new_finger_table))
             print(RoutingData(id+2, all_nodes[id], prev, new_finger_table).to_string())
 
-
-    
     def __new__(cls, index: int, number_of_devices: int, medium: Medium):
         # device #0 is the client
         # device #1 is a disconnected node
