@@ -2,6 +2,7 @@ import math
 import random
 import sys
 import threading
+from typing import Optional
 
 from emulators.Device import Device
 from emulators.Medium import Medium
@@ -9,7 +10,6 @@ from emulators.MessageStub import MessageStub
 
 import json
 import time
-
 
 # if you need controlled repetitions:
 # random.seed(100)
@@ -31,17 +31,17 @@ class AodvNode(Device):
         # I get the topology from the singleton
         self.neighbors = TopologyCreator.get_topology(number_of_devices, probability_arc)[index]
         # I initialize the "routing tables". Feel free to create your own structure if you prefer
-        self.reverse_path = {}
-        self.forward_path = {}
-        self.bcast_ids = []
+        self.forward_path: dict[int, int] = {}  # "Destination index" --> "Next-hop index"
+        self.reverse_path: dict[int, int] = {}  # "Source index" --> "Next-hop index"
+        self.bcast_ids = []  # Type hint left out on purpose due to tasks below
         # data structures to cache outgoing messages, and save received data
-        self.saved_data = []
-        self.outgoing_message_cache = []
+        self.saved_data: list[str] = []
+        self.outgoing_message_cache: list[DataMessage] = []
 
     def run(self):
         last = random.randint(0, self.number_of_devices() - 1)
         # I send the message to myself, so it gets routed
-        message = DataMessage(self.index(), self.index(), last, f"hi I am {self.index()}")
+        message = DataMessage(self.index(), self.index(), last, f"Hi. I am {self.index()}.")
         self.medium().send(message)
         while True:
             for ingoing in self.medium().receive_all():
@@ -49,11 +49,8 @@ class AodvNode(Device):
                     return
             self.medium().wait_for_next_round()
 
-    def next_hop(self, last):
-        for destination in self.forward_path:
-            if destination == last:
-                return self.forward_path[destination]
-        return None
+    def next_hop(self, last: int) -> Optional[int]:
+        return self.forward_path.get(last)  # Returns "None" if key does not exist
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, DataMessage):
@@ -115,22 +112,18 @@ class AodvNode(Device):
         return True
 
     def print_result(self):
-        print(f"AODV node {self.index()} quits, neighbours {self.neighbors}, forward paths {self.forward_path}, reverse paths {self.reverse_path}, saved data {self.saved_data} length of message cache (should be 0) {len(self.outgoing_message_cache)}")
-
-
+        print(f"AODV node {self.index()} quits: neighbours = {self.neighbors}, forward paths = {self.forward_path}, reverse paths = {self.reverse_path}, saved data = {self.saved_data}, length of message cache (should be 0) = {len(self.outgoing_message_cache)}")
 
 
 class TopologyCreator:
     # singleton design pattern
-    __topology = None
+    __topology: dict[int, list[int]] = None  # "Node index" --> [neighbor node indices]
 
-    def __check_connected(topology):
+    def __check_connected(topology: dict[int, list[int]]) -> Optional[tuple[int, int]]:
         # if the network is connected, it returns None;
         # if not, it returns two nodes belonging to two different partitions
-        queue = []
-        visited = []
-        visited.append(0)
-        queue.append(0)
+        queue = [0]
+        visited = [0]
         while queue:
             s = queue.pop(0)
             for neigh in topology.get(s):
@@ -142,8 +135,8 @@ class TopologyCreator:
                 return (visited[-1], n)
         return None
 
-    def __create_topology(number_of_devices, probability):
-        topology = {}
+    def __create_topology(number_of_devices: int, probability: float):
+        topology: dict[int, list[int]] = {}
         for i in range(0, number_of_devices):
             topology[i] = []
         for i in range(0, number_of_devices):
@@ -158,14 +151,10 @@ class TopologyCreator:
         return topology
 
     @classmethod
-    def get_topology(cls, number_of_devices, probability):
+    def get_topology(cls, number_of_devices: int, probability: float):
         if cls.__topology is not None:
-            return cls.__topology
-
-        cls.__topology = TopologyCreator.__create_topology(number_of_devices, probability)
+            cls.__topology = TopologyCreator.__create_topology(number_of_devices, probability)
         return cls.__topology
-
-
 
 
 class QuitMessage(MessageStub):
@@ -175,6 +164,7 @@ class QuitMessage(MessageStub):
     def __str__(self):
         return f'QUIT REQUEST {self.source} -> {self.destination}'
 
+
 class AodvRreqMessage(MessageStub):
     def __init__(self, sender: int, destination: int, first: int, last: int):
         super().__init__(sender, destination)
@@ -183,6 +173,7 @@ class AodvRreqMessage(MessageStub):
 
     def __str__(self):
         return f'RREQ MESSAGE {self.source} -> {self.destination}: ({self.first} -> {self.last})'
+
 
 class AodvRrepMessage(MessageStub):
     def __init__(self, sender: int, destination: int, first: int, last: int):
@@ -201,4 +192,4 @@ class DataMessage(MessageStub):
         self.data = data
 
     def __str__(self):
-        return f'DATA MESSAGE {self.source} -> {self.destination}: (final target {self.last} data {self.data})'
+        return f'DATA MESSAGE {self.source} -> {self.destination}: (final target = {self.last}, data = "{self.data}")'
