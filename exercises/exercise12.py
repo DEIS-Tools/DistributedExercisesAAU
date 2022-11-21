@@ -152,7 +152,7 @@ class TopologyCreator:
 
     @classmethod
     def get_topology(cls, number_of_devices: int, probability: float):
-        if cls.__topology is not None:
+        if cls.__topology is None:
             cls.__topology = TopologyCreator.__create_topology(number_of_devices, probability)
         return cls.__topology
 
