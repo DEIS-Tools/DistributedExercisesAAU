@@ -75,7 +75,7 @@ def run_exercise(lecture_no: int, algorithm: str, network_type: str, number_of_d
         window = Window(number_of_devices, lambda: run_exercise(lecture_no, algorithm, network_type, number_of_devices, True), instance)
         window.show()
         return window
-    if not gui:
+    if not gui and isinstance(instance, SteppingEmulator):
         instance.shell.start()
 
 if __name__ == "__main__":
