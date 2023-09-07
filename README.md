@@ -20,7 +20,7 @@ Exercises will be described later in this document.
 In general avoid changing any of the files in the `emulators` subdirectory.
 Instead, restrict your implementation to extending `emulators.Device` and `emulators.MessageStub`.
 
-Your implementation/solution for, for instance, exersice 1 should go into the `exercises/exercise1.py` document.
+Your implementation/solution for, for instance, exercise 1 should go into the `exercises/exercise1.py` document.
 I will provide new templates as the course progresses.
 
 You should be able to execute your solution to exercise 1 using the following lines:
