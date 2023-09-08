@@ -5,6 +5,21 @@ from emulators.Medium import Medium
 
 
 class Device:
+    """
+    Base class representing a device in a simulation.
+
+    Args:
+        index (int): The unique identifier for the device.
+        number_of_devices (int): The total number of devices in the simulation.
+        medium (Medium): The communication medium used by the devices.
+
+    Attributes:
+        _id (int): The unique identifier for the device.
+        _medium (Medium): The communication medium used by the device.
+        _number_of_devices (int): The total number of devices in the simulation.
+        _finished (bool): A flag indicating if the device has finished its task.
+    """
+
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         self._id = index
         self._medium = medium
@@ -12,18 +27,43 @@ class Device:
         self._finished = False
 
     def run(self):
+        """
+        Abstract method representing the main functionality of the device.
+        """
+
         raise NotImplementedError("You have to implement a run-method!")
 
     def print_result(self):
+        """
+        Abstract method for the result printer
+        """
         raise NotImplementedError("You have to implement a result printer!")
 
     def index(self):
+        """
+        The unique identifier for the device.
+
+        Returns:
+            int: The unique identifier of the device.
+        """
         return self._id
 
     def number_of_devices(self):
+        """
+        Get the total number of devices in the simulation.
+
+        Returns:
+            int: The total number of devices.
+        """
         return self._number_of_devices
 
     def medium(self):
+        """
+        Get the communication medium used by the device.
+
+        Returns:
+            Medium: The communication medium.
+        """
         return self._medium
 
 
