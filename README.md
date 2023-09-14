@@ -98,8 +98,9 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
 ```
 
 # Exercise 2
-1. Implement the RIP protocol (fill in missing code in merge_tables), described in \[DS, fifth edition\] Page 115-118. _(NOTICE: To run/debug the protocol, you must first implement the network topology described in "task 2.0" below.)_
-2. In the `__init__` of `RipCommunication`, create a ring topology (that is, set up who are the neighbors of each device). Consider a ring size of 10 devices.
+1. Similarly to the first lecture, in the `__init__` of `RipCommunication`, create a ring topology (that is, set up who are the neighbors of each device). 
+2. Implement the RIP protocol (fill in missing code in merge_tables), described in \[DS, fifth edition\] Page 115-118. _(NOTICE: To run/debug the protocol, you must first implement the network topology described in "task 2.0" below.)_
+3. Now that you have a ring topology, consider a ring size of 10 devices.
    1. How many messages are sent in total before the routing_tables of all nodes are synchronized?
    2. How can you "know" that the routing tables are complete and you can start using the network to route packets? Consider the general case of internet, and the specific case of our toy ring network. 
    3. For the ring network, consider an approach similar to
@@ -122,8 +123,8 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
               return True
          ```
     Is it realistic for a real network?
-3. Send a `RoutableMessage` after the routing tables are ready. Consider the termination problem. Can a node quit right after receiving the `RoutableMessage` for itself? What happens to the rest of the nodes?
-4. What happens, if a link has a negative cost? How many messages are sent before the `routing_tables` converge?
+4. Send a `RoutableMessage` after the routing tables are ready. Consider the termination problem. Can a node quit right after receiving the `RoutableMessage` for itself? What happens to the rest of the nodes?
+5. What happens, if a link has a negative cost? How many messages are sent before the `routing_tables` converge?
 
 # Exercise 3
 Please consult the moodle page, this exercise is not via this framework.
