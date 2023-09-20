@@ -11,6 +11,13 @@ These packages can be installed using `pip` as shown below:
 pip install --user -r requirements.txt
 ```
 
+These packages can be installed using `conda` as shown below:
+```bash
+conda env create -f environment.yml
+
+conda activate ds
+```
+
 The framework is tested under `python3.10` in Arch Linux, Ubuntu and Windows.
 ## General
 A FAQ can be found [here](https://github.com/DEIS-Tools/DistributedExercisesAAU/wiki)
