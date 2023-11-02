@@ -43,7 +43,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.input_lock = Lock()
         # self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         # self.listener.start()
-        self.shell = Thread(target=self.prompt, daemon=True)
+        self.shell = self.prompt
         self.messages_received: list[MessageStub] = []
         self.messages_sent: list[MessageStub] = []
         msg = f"""

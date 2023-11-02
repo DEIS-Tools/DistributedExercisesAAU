@@ -3,7 +3,18 @@ import inspect
 from os import name
 from threading import Thread
 from emulators.exercise_overlay import Window
-
+import exercises.exercise1
+import exercises.exercise2
+import exercises.exercise4
+import exercises.exercise5
+import exercises.exercise6
+import exercises.exercise7
+import exercises.exercise8
+import exercises.exercise9
+import exercises.exercise10
+import exercises.exercise11
+import exercises.exercise12
+import exercises.demo
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
 from emulators.SteppingEmulator import SteppingEmulator
@@ -60,7 +71,7 @@ def run_exercise(
         instance = emulator(number_of_devices, alg)
 
     def run_instance():
-        if instance is not None:
+        if instance:
             instance.run()
             print(f"{CYAN}Execution Complete{RESET}")
             instance.print_result()
@@ -83,7 +94,7 @@ def run_exercise(
         window.show()
         return window
     if not gui and isinstance(instance, SteppingEmulator):
-        instance.shell.start()
+        instance.shell()
 
 
 if __name__ == "__main__":
