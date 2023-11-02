@@ -1,105 +1,125 @@
+import typing
+from PyQt6 import QtCore
 from exercise_runner import run_exercise
-from PyQt6.QtWidgets import (
-    QApplication,
-    QWidget,
-    QLineEdit,
-    QVBoxLayout,
-    QPushButton,
-    QHBoxLayout,
-    QLabel,
-    QComboBox,
-)
-from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import QIcon, QRegularExpressionValidator
+from PyQt6.QtCore import Qt, QThread, QObject, pyqtSignal, QRegularExpression
 from sys import argv
 
-app = QApplication(argv)
+class Worker(QObject):
+    finished: pyqtSignal = pyqtSignal()
+    window: pyqtSignal = pyqtSignal(QObject)
+    def __init__(self) -> None:
+        super().__init__()
 
-windows = list()
-
-# new
-window = QWidget()
-window.setWindowIcon(QIcon("icon.ico"))
-window.setWindowTitle("Distributed Exercises AAU")
-main = QVBoxLayout()
-window.setFixedSize(600, 100)
-start_button = QPushButton("Start")
-main.addWidget(start_button)
-input_area = QHBoxLayout()
-lecture_layout = QVBoxLayout()
-lecture_layout.addWidget(QLabel("Lecture"), alignment=Qt.AlignmentFlag.AlignCenter)
-lecture_combobox = QComboBox()
-lecture_combobox.addItems([str(i) for i in range(13) if i != 3])
-lecture_layout.addWidget(lecture_combobox)
-input_area.addLayout(lecture_layout)
-type_layout = QVBoxLayout()
-type_layout.addWidget(QLabel("Type"), alignment=Qt.AlignmentFlag.AlignCenter)
-type_combobox = QComboBox()
-type_combobox.addItems(["stepping", "async", "sync"])
-type_layout.addWidget(type_combobox)
-input_area.addLayout(type_layout)
-algorithm_layout = QVBoxLayout()
-algorithm_layout.addWidget(QLabel("Algorithm"), alignment=Qt.AlignmentFlag.AlignCenter)
-algorithm_input = QLineEdit()
-algorithm_input.setText("PingPong")
-algorithm_layout.addWidget(algorithm_input)
-input_area.addLayout(algorithm_layout)
-devices_layout = QVBoxLayout()
-devices_layout.addWidget(QLabel("Devices"), alignment=Qt.AlignmentFlag.AlignCenter)
-devices_input = QLineEdit()
-devices_input.setText("3")
-devices_layout.addWidget(devices_input)
-input_area.addLayout(devices_layout)
-main.addLayout(input_area)
-starting_exercise = False
-actions: dict[str, QLineEdit | QComboBox] = {
-    "Lecture": lecture_combobox,
-    "Type": type_combobox,
-    "Algorithm": algorithm_input,
-    "Devices": devices_input,
-}
+    def run(self,
+        lecture_no: int,
+        algorithm: str,
+        network_type: str,
+        number_of_devices: int,
+        ):
+        self.window.emit(run_exercise(lecture_no, algorithm, network_type, number_of_devices, True))
+        self.finished.emit()
 
 
-def text_changed(text):
-    exercises = {
-        0: "PingPong",
-        1: "Gossip",
-        2: "RipCommunication",
-        4: "TokenRing",
-        5: "TOSEQMulticast",
-        6: "PAXOS",
-        7: "Bully",
-        8: "GfsNetwork",
-        9: "MapReduceNetwork",
-        10: "BlockchainNetwork",
-        11: "ChordNetwork",
-        12: "AodvNode",
-    }
-    lecture = int(text)
+class InputArea(QFormLayout):
+    def __init__(self) -> None:
+        super().__init__()
+        self.__algs = [
+            "PingPong",
+            "Gossip",
+            "RipCommunication",
+            "TokenRing",
+            "TOSEQMulticast",
+            "PAXOS",
+            "Bully",
+            "GfsNetwork",
+            "MapReduceNetwork",
+            "BlockchainNetwork",
+            "ChordNetwork",
+            "AodvNode",
+        ]
+        self.lecture = QComboBox()
+        self.lecture.addItems([str(i) for i in range(13) if i != 3])
 
-    actions["Algorithm"].setText(exercises[lecture])
+        self.type = QComboBox()
+        self.type.addItems(["stepping", "async", "sync"])
 
+        self.alg = QComboBox()
+        self.alg.addItems(self.__algs)
 
-lecture_combobox.currentTextChanged.connect(text_changed)
+        self.device = QLineEdit(text="3")
 
+        self.device.setValidator(
+            QRegularExpressionValidator(
+                QRegularExpression(r"[0-9]*")
+                ))
 
-def start_exercise():
-    global starting_exercise
-    if not starting_exercise:
-        starting_exercise = True
-        windows.append(
-            run_exercise(
-                int(actions["Lecture"].currentText()),
-                actions["Algorithm"].text(),
-                actions["Type"].currentText(),
-                int(actions["Devices"].text()),
-                True,
+        self.addRow("Lecture", self.lecture)
+        self.addRow("Type", self.type)
+        self.addRow("Algorithm", self.alg)
+        self.addRow("Devices", self.device)
+
+        self.lecture.currentTextChanged.connect(self.__lecture_handler)
+        self.__lecture_handler("0")
+
+    def __lecture_handler(self, text: str):
+        self.alg.setCurrentText(self.__algs[int(text)])
+
+    def data(self):
+        return (
+            int(self.lecture.currentText()), 
+            self.alg.currentText(),
+            self.type.currentText(),
+            int(self.device.text())
             )
-        )
-        starting_exercise = False
 
+class MainWindow(QMainWindow):
+    def __init__(self) -> None:
+        super().__init__(
+            windowTitle="Distributed Exercises AAU",
+            windowIcon=QIcon("icon.ico")
+            )
+        self.__thread = None
+        self.__worker = None
+        self.__windows = []
+        layout = QVBoxLayout()
+        self.__start_btn = QPushButton("Start")
 
-start_button.clicked.connect(start_exercise)
-window.setLayout(main)
+        group = QGroupBox(title="Inputs")
+        self.__input_area = InputArea()
+        group.setLayout(self.__input_area)
+
+        layout.addWidget(group)
+        layout.addWidget(self.__start_btn)
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
+
+        self.__start_btn.clicked.connect(self.__start)
+
+    def __start(self):
+        if self.__worker is not None:
+            return
+
+        self.__thread = QThread()
+        self.__worker = Worker()
+        self.__thread.started.connect(lambda: self.__worker.run(*self.__input_area.data()))
+        self.__worker.finished.connect(self.__thread.quit)
+        self.__worker.window.connect(self.__window_handler)
+        self.__worker.finished.connect(self.__worker.deleteLater)
+        self.__thread.finished.connect(self.__thread.deleteLater)
+        self.__thread.start()
+
+    def __window_handler(self, window: QObject):
+        self.__windows.append(window)
+
+    def show(self) -> None:
+        self.resize(600, 100)
+        return super().show()
+    
+
+app = QApplication(argv)
+window = MainWindow()
 window.show()
 app.exec()
