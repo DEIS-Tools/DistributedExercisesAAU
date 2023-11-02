@@ -15,7 +15,6 @@ class ConsensusRequester:
 
 
 class SimpleRequester(ConsensusRequester):
-
     def __init__(self):
         self._proposal = random.randint(0, 100)
 
@@ -32,7 +31,8 @@ class SimpleRequester(ConsensusRequester):
             SimpleRequester._consensus = element
         if SimpleRequester._consensus != element:
             raise ValueError(
-                f"Disagreement in consensus, expected {element} but other process already got {SimpleRequester._consensus}")
+                f"Disagreement in consensus, expected {element} but other process already got {SimpleRequester._consensus}"
+            )
 
 
 class Propose(MessageStub):
@@ -44,11 +44,17 @@ class Propose(MessageStub):
         return self._value
 
     def __str__(self):
-        return f'Propose: {self.source} -> {self.destination}: {self._value}'
+        return f"Propose: {self.source} -> {self.destination}: {self._value}"
 
 
 class FResilientConsensus(Device):
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: ConsensusRequester = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -81,8 +87,13 @@ class FResilientConsensus(Device):
 
 
 class SingleByzantine(Device):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: ConsensusRequester = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -140,16 +151,51 @@ def find_majority(raw: [(int, int)]):
             best = None
     return best
 
+
 class King(Device):
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: ConsensusRequester = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
         else:
             self._application = SimpleRequester()
 
+    def b_multicast(self, message: MessageStub):
+        message.source = self.index()
+        for i in self.medium().ids():
+            message.destination = i
+            self.medium().send(message)
+
     def run(self):
-        pass
+        # Set own v to a preferred value // f+1 phases in total
+        # for each phase i ∈ 0 . . . f do
+        #   // round 1:
+        #   B-multicast(v )
+        #   Await vj from each process pj
+        #   Set v to the most frequent element ∈ v0...vn−1
+        #   Set mult to the number of occurrences of v
+        #   Set v to a default value if mult < n/2
+        #   // round 2:
+        #   if k = i then
+        #       B-multicast(v ) // king for phase k is pk , send tie breaker
+        #   end
+        #   Set vk to the value received from the king
+        #   if mult ≤ (n/2) + f then
+        #       Set v to the vk
+        #   end
+        # end
+        v = random.randint(1, 100)
+        for i in range(0, self.number_of_devices()):
+            self.b_multicast(message=Propose(v))
+            vs = self.medium().receive_all()
+            v = most_common()
+            mult = vs.count(v)
 
     def print_result(self):
         pass
@@ -161,19 +207,22 @@ class PrepareMessage(MessageStub):
         self.uid = uid
 
     def __str__(self):
-        return f'PREPARE {self.source} -> {self.destination}: {self.uid}'
+        return f"PREPARE {self.source} -> {self.destination}: {self.uid}"
 
 
 class PromiseMessage(MessageStub):
-    def __init__(self, sender: int, destination: int, uid: int, prev_uid: int, prev_value):
+    def __init__(
+        self, sender: int, destination: int, uid: int, prev_uid: int, prev_value
+    ):
         super().__init__(sender, destination)
         self.uid = uid
         self.prev_uid = prev_uid
         self.prev_value = prev_value
 
     def __str__(self):
-        return f'PROMISE {self.source} -> {self.destination}: {self.uid}' + \
-               ('' if self.prev_uid == 0 else f'accepted {self.prev_uid}, {self.prev_value}')
+        return f"PROMISE {self.source} -> {self.destination}: {self.uid}" + (
+            "" if self.prev_uid == 0 else f"accepted {self.prev_uid}, {self.prev_value}"
+        )
 
 
 class RequestAcceptMessage(MessageStub):
@@ -183,7 +232,7 @@ class RequestAcceptMessage(MessageStub):
         self.value = value
 
     def __str__(self):
-        return f'ACCEPT-REQUEST {self.source} -> {self.destination}: {self.uid}, {self.value}'
+        return f"ACCEPT-REQUEST {self.source} -> {self.destination}: {self.uid}, {self.value}"
 
 
 class AcceptMessage(MessageStub):
@@ -193,11 +242,13 @@ class AcceptMessage(MessageStub):
         self.value = value
 
     def __str__(self):
-        return f'ACCEPT {self.source} -> {self.destination}: {self.uid}, {self.value}'
+        return f"ACCEPT {self.source} -> {self.destination}: {self.uid}, {self.value}"
 
 
 class PAXOSNetwork:
-    def __init__(self, index: int, medium: Medium, acceptors: list[int], learners: list[int]):
+    def __init__(
+        self, index: int, medium: Medium, acceptors: list[int], learners: list[int]
+    ):
         self._acceptors = acceptors
         self._learners = learners
         self._medium = medium
@@ -236,14 +287,22 @@ class PAXOSNetwork:
 
 
 class PAXOS(Device):
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: ConsensusRequester = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
         else:
             self._application = SimpleRequester()
         # assumes everyone has every role
-        config = PAXOSNetwork(index, self.medium(), self.medium().ids(), self.medium().ids())
+        config = PAXOSNetwork(
+            index, self.medium(), self.medium().ids(), self.medium().ids()
+        )
         self._proposer = Proposer(config, self._application)
         self._acceptor = Acceptor(config)
         self._learner = Learner(config, self._application)
@@ -337,7 +396,7 @@ class Learner:
         if self._done:
             return
         self._done = True
-        print(f'CONSENSUS {self._network.index} LEARNER on {msg.value}')
+        print(f"CONSENSUS {self._network.index} LEARNER on {msg.value}")
         self._application.consensus_reached(msg.value)
 
     def done(self):

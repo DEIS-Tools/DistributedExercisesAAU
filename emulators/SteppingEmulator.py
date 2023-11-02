@@ -6,9 +6,7 @@ from emulators.AsyncEmulator import AsyncEmulator
 from .EmulatorStub import EmulatorStub
 from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
-from pynput import keyboard
-from getpass import getpass #getpass to hide input, cleaner terminal
-from threading import Barrier, Lock, Thread #run getpass in seperate thread
+from threading import Barrier, Lock, Thread, BrokenBarrierError  # run getpass in seperate thread
 from os import name
 
 if name == "posix":
@@ -24,28 +22,30 @@ else:
 class SteppingEmulator(SyncEmulator, AsyncEmulator):
     _single = False
     last_action = ""
-    messages_received:list[MessageStub] = []
-    messages_sent:list[MessageStub] = []
+    messages_received: list[MessageStub] = []
+    messages_sent: list[MessageStub] = []
     keyheld = False
     pick_device = -1
     pick_running = False
     next_message = None
     log = None
-    parent:EmulatorStub = AsyncEmulator
+    parent: EmulatorStub = AsyncEmulator
 
-    def __init__(self, number_of_devices: int, kind): #default init, add stuff here to run when creating object
+    def __init__(
+        self, number_of_devices: int, kind
+    ):  # default init, add stuff here to run when creating object
         super().__init__(number_of_devices, kind)
-        #self._stepper = Thread(target=lambda: getpass(""), daemon=True)
-        #self._stepper.start()
+        # self._stepper = Thread(target=lambda: getpass(""), daemon=True)
+        # self._stepper.start()
         self.barrier = Barrier(parties=number_of_devices)
         self.step_barrier = Barrier(parties=2)
         self.is_stepping = True
         self.input_lock = Lock()
-        #self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
-        #self.listener.start()
+        # self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
+        # self.listener.start()
         self.shell = Thread(target=self.prompt, daemon=True)
-        self.messages_received:list[MessageStub] = []
-        self.messages_sent:list[MessageStub] = []
+        self.messages_received: list[MessageStub] = []
+        self.messages_sent: list[MessageStub] = []
         msg = f"""
 {CYAN}Shell input:{RESET}:
     {CYAN}step(press return){RESET}: Step a single time through messages
@@ -56,11 +56,11 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
     {CYAN}swap{RESET}:               Toggle between sync and async emulation
         """
         print(msg)
-    
+
     def dequeue(self, index: int) -> Optional[MessageStub]:
         self._progress.acquire()
-        #print(f'thread {index} is in dequeue')
-        if not self.next_message == None:
+        # print(f'thread {index} is in dequeue')
+        if self.next_message:
             if not index == self.pick_device:
                 self.collectThread()
                 return self.dequeue(index)
@@ -73,14 +73,14 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 self.next_message = None
                 self.pick_device = -1
                 self.barrier.reset()
-                print(f'\r\t{GREEN}Receive{RESET} {result}')
-                
+                print(f"\r\t{GREEN}Receive{RESET} {result}")
+
         else:
             result = self.parent.dequeue(self, index, True)
 
         self.pick_running = False
 
-        if result != None:
+        if result:
             self.messages_received.append(result)
             self.last_action = "receive"
             if self.is_stepping:
@@ -88,11 +88,11 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
 
         self._progress.release()
         return result
-    
+
     def queue(self, message: MessageStub):
         self._progress.acquire()
-        #print(f'thread {message.source} is in queue')
-        if not self.next_message == None and not message.source == self.pick_device:
+        # print(f'thread {message.source} is in queue')
+        if self.next_message and not message.source == self.pick_device:
             self.collectThread()
             return self.queue(message)
 
@@ -101,12 +101,12 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.messages_sent.append(message)
 
         self.pick_running = False
-            
+
         if self.is_stepping:
             self.step()
         self._progress.release()
 
-    #the main function to stop execution
+    # the main function to stop execution
     def step(self):
         if self.is_stepping:
             self.step_barrier.wait()
@@ -121,26 +121,27 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         for key in messages.keys():
             if len(messages[key]) > 0:
                 keys.append(key)
-        print(f'{GREEN}Available devices:{RESET} {keys}')
-        device = int(input(f'Specify device: '))
+        print(f"{GREEN}Available devices:{RESET} {keys}")
+        device = int(input("Specify device: "))
         self.print_transit_for_device(device)
-        index = int(input(f'Specify index of the next message: '))
+        index = int(input("Specify index of the next message: "))
         self.pick_device = device
         self.next_message = messages[device][index]
-        while not self.next_message == None:
+        while self.next_message:
             self.pick_running = True
             self.step_barrier.wait()
             while self.pick_running and not self.all_terminated():
                 pass
-            sleep(.1)
+            sleep(0.1)
 
-    
     def prompt(self):
         self.prompt_active = True
         line = ""
         while not line == "exit":
             sleep(1)
-            line = input(f'\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}] > ')
+            line = input(
+                f"\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}] > "
+            )
             self.input_lock.acquire()
             args = line.split(" ")
             match args[0]:
@@ -166,45 +167,48 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self.prompt_active = False
 
     def print_prompt(self):
-        print(f'\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}] > ', end="", flush=True)
+        print(
+            f"\t[{CYAN}{len(self.messages_sent)} {RESET}->{CYAN} {len(self.messages_received)}{RESET}] > ",
+            end="",
+            flush=True,
+        )
 
-
-    #print all messages in transit
+    # print all messages in transit
     def print_transit(self):
         print(f"{CYAN}Messages in transit:{RESET}")
         if self.parent is AsyncEmulator:
             for messages in self._messages.values():
                 for message in messages:
-                    print(f'\t{message}')
+                    print(f"\t{message}")
         elif self.parent is SyncEmulator:
             for messages in self._last_round_messages.values():
                 for message in messages:
-                    print(f'\t{message}')
-    
-    #print all messages in transit to specified device
+                    print(f"\t{message}")
+
+    # print all messages in transit to specified device
     def print_transit_for_device(self, device):
-        print(f'{CYAN}Messages in transit to device #{device}{RESET}')
-        print(f'\t{CYAN}index{RESET}:     <message>')
+        print(f"{CYAN}Messages in transit to device #{device}{RESET}")
+        print(f"\t{CYAN}index{RESET}:     <message>")
         index = 0
         if self.parent is AsyncEmulator:
-            if not device in self._messages.keys():
+            if device not in self._messages.keys():
                 return
-            messages:list[MessageStub] = self._messages.get(device)
+            messages: list[MessageStub] = self._messages.get(device)
         elif self.parent is SyncEmulator:
-            if not device in self._last_round_messages.keys():
+            if device not in self._last_round_messages.keys():
                 return
-            messages:list[MessageStub] = self._last_round_messages.get(device)
+            messages: list[MessageStub] = self._last_round_messages.get(device)
         for message in messages:
-            print(f'\t{CYAN}{index}{RESET}:         {message}')
-            index+=1
-    
-    #swap between which parent class the program will run in between deliveries
+            print(f"\t{CYAN}{index}{RESET}:         {message}")
+            index += 1
+
+    # swap between which parent class the program will run in between deliveries
     def swap_emulator(self):
         if self.parent is AsyncEmulator:
             self.parent = SyncEmulator
         elif self.parent is SyncEmulator:
             self.parent = AsyncEmulator
-        print(f'Changed emulator to {GREEN}{self.parent.__name__}{RESET}')
+        print(f"Changed emulator to {GREEN}{self.parent.__name__}{RESET}")
 
     def run(self):
         self._progress.acquire()
@@ -216,7 +220,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         self._round_lock.acquire()
         while True:
             if self.parent is AsyncEmulator:
-                sleep(.1)
+                sleep(0.1)
                 self._progress.acquire()
                 # check if everyone terminated
                 if self.all_terminated():
@@ -226,7 +230,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 self._round_lock.acquire()
                 # check if everyone terminated
                 self._progress.acquire()
-                print(f'\r\t## {GREEN}ROUND {self._rounds}{RESET} ##')
+                print(f"\r\t## {GREEN}ROUND {self._rounds}{RESET} ##")
                 if self.all_terminated():
                     self._progress.release()
                     break
@@ -243,13 +247,13 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 self._current_round_messages = {}
                 self.reset_done()
                 self._rounds += 1
-                ids = [x for x in self.ids()] # convert to list to make it shuffleable
+                ids = [x for x in self.ids()]  # convert to list to make it shuffleable
                 random.shuffle(ids)
                 for index in ids:
                     if self._awaits[index].locked():
                         self._awaits[index].release()
                 self._progress.release()
-                
+
         for t in self._threads:
             t.join()
 
@@ -264,11 +268,10 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         return self.parent.print_statistics(self)
 
     def collectThread(self):
-        #print("collecting a thread")
+        # print("collecting a thread")
         self.pick_running = False
         self._progress.release()
         try:
             self.barrier.wait()
-        except:
+        except BrokenBarrierError:
             pass
-        

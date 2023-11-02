@@ -1,15 +1,25 @@
 from exercise_runner import run_exercise
-from PyQt6.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QPushButton, QHBoxLayout, QLabel, QComboBox
+from PyQt6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QLineEdit,
+    QVBoxLayout,
+    QPushButton,
+    QHBoxLayout,
+    QLabel,
+    QComboBox,
+)
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from sys import argv
+
 app = QApplication(argv)
 
 windows = list()
 
-#new
+# new
 window = QWidget()
-window.setWindowIcon(QIcon('icon.ico'))
+window.setWindowIcon(QIcon("icon.ico"))
 window.setWindowTitle("Distributed Exercises AAU")
 main = QVBoxLayout()
 window.setFixedSize(600, 100)
@@ -42,33 +52,50 @@ devices_layout.addWidget(devices_input)
 input_area.addLayout(devices_layout)
 main.addLayout(input_area)
 starting_exercise = False
-actions:dict[str, QLineEdit | QComboBox] = {"Lecture":lecture_combobox, "Type":type_combobox, "Algorithm":algorithm_input, "Devices":devices_input}
+actions: dict[str, QLineEdit | QComboBox] = {
+    "Lecture": lecture_combobox,
+    "Type": type_combobox,
+    "Algorithm": algorithm_input,
+    "Devices": devices_input,
+}
+
 
 def text_changed(text):
     exercises = {
-        0:'PingPong', 
-        1:'Gossip', 
-        2:'RipCommunication', 
-        4:'TokenRing', 
-        5:'TOSEQMulticast', 
-        6:'PAXOS', 
-        7:'Bully',
-        8:'GfsNetwork',
-        9:'MapReduceNetwork',
-        10:'BlockchainNetwork',
-        11:'ChordNetwork',
-        12:'AodvNode'}
+        0: "PingPong",
+        1: "Gossip",
+        2: "RipCommunication",
+        4: "TokenRing",
+        5: "TOSEQMulticast",
+        6: "PAXOS",
+        7: "Bully",
+        8: "GfsNetwork",
+        9: "MapReduceNetwork",
+        10: "BlockchainNetwork",
+        11: "ChordNetwork",
+        12: "AodvNode",
+    }
     lecture = int(text)
 
-    actions['Algorithm'].setText(exercises[lecture])
+    actions["Algorithm"].setText(exercises[lecture])
+
 
 lecture_combobox.currentTextChanged.connect(text_changed)
+
 
 def start_exercise():
     global starting_exercise
     if not starting_exercise:
         starting_exercise = True
-        windows.append(run_exercise(int(actions['Lecture'].currentText()), actions['Algorithm'].text(), actions['Type'].currentText(), int(actions['Devices'].text()), True))
+        windows.append(
+            run_exercise(
+                int(actions["Lecture"].currentText()),
+                actions["Algorithm"].text(),
+                actions["Type"].currentText(),
+                int(actions["Devices"].text()),
+                True,
+            )
+        )
         starting_exercise = False
 
 

@@ -1,19 +1,10 @@
-import math
-import random
-import sys
-import os
-
 from emulators.Device import Device
 from emulators.Medium import Medium
 from emulators.MessageStub import MessageStub
-from cryptography.hazmat.primitives import hashes
 
 from hashlib import sha256
 import json
 import time
-
-
-
 
 
 class Block:
@@ -37,7 +28,6 @@ class Block:
         return "{0:0256b}".format(int(self.hash, 16))
 
 
-
 class Blockchain:
     def __init__(self):
         self.unconfirmed_transactions = []
@@ -57,11 +47,12 @@ class Blockchain:
         return self.chain[-1]
 
     difficulty = 4
+
     # TODO: set difficulty to 2, to have many more forks.
     # TODO: understand why having lower difficulty leads to more forks.
     def proof_of_work(self, block):
         computed_hash_binary = block.hash_binary
-        if not computed_hash_binary.startswith('0' * Blockchain.difficulty):
+        if not computed_hash_binary.startswith("0" * Blockchain.difficulty):
             return False
         return True
 
@@ -76,7 +67,7 @@ class Blockchain:
             return False
         self.chain.append(block)
         return True
- 
+
     def add_new_transaction(self, transaction):
         self.unconfirmed_transactions.append(transaction)
 
@@ -85,7 +76,6 @@ class Blockchain:
         for c in self.chain:
             msg += c.to_string()
         return msg
-
 
 
 class BlockchainMiner(Device):
@@ -100,11 +90,13 @@ class BlockchainMiner(Device):
         last_block = self.blockchain.last_block
 
         # I create a block using current timestamp, unconfirmed transactions and nonce
-        new_block = Block(index=last_block.index + 1,
-                          transactions=self.blockchain.unconfirmed_transactions,
-                          timestamp=time.time(),
-                          previous_hash=last_block.hash,
-                          nonce=self.next_nonce)
+        new_block = Block(
+            index=last_block.index + 1,
+            transactions=self.blockchain.unconfirmed_transactions,
+            timestamp=time.time(),
+            previous_hash=last_block.hash,
+            nonce=self.next_nonce,
+        )
 
         # I check if the block passes the proof_of_work test
         proof = self.blockchain.proof_of_work(new_block)
@@ -163,7 +155,9 @@ class BlockchainMiner(Device):
             pass
         elif isinstance(ingoing, BlockchainRequestMessage):
             # this is used to send the blockchain data to a client requesting them
-            message = BlockchainMessage(self.index(), ingoing.source, self.blockchain.chain)
+            message = BlockchainMessage(
+                self.index(), ingoing.source, self.blockchain.chain
+            )
             self.medium().send(message)
         elif isinstance(ingoing, TransactionMessage):
             self.blockchain.add_new_transaction(ingoing.transaction)
@@ -175,9 +169,10 @@ class BlockchainMiner(Device):
         print("Miner " + str(self.index()) + " quits")
 
 
-
 class BlockchainClient(Device):
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, my_miner: int):
+    def __init__(
+        self, index: int, number_of_devices: int, medium: Medium, my_miner: int
+    ):
         super().__init__(index, number_of_devices, medium)
         self.my_miner = my_miner
 
@@ -191,7 +186,9 @@ class BlockchainClient(Device):
             self.medium().wait_for_next_round()
 
     def send_transaction(self):
-        message = TransactionMessage(self.index(), self.my_miner, f"(transaction by client {self.index()})")
+        message = TransactionMessage(
+            self.index(), self.my_miner, f"(transaction by client {self.index()})"
+        )
         self.medium().send(message)
 
     def request_blockchain(self):
@@ -216,9 +213,9 @@ class BlockchainClient(Device):
         print(f"client {self.index()} quits")
 
 
-
 class BlockchainNetwork:
     miners = []
+
     def __new__(cls, index: int, number_of_devices: int, medium: Medium):
         # first miner MUST have index 0
 
@@ -226,8 +223,7 @@ class BlockchainNetwork:
             return BlockchainMiner(index, number_of_devices, medium)
         else:
             # I associate a miner to each client, in a very aleatory manner
-            return BlockchainClient(index, number_of_devices, medium, index-1)
-
+            return BlockchainClient(index, number_of_devices, medium, index - 1)
 
 
 class QuitMessage(MessageStub):
@@ -235,8 +231,7 @@ class QuitMessage(MessageStub):
         super().__init__(sender, destination)
 
     def __str__(self):
-        return f'QUIT REQUEST {self.source} -> {self.destination}'
-
+        return f"QUIT REQUEST {self.source} -> {self.destination}"
 
 
 class BlockchainMessage(MessageStub):
@@ -245,8 +240,7 @@ class BlockchainMessage(MessageStub):
         self.chain = chain
 
     def __str__(self):
-        return f'NEW BLOCK MESSAGE {self.source} -> {self.destination}: ({len(self.chain)} blocks)'
-
+        return f"NEW BLOCK MESSAGE {self.source} -> {self.destination}: ({len(self.chain)} blocks)"
 
 
 class TransactionMessage(MessageStub):
@@ -255,8 +249,7 @@ class TransactionMessage(MessageStub):
         self.transaction = transaction
 
     def __str__(self):
-        return f'TRANSACTION {self.source} -> {self.destination}: ({self.transaction})'
-
+        return f"TRANSACTION {self.source} -> {self.destination}: ({self.transaction})"
 
 
 class BlockchainRequestMessage(MessageStub):
@@ -264,4 +257,4 @@ class BlockchainRequestMessage(MessageStub):
         super().__init__(sender, destination)
 
     def __str__(self):
-        return f'REQUEST FOR BLOCKCHAIN DATA {self.source} -> {self.destination}'
+        return f"REQUEST FOR BLOCKCHAIN DATA {self.source} -> {self.destination}"

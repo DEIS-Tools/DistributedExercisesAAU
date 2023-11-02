@@ -1,7 +1,4 @@
 import math
-import random
-import threading
-import time
 
 from emulators.Medium import Medium
 from emulators.Device import Device, WorkerDevice
@@ -14,11 +11,10 @@ class Ping(MessageStub):
         super().__init__(sender, destination)
 
     def __str__(self):
-        return f'Ping: {self.source} -> {self.destination}'
+        return f"Ping: {self.source} -> {self.destination}"
 
 
 class Pinger(Device):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
         self._output_ping = False
@@ -46,7 +42,6 @@ class Type(enum.Enum):
 
 
 class MutexMessage(MessageStub):
-
     def __init__(self, sender: int, destination: int, message_type: Type):
         super().__init__(sender, destination)
         self._type = message_type
@@ -62,11 +57,11 @@ class MutexMessage(MessageStub):
 
     def __str__(self):
         if self._type == Type.REQUEST:
-            return f'Request: {self.source} -> {self.destination}'
+            return f"Request: {self.source} -> {self.destination}"
         if self._type == Type.RELEASE:
-            return f'Release: {self.source} -> {self.destination}'
+            return f"Release: {self.source} -> {self.destination}"
         if self._type == Type.GRANT:
-            return f'Grant: {self.source} -> {self.destination}'
+            return f"Grant: {self.source} -> {self.destination}"
 
 
 class Centralised:
@@ -78,10 +73,9 @@ class Centralised:
 
 
 class Coordinator(Device):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
-        assert (self.index() == 0)  # we assume that the coordinator is fixed at index 0.
+        assert self.index() == 0  # we assume that the coordinator is fixed at index 0.
         self._granted = None
         self._waiting = []
 
@@ -94,12 +88,14 @@ class Coordinator(Device):
                 if ingoing.is_request():
                     self._waiting.append(ingoing.source)
                 elif ingoing.is_release():
-                    assert (self._granted == ingoing.source)
+                    assert self._granted == ingoing.source
                     self._granted = None
 
                 if len(self._waiting) > 0 and self._granted is None:
                     self._granted = self._waiting.pop(0)
-                    self.medium().send(MutexMessage(self.index(), self._granted, Type.GRANT))
+                    self.medium().send(
+                        MutexMessage(self.index(), self._granted, Type.GRANT)
+                    )
             self.medium().wait_for_next_round()
 
     def print_result(self):
@@ -107,10 +103,9 @@ class Coordinator(Device):
 
 
 class Requester(WorkerDevice):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
-        assert (self.index() != 0)  # we assume that the coordinator is fixed at index 0.
+        assert self.index() != 0  # we assume that the coordinator is fixed at index 0.
         self._requested = False
 
     def run(self):
@@ -118,16 +113,14 @@ class Requester(WorkerDevice):
             ingoing = self.medium().receive()
             if ingoing is not None:
                 if ingoing.is_grant():
-                    assert (self._requested)
+                    assert self._requested
                     self.do_work()
                     self._requested = False
-                    self.medium().send(
-                        MutexMessage(self.index(), 0, Type.RELEASE))
+                    self.medium().send(MutexMessage(self.index(), 0, Type.RELEASE))
 
             if self.has_work() and not self._requested:
                 self._requested = True
-                self.medium().send(
-                    MutexMessage(self.index(), 0, Type.REQUEST))
+                self.medium().send(MutexMessage(self.index(), 0, Type.REQUEST))
 
             self.medium().wait_for_next_round()
 
@@ -163,7 +156,6 @@ class TokenRing(WorkerDevice):
 
 
 class StampedMessage(MutexMessage):
-
     def __init__(self, sender: int, destination: int, message_type: Type, time: int):
         super().__init__(sender, destination, message_type)
         self._stamp = time
@@ -172,7 +164,7 @@ class StampedMessage(MutexMessage):
         return self._stamp
 
     def __str__(self):
-        return super().__str__() + f' [stamp={self._stamp}]'
+        return super().__str__() + f" [stamp={self._stamp}]"
 
 
 class State(enum.Enum):
@@ -182,7 +174,6 @@ class State(enum.Enum):
 
 
 class RicartAgrawala(WorkerDevice):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
         self._state = State.RELEASED
@@ -207,13 +198,17 @@ class RicartAgrawala(WorkerDevice):
 
     def handle_request(self, message: StampedMessage):
         new_time = max(self._time, message.stamp()) + 1
-        if self._state == State.HELD or (self._state == State.WANTED and
-                                         (self._time, self.index()) < (message.stamp(), message.source)):
+        if self._state == State.HELD or (
+            self._state == State.WANTED
+            and (self._time, self.index()) < (message.stamp(), message.source)
+        ):
             self._time = new_time
             self._waiting.append(message.source)
         else:
             new_time += 1
-            self.medium().send(StampedMessage(self.index(), message.source, Type.GRANT, new_time))
+            self.medium().send(
+                StampedMessage(self.index(), message.source, Type.GRANT, new_time)
+            )
             self._time = new_time
 
     def handle_grant(self, message: StampedMessage):
@@ -229,9 +224,7 @@ class RicartAgrawala(WorkerDevice):
         self._state = State.RELEASED
         self._time += 1
         for id in self._waiting:
-            self.medium().send(
-                StampedMessage(self.index(), id, Type.GRANT, self._time)
-            )
+            self.medium().send(StampedMessage(self.index(), id, Type.GRANT, self._time))
         self._waiting.clear()
 
     def acquire(self):
@@ -242,15 +235,16 @@ class RicartAgrawala(WorkerDevice):
         for id in self.medium().ids():
             if id != self.index():
                 self.medium().send(
-                    StampedMessage(self.index(), id,
-                                   Type.REQUEST, self._time))
+                    StampedMessage(self.index(), id, Type.REQUEST, self._time)
+                )
 
     def print_result(self):
-        print(f"RA {self.index()} Terminated with request? {self._state == State.WANTED}")
+        print(
+            f"RA {self.index()} Terminated with request? {self._state == State.WANTED}"
+        )
 
 
 class Maekawa(WorkerDevice):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
         self._state = State.RELEASED
@@ -320,7 +314,9 @@ class Maekawa(WorkerDevice):
             self._voted = False
 
     def print_result(self):
-        print(f"MA {self.index()} Terminated with request? {self._state == State.WANTED}")
+        print(
+            f"MA {self.index()} Terminated with request? {self._state == State.WANTED}"
+        )
 
 
 class SKToken(MessageStub):
@@ -336,13 +332,14 @@ class SKToken(MessageStub):
         return self._ln
 
     def __str__(self):
-        return f"Token: {self.source} -> {self.destination}, \n" \
-               f"\t\tQueue {str(self._queue)}\n" \
-               f"\t\tLN {str(self._ln)}"
+        return (
+            f"Token: {self.source} -> {self.destination}, \n"
+            f"\t\tQueue {str(self._queue)}\n"
+            f"\t\tLN {str(self._ln)}"
+        )
 
 
 class SuzukiKasami(WorkerDevice):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
         self._rn = [0 for _ in range(0, number_of_devices)]
@@ -413,13 +410,16 @@ class SuzukiKasami(WorkerDevice):
         for id in self.medium().ids():
             if id != self.index():
                 self.medium().send(
-                    StampedMessage(self.index(), id, Type.REQUEST, self._rn[self.index()]))
+                    StampedMessage(
+                        self.index(), id, Type.REQUEST, self._rn[self.index()]
+                    )
+                )
 
 
 # Election Algorithms
 
-class Vote(MessageStub):
 
+class Vote(MessageStub):
     def __init__(self, sender: int, destination: int, vote: int, decided: bool):
         super().__init__(sender, destination)
         self._vote = vote
@@ -432,7 +432,7 @@ class Vote(MessageStub):
         return self._decided
 
     def __str__(self):
-        return f'Vote: {self.source} -> {self.destination}, voted for {self._vote}, decided? {self._decided}'
+        return f"Vote: {self.source} -> {self.destination}, voted for {self._vote}, decided? {self._decided}"
 
 
 class ChangRoberts(Device):
@@ -445,15 +445,13 @@ class ChangRoberts(Device):
         while True:
             nxt = (self.index() + 1) % self.number_of_devices()
             if not self._participated:
-                self.medium().send(
-                    Vote(self.index(), nxt, self.index(), False))
+                self.medium().send(Vote(self.index(), nxt, self.index(), False))
                 self._participated = True
             ingoing = self.medium().receive()
             if ingoing is not None:
                 if ingoing.vote() == self.index():
                     if not ingoing.decided():
-                        self.medium().send(
-                            Vote(self.index(), nxt, self.index(), True))
+                        self.medium().send(Vote(self.index(), nxt, self.index(), True))
                     else:
                         self._leader = self.index()
                         return  # this device is the new leader
@@ -462,18 +460,18 @@ class ChangRoberts(Device):
                 elif ingoing.vote() > self.index():
                     # forward the message
                     self.medium().send(
-                        Vote(self.index(), nxt, ingoing.vote(), ingoing.decided()))
+                        Vote(self.index(), nxt, ingoing.vote(), ingoing.decided())
+                    )
                     if ingoing.decided():
                         self._leader = ingoing.vote()
                         return
             self.medium().wait_for_next_round()
 
     def print_result(self):
-        print(f'Leader seen from {self._id} is {self._leader}')
+        print(f"Leader seen from {self._id} is {self._leader}")
 
 
 class Bully(Device):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
         self._leader = None
@@ -496,7 +494,14 @@ class Bully(Device):
                 if ingoing is not None:
                     got_input = True
                     if ingoing.vote() < self.index():
-                        self.medium().send(Vote(self.index(), ingoing.source, self.index(), self.largest()))
+                        self.medium().send(
+                            Vote(
+                                self.index(),
+                                ingoing.source,
+                                self.index(),
+                                self.largest(),
+                            )
+                        )
                         new_election = True
                     else:
                         self._shut_up = True
@@ -517,7 +522,9 @@ class Bully(Device):
                         # we are the new leader, we could declare everybody else dead
                         for id in self.medium().ids():
                             if id != self.index():
-                                self.medium().send(Vote(self.index(), id, self.index(), True))
+                                self.medium().send(
+                                    Vote(self.index(), id, self.index(), True)
+                                )
                         self._leader = self.index()
                         return
             self.medium().wait_for_next_round()
@@ -528,7 +535,9 @@ class Bully(Device):
             self._election = True
             for id in self.medium().ids():
                 if id > self.index():
-                    self.medium().send(Vote(self.index(), id, self.index(), self.largest()))
+                    self.medium().send(
+                        Vote(self.index(), id, self.index(), self.largest())
+                    )
 
     def print_result(self):
-        print(f'Leader seen from {self._id} is {self._leader}')
+        print(f"Leader seen from {self._id} is {self._leader}")

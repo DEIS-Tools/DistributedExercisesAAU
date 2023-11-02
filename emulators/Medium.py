@@ -1,5 +1,3 @@
-import threading
-
 from emulators.MessageStub import MessageStub
 
 

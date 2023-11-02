@@ -1,8 +1,6 @@
 import copy
 import random
-import threading
 import time
-from threading import Lock
 from typing import Optional
 from os import name
 
@@ -18,12 +16,12 @@ else:
     CYAN = ""
     GREEN = ""
 
-class AsyncEmulator(EmulatorStub):
 
+class AsyncEmulator(EmulatorStub):
     def __init__(self, number_of_devices: int, kind):
         super().__init__(number_of_devices, kind)
         self._terminated = 0
-        self._messages:dict[int, list[MessageStub]] = {}
+        self._messages: dict[int, list[MessageStub]] = {}
         self._messages_sent = 0
 
     def run(self):
@@ -46,12 +44,18 @@ class AsyncEmulator(EmulatorStub):
         if not stepper:
             self._progress.acquire()
         self._messages_sent += 1
-        print(f'\r\t{GREEN}Send{RESET} {message}')
+        print(f"\r\t{GREEN}Send{RESET} {message}")
         if message.destination not in self._messages:
             self._messages[message.destination] = []
-        self._messages[message.destination].append(copy.deepcopy(message)) # avoid accidental memory sharing
-        random.shuffle(self._messages[message.destination]) # shuffle to emulate changes in order
-        time.sleep(random.uniform(0.01, 0.1)) # try to obfuscate delays and emulate network delays
+        self._messages[message.destination].append(
+            copy.deepcopy(message)
+        )  # avoid accidental memory sharing
+        random.shuffle(
+            self._messages[message.destination]
+        )  # shuffle to emulate changes in order
+        time.sleep(
+            random.uniform(0.01, 0.1)
+        )  # try to obfuscate delays and emulate network delays
         if not stepper:
             self._progress.release()
 
@@ -68,21 +72,24 @@ class AsyncEmulator(EmulatorStub):
             return None
         else:
             m = self._messages[index].pop()
-            print(f'\r\t{GREEN}Recieve{RESET} {m}')
+            print(f"\r\t{GREEN}Recieve{RESET} {m}")
             if not stepper:
                 self._progress.release()
             return m
 
     def done(self, index: int):
-        time.sleep(random.uniform(0.01, 0.1)) # try to obfuscate delays and emulate network delays
+        time.sleep(
+            random.uniform(0.01, 0.1)
+        )  # try to obfuscate delays and emulate network delays
         return
 
-
     def print_statistics(self):
-        print(f'\t{GREEN}Total{RESET} {self._messages_sent} messages')
-        print(f'\t{GREEN}Average{RESET} {self._messages_sent/len(self._devices)} messages/device')
+        print(f"\t{GREEN}Total{RESET} {self._messages_sent} messages")
+        print(
+            f"\t{GREEN}Average{RESET} {self._messages_sent/len(self._devices)} messages/device"
+        )
 
-    def terminated(self, index:int):
+    def terminated(self, index: int):
         self._progress.acquire()
         self._terminated += 1
         self._progress.release()

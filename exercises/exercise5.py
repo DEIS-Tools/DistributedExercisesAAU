@@ -2,12 +2,12 @@ import random
 import threading
 import time
 
-import math
 import copy
 
 from emulators.Device import Device
 from emulators.Medium import Medium
 from emulators.MessageStub import MessageStub
+
 
 class MulticastMessage(MessageStub):
     def __init__(self, sender: int, destination: int, content):
@@ -18,7 +18,7 @@ class MulticastMessage(MessageStub):
         return self._content
 
     def __str__(self):
-        return f'Multicast: {self.source} -> {self.destination} [{self._content}]'
+        return f"Multicast: {self.source} -> {self.destination} [{self._content}]"
 
 
 class MulticastListener:
@@ -56,8 +56,13 @@ class Multicaster(MulticastListener):
 
 
 class BasicMulticast(Device, MulticastService):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: MulticastListener = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: MulticastListener = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -94,15 +99,22 @@ class BasicMulticast(Device, MulticastService):
 
 
 class ReliableMulticast(MulticastListener, MulticastService, Device):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: MulticastListener = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: MulticastListener = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
         else:
             self._application = Multicaster(index, self)
         self._b_multicast = BasicMulticast(index, number_of_devices, medium, self)
-        self._seq_number = 0  # not strictly needed, but helps giving messages a unique ID
+        self._seq_number = (
+            0  # not strictly needed, but helps giving messages a unique ID
+        )
         self._received = set()
 
     def send(self, content):
@@ -134,7 +146,7 @@ class NACK(MessageStub):
         return self._seq_number
 
     def __str__(self):
-        return f'NACK: {self.source} -> {self.destination}: {self._seq_number}'
+        return f"NACK: {self.source} -> {self.destination}: {self._seq_number}"
 
 
 class Resend(MessageStub):
@@ -146,12 +158,17 @@ class Resend(MessageStub):
         return self._message
 
     def __str__(self):
-        return f'Resend: {self.source} -> {self.destination}: {self._message}'
+        return f"Resend: {self.source} -> {self.destination}: {self._message}"
 
 
 class ReliableIPMulticast(MulticastListener, MulticastService, Device):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: MulticastListener = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: MulticastListener = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -170,8 +187,7 @@ class ReliableIPMulticast(MulticastListener, MulticastService, Device):
             self.nack_missing(seq_numbers)
 
     def send(self, content):
-        self._received[(self.index(),
-                        self._seq_numbers[self.index()])] = content
+        self._received[(self.index(), self._seq_numbers[self.index()])] = content
         self._b_multicast.send((self.index(), self._seq_numbers, content))
         self.try_deliver()
 
@@ -180,9 +196,17 @@ class ReliableIPMulticast(MulticastListener, MulticastService, Device):
 
     def forward(self, message):
         if isinstance(message, NACK):
-            self.medium().send(Resend(self.index(), message.source,
-                                      (self.index(), self._seq_numbers,
-                                       self._received[(self.index(), message.seq_number())])))
+            self.medium().send(
+                Resend(
+                    self.index(),
+                    message.source,
+                    (
+                        self.index(),
+                        self._seq_numbers,
+                        self._received[(self.index(), message.seq_number())],
+                    ),
+                )
+            )
         elif isinstance(message, Resend):
             self.deliver(message.message())
         else:
@@ -199,8 +223,7 @@ class ReliableIPMulticast(MulticastListener, MulticastService, Device):
     def nack_missing(self, n_seq: list[int]):
         for id in range(0, len(n_seq)):
             for mid in range(self._seq_numbers[id] + 1, n_seq[id]):
-                self.medium().send(
-                    NACK(self.index(), id, mid))
+                self.medium().send(NACK(self.index(), id, mid))
 
 
 class Order:
@@ -215,11 +238,17 @@ class Order:
         return self._message_id
 
     def __str__(self):
-        return f'Order(<{self.message_id()}> = {self.order()})'
+        return f"Order(<{self.message_id()}> = {self.order()})"
+
 
 class TOSEQMulticast(MulticastListener, MulticastService, Device):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: MulticastListener = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: MulticastListener = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -269,7 +298,9 @@ class TOSEQMulticast(MulticastListener, MulticastService, Device):
 
 
 class Vote(MessageStub):
-    def __init__(self, sender: int, destination: int, order: (int, int), message_id: (int, int)):
+    def __init__(
+        self, sender: int, destination: int, order: (int, int), message_id: (int, int)
+    ):
         super().__init__(sender, destination)
         self._order = order
         self._message_id = message_id
@@ -281,12 +312,17 @@ class Vote(MessageStub):
         return self._message_id
 
     def __str__(self):
-        return f'Vote: {self.source} -> {self.destination}: <{self.message_id()}> = {self.order()}'
+        return f"Vote: {self.source} -> {self.destination}: <{self.message_id()}> = {self.order()}"
 
 
 class ISISMulticast(MulticastListener, MulticastService, Device):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: MulticastListener = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: MulticastListener = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -319,18 +355,14 @@ class ISISMulticast(MulticastListener, MulticastService, Device):
             self._hb_q[(sid, sseq)] = content
             self._p_seq = max(self._a_seq, self._p_seq) + 1
             # We should technically send proposer ID for tie-breaks
-            self.medium().send(
-                Vote(self.index(), sid, self._p_seq, (sid, sseq))
-            )
+            self.medium().send(Vote(self.index(), sid, self._p_seq, (sid, sseq)))
 
     def forward(self, message):
         if isinstance(message, Vote):
             votes = self._votes[message.message_id()]
             votes.append(message.order())
             if len(votes) == self.number_of_devices():
-                self._b_multicast.send(
-                    Order(message.message_id(), max(votes))
-                )
+                self._b_multicast.send(Order(message.message_id(), max(votes)))
         else:
             self._application.forward(message)
 
@@ -344,8 +376,13 @@ class ISISMulticast(MulticastListener, MulticastService, Device):
 
 
 class COMulticast(MulticastListener, MulticastService, Device):
-
-    def __init__(self, index: int, number_of_devices: int, medium: Medium, application: MulticastListener = None):
+    def __init__(
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: MulticastListener = None,
+    ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
             self._application = application
@@ -367,7 +404,7 @@ class COMulticast(MulticastListener, MulticastService, Device):
         self._application.forward(message)
 
     def try_deliver(self):
-        for (vec, index, content) in self._hb_q:
+        for vec, index, content in self._hb_q:
             if self.is_next(vec, index):
                 self._application.deliver(content)
                 self._n_vect[index] += 1
