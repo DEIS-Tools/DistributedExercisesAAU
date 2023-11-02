@@ -23,38 +23,38 @@ class MapReduceMaster(Device):
     def run(self):
         # since this is a server, its job is to answer for requests (messages), then do something
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, ClientJobStartMessage):
             # I assign ingoing.number_partitions workers as reducers, the rest as mappers
             # and I assign some files to each mapper
             self.number_partitions = ingoing.number_partitions
-            number_of_mappers = self.number_of_devices() - self.number_partitions - 2
+            number_of_mappers = self.number_of_devices - self.number_partitions - 2
             for i in range(2, self.number_partitions + 2):
                 message = ReduceTaskMessage(
-                    self.index(), i, i - 2, self.number_partitions, number_of_mappers
+                    self.index, i, i - 2, self.number_partitions, number_of_mappers
                 )  # the reducer needs to know how many mappers they are, to know when its task is completed
-                self.medium().send(message)
+                self.medium.send(message)
             for i in range(0, number_of_mappers):
                 length = len(ingoing.filenames)
                 length = 5  # TODO: comment out this line to process all files, once you think your code is ready
                 first = int(length * i / number_of_mappers)
                 last = int(length * (i + 1) / number_of_mappers)
                 message = MapTaskMessage(
-                    self.index(),
+                    self.index,
                     self.number_partitions + 2 + i,
                     ingoing.filenames[first:last],
                     self.number_partitions,
                 )
-                self.medium().send(message)
+                self.medium.send(message)
         elif isinstance(ingoing, QuitMessage):
             # if the client is satisfied with the work done, I can tell all workers to quit, then I can quit
             for w in MapReduceNetwork.workers:
-                self.medium().send(QuitMessage(self.index(), w))
+                self.medium.send(QuitMessage(self.index, w))
             return False
         elif isinstance(ingoing, MappingDoneMessage):
             # TODO: contact all reducers, telling them that a mapper has completed its job
@@ -68,11 +68,15 @@ class MapReduceMaster(Device):
                 message = ClientJobCompletedMessage(
                     1, MapReduceNetwork.client_index, self.result_files
                 )
-                self.medium().send(message)
+                self.medium.send(message)
         return True
 
     def print_result(self):
-        print(f"Master {self.index()} quits")
+        print(f"Master {self.index} quits")
+
+
+class ReducerVisitMapperMessage:
+    pass
 
 
 class MapReduceWorker(Device):
@@ -139,13 +143,13 @@ class MapReduceWorker(Device):
                     self.M_cached_results[word] = (
                         self.M_cached_results.get(word, 0) + map_result[word]
                     )
-                print(f"Mapper {self.index()}: file '{filename}' processed")
+                print(f"Mapper {self.index}: file '{filename}' processed")
                 if self.M_files_to_process == []:
                     self.mapper_shuffle()
                     message = MappingDoneMessage(
-                        self.index(), MapReduceNetwork.master_index
+                        self.index, MapReduceNetwork.master_index
                     )
-                    self.medium().send(message)
+                    self.medium.send(message)
         if self.role == Role.REDUCER:
             # not much to do: everything is done when the master tells us about a mapper that completed its task
             pass
@@ -153,15 +157,15 @@ class MapReduceWorker(Device):
     def run(self):
         # since this is a worker, it looks for incoming requests (messages), then it works a little
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
             self.do_some_work()
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, QuitMessage):
-            print(f"I am Worker {self.index()} and I am quitting")
+            print(f"I am Worker {self.index} and I am quitting")
             return False
         elif isinstance(ingoing, MapTaskMessage):
             # I was assigned to be a mapper, thus I:
@@ -195,7 +199,7 @@ class MapReduceWorker(Device):
         return True
 
     def print_result(self):
-        print(f"Worker {self.index()} quits. It was a {self.role}")
+        print(f"Worker {self.index} quits. It was a {self.role}")
 
 
 class MapReduceClient(Device):
@@ -213,25 +217,25 @@ class MapReduceClient(Device):
 
     def run(self):
         # being a client, it listens to incoming messages, but it also does something to put the ball rolling
-        print(f"I am client {self.index()}")
+        print(f"I am client {self.index}")
         books = self.scan_for_books()
 
         message = ClientJobStartMessage(
-            self.index(), MapReduceNetwork.master_index, books, 3
+            self.index, MapReduceNetwork.master_index, books, 3
         )  # TODO: experiment with different number of reducers
-        self.medium().send(message)
+        self.medium.send(message)
 
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, ClientJobCompletedMessage):
             # I can tell the master to quit
             # I will print the result later, with the print_result function
-            self.medium().send(QuitMessage(self.index(), MapReduceNetwork.master_index))
+            self.medium.send(QuitMessage(self.index, MapReduceNetwork.master_index))
             self.result_files = ingoing.result_files
             return False
         return True

@@ -66,10 +66,10 @@ class ChordNode(Device):
     def run(self):
         # a chord node acts like a server
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def is_request_for_me(self, guid: int) -> bool:
         # TODO: implement this function that checks if the routing process is over
@@ -88,8 +88,8 @@ class ChordNode(Device):
                 # TODO: route the message
                 # you can fill up the next_hop function for this
                 next_hop = self.next_hop(ingoing.guid)
-                message = PutMessage(self.index(), next_hop, ingoing.guid, ingoing.data)
-                self.medium().send(message)
+                message = PutMessage(self.index, next_hop, ingoing.guid, ingoing.data)
+                self.medium.send(message)
         if isinstance(ingoing, GetReqMessage):
             # maybe TODO, but the GET is not very interesting
             pass
@@ -118,10 +118,10 @@ class ChordNode(Device):
             if my_range < 0:
                 my_range += pow(2, address_size)
             print(
-                f"Chord node {self.index()} quits, it managed {my_range} addresses, it had {len(self.saved_data)} data blocks"
+                f"Chord node {self.index} quits, it managed {my_range} addresses, it had {len(self.saved_data)} data blocks"
             )
         else:
-            print(f"Chord node {self.index()} quits, it was still disconnected")
+            print(f"Chord node {self.index} quits, it was still disconnected")
 
 
 class ChordClient(Device):
@@ -134,8 +134,8 @@ class ChordClient(Device):
             # if your chord address space gets too big, use the following code:
             # for i in range(pow(2, address_size)):
             # guid = random.randint(0, pow(2,address_size)-1)
-            message = PutMessage(self.index(), 2, guid, "hello")
-            self.medium().send(message)
+            message = PutMessage(self.index, 2, guid, "hello")
+            self.medium.send(message)
 
         # TODO: uncomment this code to start the JOIN process
         # new_chord_id = random.randint(0, pow(2,address_size)-1)
@@ -147,9 +147,9 @@ class ChordClient(Device):
         time.sleep(
             10
         )  # or use some smart trick to wait for the routing process to be completed before shutting down the distributed system
-        for i in range(1, self.number_of_devices()):
-            message = QuitMessage(self.index(), i)
-            self.medium().send(message)
+        for i in range(1, self.number_of_devices):
+            message = QuitMessage(self.index, i)
+            self.medium.send(message)
         return
 
         # currently, I do not manage incoming messages
@@ -165,7 +165,7 @@ class ChordClient(Device):
         return True
 
     def print_result(self):
-        print(f"client {self.index()} quits")
+        print(f"client {self.index} quits")
 
 
 class ChordNetwork:

@@ -6,7 +6,7 @@ from emulators.AsyncEmulator import AsyncEmulator
 from .EmulatorStub import EmulatorStub
 from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
-from threading import Barrier, Lock, Thread, BrokenBarrierError  # run getpass in seperate thread
+from threading import Barrier, Lock, BrokenBarrierError  # run getpass in seperate thread
 from os import name
 
 if name == "posix":

@@ -39,6 +39,7 @@ class Device:
         """
         raise NotImplementedError("You have to implement a result printer!")
 
+    @property
     def index(self):
         """
         The unique identifier for the device.
@@ -48,6 +49,7 @@ class Device:
         """
         return self._id
 
+    @property
     def number_of_devices(self):
         """
         Get the total number of devices in the simulation.
@@ -57,6 +59,7 @@ class Device:
         """
         return self._number_of_devices
 
+    @property
     def medium(self):
         """
         Get the communication medium used by the device.
@@ -78,8 +81,8 @@ class WorkerDevice(Device):
     def has_work(self) -> bool:
         # The random call emulates that a concurrent process asked for the
         self._has_work = (
-            self._has_work
-            or random.randint(0, self.number_of_devices()) == self.index()
+                self._has_work
+                or random.randint(0, self.number_of_devices) == self.index
         )
         return self._has_work
 
@@ -89,7 +92,7 @@ class WorkerDevice(Device):
         # might require continued interaction. The "working" thread would then notify our Requester class back
         # when the mutex is done being used.
         self._lock.acquire()
-        print(f"Device {self.index()} has started working")
+        print(f"Device {self.index} has started working")
         self._concurrent_workers += 1
         if self._concurrent_workers > 1:
             self._lock.release()
@@ -99,9 +102,9 @@ class WorkerDevice(Device):
         assert self.has_work()
         amount_of_work = random.randint(1, 4)
         for i in range(0, amount_of_work):
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
         self._lock.acquire()
-        print(f"Device {self.index()} has ended working")
+        print(f"Device {self.index} has ended working")
         self._concurrent_workers -= 1
         self._lock.release()
         self._has_work = False

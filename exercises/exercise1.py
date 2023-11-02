@@ -27,4 +27,4 @@ class Gossip(Device):
         return
 
     def print_result(self):
-        print(f"\tDevice {self.index()} got secrets: {self._secrets}")
+        print(f"\tDevice {self.index} got secrets: {self._secrets}")

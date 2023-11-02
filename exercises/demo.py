@@ -40,16 +40,16 @@ class PingPong(Device):
         for repetetions in range(0, 10):
             # in each repetition, let us send the ping to one random other device
             message = PingMessage(
-                self.index(),
-                random.randrange(0, self.number_of_devices()),
+                self.index,
+                random.randrange(0, self.number_of_devices),
                 self._is_ping,
             )
             # we send the message via a "medium"
-            self.medium().send(message)
+            self.medium.send(message)
             # in this instance, we also try to receive some messages, there can be multiple, but
             # eventually the medium will return "None"
             while True:
-                ingoing = self.medium().receive()
+                ingoing = self.medium.receive()
                 if ingoing is None:
                     break
 
@@ -67,10 +67,10 @@ class PingPong(Device):
                     self._is_ping = ingoing.is_ping
 
             # this call is only used for synchronous networks
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     # for pretty-printing and debugging, implement this function
     def print_result(self):
         print(
-            f"\tDevice {self.index()} got pings: {self._rec_ping} and pongs: {self._rec_pong}"
+            f"\tDevice {self.index} got pings: {self._rec_ping} and pongs: {self._rec_pong}"
         )

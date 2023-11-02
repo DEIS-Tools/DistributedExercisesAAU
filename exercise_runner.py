@@ -1,23 +1,14 @@
 import argparse
+import importlib
 import inspect
 from os import name
 from threading import Thread
+
 from emulators.exercise_overlay import Window
-import exercises.exercise1
-import exercises.exercise2
-import exercises.exercise4
-import exercises.exercise5
-import exercises.exercise6
-import exercises.exercise7
-import exercises.exercise8
-import exercises.exercise9
-import exercises.exercise10
-import exercises.exercise11
-import exercises.exercise12
-import exercises.demo
 from emulators.AsyncEmulator import AsyncEmulator
 from emulators.SyncEmulator import SyncEmulator
 from emulators.SteppingEmulator import SteppingEmulator
+
 
 if name == "posix":
     RESET = "\u001B[0m"
@@ -33,7 +24,8 @@ def fetch_alg(lecture: str, algorithm: str):
     if "." in algorithm or ";" in algorithm:
         raise ValueError('"." and ";" are not allowed as names of solutions.')
     try:
-        alg = eval(f"exercises.{lecture}.{algorithm}")
+        module = importlib.import_module(f"exercises.{lecture}")
+        alg = getattr(module, algorithm)
         if not inspect.isclass(alg):
             raise TypeError(f'Could not find "exercises.{lecture}.{algorithm} class')
     except NameError:

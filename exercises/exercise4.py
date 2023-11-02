@@ -21,7 +21,7 @@ class Pinger(Device):
 
     def run(self):
         while True:
-            ingoing = self.medium().receive()
+            ingoing = self.medium.receive()
             if isinstance(ingoing, Ping):
                 if self._output_ping:
                     print("Ping")
@@ -29,7 +29,7 @@ class Pinger(Device):
                 else:
                     print("Pong")
                     self._output_ping = True
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def print_result(self):
         print("Done!")
@@ -75,14 +75,14 @@ class Centralised:
 class Coordinator(Device):
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
-        assert self.index() == 0  # we assume that the coordinator is fixed at index 0.
+        assert self.index == 0  # we assume that the coordinator is fixed at index 0.
         self._granted = None
         self._waiting = []
 
     def run(self):
         while True:
             while True:
-                ingoing = self.medium().receive()
+                ingoing = self.medium.receive()
                 if ingoing is None:
                     break
                 if ingoing.is_request():
@@ -93,10 +93,10 @@ class Coordinator(Device):
 
                 if len(self._waiting) > 0 and self._granted is None:
                     self._granted = self._waiting.pop(0)
-                    self.medium().send(
-                        MutexMessage(self.index(), self._granted, Type.GRANT)
+                    self.medium.send(
+                        MutexMessage(self.index, self._granted, Type.GRANT)
                     )
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def print_result(self):
         print("Coordinator Terminated")
@@ -105,27 +105,27 @@ class Coordinator(Device):
 class Requester(WorkerDevice):
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
-        assert self.index() != 0  # we assume that the coordinator is fixed at index 0.
+        assert self.index != 0  # we assume that the coordinator is fixed at index 0.
         self._requested = False
 
     def run(self):
         while True:
-            ingoing = self.medium().receive()
+            ingoing = self.medium.receive()
             if ingoing is not None:
                 if ingoing.is_grant():
                     assert self._requested
                     self.do_work()
                     self._requested = False
-                    self.medium().send(MutexMessage(self.index(), 0, Type.RELEASE))
+                    self.medium.send(MutexMessage(self.index, 0, Type.RELEASE))
 
             if self.has_work() and not self._requested:
                 self._requested = True
-                self.medium().send(MutexMessage(self.index(), 0, Type.REQUEST))
+                self.medium.send(MutexMessage(self.index, 0, Type.REQUEST))
 
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def print_result(self):
-        print(f"Requester {self.index()} Terminated with request? {self._requested}")
+        print(f"Requester {self.index} Terminated with request? {self._requested}")
 
 
 class TokenRing(WorkerDevice):
@@ -138,7 +138,7 @@ class TokenRing(WorkerDevice):
     def run(self):
         while True:
             while True:
-                ingoing = self.medium().receive()
+                ingoing = self.medium.receive()
                 if ingoing is None:
                     break
                 if ingoing.is_grant():
@@ -146,13 +146,13 @@ class TokenRing(WorkerDevice):
             if self._has_token:
                 if self.has_work():
                     self.do_work()
-                nxt = (self.index() + 1) % self.number_of_devices()
+                nxt = (self.index + 1) % self.number_of_devices
                 self._has_token = False
-                self.medium().send(MutexMessage(self.index(), nxt, Type.GRANT))
-            self.medium().wait_for_next_round()
+                self.medium.send(MutexMessage(self.index, nxt, Type.GRANT))
+            self.medium.wait_for_next_round()
 
     def print_result(self):
-        print(f"Token Ring {self.index()} Terminated with request? {self._requested}")
+        print(f"Token Ring {self.index} Terminated with request? {self._requested}")
 
 
 class StampedMessage(MutexMessage):
@@ -186,7 +186,7 @@ class RicartAgrawala(WorkerDevice):
             if self.has_work():
                 self.acquire()
             while True:
-                ingoing = self.medium().receive()
+                ingoing = self.medium.receive()
                 if ingoing is not None:
                     if ingoing.is_grant():
                         self.handle_grant(ingoing)
@@ -194,27 +194,27 @@ class RicartAgrawala(WorkerDevice):
                         self.handle_request(ingoing)
                 else:
                     break
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_request(self, message: StampedMessage):
         new_time = max(self._time, message.stamp()) + 1
         if self._state == State.HELD or (
-            self._state == State.WANTED
-            and (self._time, self.index()) < (message.stamp(), message.source)
+                self._state == State.WANTED
+                and (self._time, self.index) < (message.stamp(), message.source)
         ):
             self._time = new_time
             self._waiting.append(message.source)
         else:
             new_time += 1
-            self.medium().send(
-                StampedMessage(self.index(), message.source, Type.GRANT, new_time)
+            self.medium.send(
+                StampedMessage(self.index, message.source, Type.GRANT, new_time)
             )
             self._time = new_time
 
     def handle_grant(self, message: StampedMessage):
         self._grants += 1
         self._time = max(self._time, message.stamp()) + 1
-        if self._grants == self.number_of_devices() - 1:
+        if self._grants == self.number_of_devices - 1:
             self._state = State.HELD
             self.do_work()
             self.release()
@@ -224,7 +224,7 @@ class RicartAgrawala(WorkerDevice):
         self._state = State.RELEASED
         self._time += 1
         for id in self._waiting:
-            self.medium().send(StampedMessage(self.index(), id, Type.GRANT, self._time))
+            self.medium.send(StampedMessage(self.index, id, Type.GRANT, self._time))
         self._waiting.clear()
 
     def acquire(self):
@@ -232,15 +232,15 @@ class RicartAgrawala(WorkerDevice):
             return
         self._state = State.WANTED
         self._time += 1
-        for id in self.medium().ids():
-            if id != self.index():
-                self.medium().send(
-                    StampedMessage(self.index(), id, Type.REQUEST, self._time)
+        for id in self.medium.ids():
+            if id != self.index:
+                self.medium.send(
+                    StampedMessage(self.index, id, Type.REQUEST, self._time)
                 )
 
     def print_result(self):
         print(
-            f"RA {self.index()} Terminated with request? {self._state == State.WANTED}"
+            f"RA {self.index} Terminated with request? {self._state == State.WANTED}"
         )
 
 
@@ -253,20 +253,20 @@ class Maekawa(WorkerDevice):
         self._grants = 0
         # Generate quorums/ voting set
         self._voting_set = set()
-        dimension = int(math.sqrt(self.number_of_devices()))
-        offset_x = self.index() % dimension
-        offset_y = int(self.index() / dimension)
+        dimension = int(math.sqrt(self.number_of_devices))
+        offset_x = self.index % dimension
+        offset_y = int(self.index / dimension)
         for i in range(0, dimension):
             # same "column"
-            if i * dimension + offset_x < self.number_of_devices():
+            if i * dimension + offset_x < self.number_of_devices:
                 self._voting_set.add(i * dimension + offset_x)
             # same "row"
-            if offset_y * dimension + i < self.number_of_devices():
+            if offset_y * dimension + i < self.number_of_devices:
                 self._voting_set.add(offset_y * dimension + i)
 
     def run(self):
         while True:
-            ingoing = self.medium().receive()
+            ingoing = self.medium.receive()
             if ingoing is not None:
                 if ingoing.is_grant():
                     self.handle_grant(ingoing)
@@ -276,14 +276,14 @@ class Maekawa(WorkerDevice):
                     self.handle_release(ingoing)
             if self.has_work():
                 self.acquire()
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def acquire(self):
         if self._state == State.WANTED:
             return
         self._state = State.WANTED
         for id in self._voting_set:
-            self.medium().send(MutexMessage(self.index(), id, Type.REQUEST))
+            self.medium.send(MutexMessage(self.index, id, Type.REQUEST))
 
     def handle_grant(self, message: MutexMessage):
         self._grants += 1
@@ -296,26 +296,26 @@ class Maekawa(WorkerDevice):
         self._grants = 0
         self._state = State.RELEASED
         for id in self._voting_set:
-            self.medium().send(MutexMessage(self.index(), id, Type.RELEASE))
+            self.medium.send(MutexMessage(self.index, id, Type.RELEASE))
 
     def handle_request(self, message: MutexMessage):
         if self._state == State.HELD or self._voted:
             self._waiting.append(message.source)
         else:
             self._voted = True
-            self.medium().send(MutexMessage(self.index(), message.source, Type.GRANT))
+            self.medium.send(MutexMessage(self.index, message.source, Type.GRANT))
 
     def handle_release(self, message: MutexMessage):
         if len(self._waiting) > 0:
             nxt = self._waiting.pop(0)
             self._voted = True
-            self.medium().send(MutexMessage(self.index(), nxt, Type.GRANT))
+            self.medium.send(MutexMessage(self.index, nxt, Type.GRANT))
         else:
             self._voted = False
 
     def print_result(self):
         print(
-            f"MA {self.index()} Terminated with request? {self._state == State.WANTED}"
+            f"MA {self.index} Terminated with request? {self._state == State.WANTED}"
         )
 
 
@@ -365,11 +365,11 @@ class SuzukiKasami(WorkerDevice):
                 else:
                     self.acquire()
 
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_messages(self):
         while True:
-            ingoing = self.medium().receive()
+            ingoing = self.medium.receive()
             if ingoing is None:
                 break
             if isinstance(ingoing, SKToken):
@@ -383,15 +383,15 @@ class SuzukiKasami(WorkerDevice):
             (queue, ln) = self._token
             if self._rn[message.source] == ln[message.source] + 1:
                 self._token = None
-                self.medium().send(SKToken(self.index(), message.source, queue, ln))
+                self.medium.send(SKToken(self.index, message.source, queue, ln))
 
     def release(self):
         self._working = False
         self._requested = False
         (queue, ln) = self._token
-        ln[self.index()] = self._rn[self.index()]
+        ln[self.index] = self._rn[self.index]
         # let's generate a new queue with all devices with outstanding requests
-        for id in self.medium().ids():
+        for id in self.medium.ids():
             if ln[id] + 1 == self._rn[id]:
                 if id not in queue:
                     queue.append(id)
@@ -399,19 +399,19 @@ class SuzukiKasami(WorkerDevice):
         if len(queue) > 0:
             nxt = queue.pop(0)
             self._token = None
-            self.medium().send(SKToken(self.index(), nxt, queue, ln))
+            self.medium.send(SKToken(self.index, nxt, queue, ln))
 
     def acquire(self):
         if self._requested:
             return
         # Tell everyone that we want the token!
         self._requested = True
-        self._rn[self.index()] += 1
-        for id in self.medium().ids():
-            if id != self.index():
-                self.medium().send(
+        self._rn[self.index] += 1
+        for id in self.medium.ids():
+            if id != self.index:
+                self.medium.send(
                     StampedMessage(
-                        self.index(), id, Type.REQUEST, self._rn[self.index()]
+                        self.index, id, Type.REQUEST, self._rn[self.index]
                     )
                 )
 
@@ -443,29 +443,29 @@ class ChangRoberts(Device):
 
     def run(self):
         while True:
-            nxt = (self.index() + 1) % self.number_of_devices()
+            nxt = (self.index + 1) % self.number_of_devices
             if not self._participated:
-                self.medium().send(Vote(self.index(), nxt, self.index(), False))
+                self.medium.send(Vote(self.index, nxt, self.index, False))
                 self._participated = True
-            ingoing = self.medium().receive()
+            ingoing = self.medium.receive()
             if ingoing is not None:
-                if ingoing.vote() == self.index():
+                if ingoing.vote() == self.index:
                     if not ingoing.decided():
-                        self.medium().send(Vote(self.index(), nxt, self.index(), True))
+                        self.medium.send(Vote(self.index, nxt, self.index, True))
                     else:
-                        self._leader = self.index()
+                        self._leader = self.index
                         return  # this device is the new leader
-                elif ingoing.vote() < self.index():
+                elif ingoing.vote() < self.index:
                     continue
-                elif ingoing.vote() > self.index():
+                elif ingoing.vote() > self.index:
                     # forward the message
-                    self.medium().send(
-                        Vote(self.index(), nxt, ingoing.vote(), ingoing.decided())
+                    self.medium.send(
+                        Vote(self.index, nxt, ingoing.vote(), ingoing.decided())
                     )
                     if ingoing.decided():
                         self._leader = ingoing.vote()
                         return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def print_result(self):
         print(f"Leader seen from {self._id} is {self._leader}")
@@ -479,7 +479,7 @@ class Bully(Device):
         self._election = False
 
     def largest(self):
-        return self.index() == max(self.medium().ids())
+        return self.index == max(self.medium.ids())
 
     def run(self):
         first_round = True
@@ -490,15 +490,15 @@ class Bully(Device):
 
             new_election = False
             while True:
-                ingoing = self.medium().receive()
+                ingoing = self.medium.receive()
                 if ingoing is not None:
                     got_input = True
-                    if ingoing.vote() < self.index():
-                        self.medium().send(
+                    if ingoing.vote() < self.index:
+                        self.medium.send(
                             Vote(
-                                self.index(),
+                                self.index,
                                 ingoing.source,
-                                self.index(),
+                                self.index,
                                 self.largest(),
                             )
                         )
@@ -520,23 +520,23 @@ class Bully(Device):
                         self.start_election()
                     else:
                         # we are the new leader, we could declare everybody else dead
-                        for id in self.medium().ids():
-                            if id != self.index():
-                                self.medium().send(
-                                    Vote(self.index(), id, self.index(), True)
+                        for id in self.medium.ids():
+                            if id != self.index:
+                                self.medium.send(
+                                    Vote(self.index, id, self.index, True)
                                 )
-                        self._leader = self.index()
+                        self._leader = self.index
                         return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
             first_round = False
 
     def start_election(self):
         if not self._election:
             self._election = True
-            for id in self.medium().ids():
-                if id > self.index():
-                    self.medium().send(
-                        Vote(self.index(), id, self.index(), self.largest())
+            for id in self.medium.ids():
+                if id > self.index:
+                    self.medium.send(
+                        Vote(self.index, id, self.index, self.largest())
                     )
 
     def print_result(self):

@@ -106,7 +106,7 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
    3. For the ring network, consider an approach similar to
       1. ```python
          def routing_table_complete(self):
-           if len(self.routing_table) < self.number_of_devices()-1:
+           if len(self.routing_table) < self.number_of_devices-1:
                return False
            return True
          ```
@@ -114,11 +114,11 @@ python3.10 exercise_runner.py --lecture 1 --algorithm ImprovedGossip --type asyn
    4. Try this other approach, which works better:
       1. ```python
          def routing_table_complete(self):
-           if len(self.routing_table) < self.number_of_devices()-1:
+           if len(self.routing_table) < self.number_of_devices-1:
                return False
            for row in self.routing_table:
                (next_hop, distance) = self.routing_table[row]
-               if distance > (self.number_of_devices()/2):
+               if distance > (self.number_of_devices/2):
                    return False
               return True
          ```

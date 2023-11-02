@@ -39,33 +39,33 @@ class AodvNode(Device):
         self.outgoing_message_cache: list[DataMessage] = []
 
     def run(self):
-        last = random.randint(0, self.number_of_devices() - 1)
+        last = random.randint(0, self.number_of_devices - 1)
         # I send the message to myself, so it gets routed
         message = DataMessage(
-            self.index(), self.index(), last, f"Hi. I am {self.index()}."
+            self.index, self.index, last, f"Hi. I am {self.index}."
         )
-        self.medium().send(message)
+        self.medium.send(message)
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def next_hop(self, last: int) -> Optional[int]:
         return self.forward_path.get(last)  # Returns "None" if key does not exist
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, DataMessage):
-            if self.index() == ingoing.last:
+            if self.index == ingoing.last:
                 # the message is for me
                 self.saved_data.append(ingoing.data)
                 # <hack for the termination>
                 AodvNode.messages_lock.acquire()
                 AodvNode.data_messages_received += 1
                 AodvNode.messages_lock.release()
-                if AodvNode.data_messages_received == self.number_of_devices():
-                    for i in range(0, self.number_of_devices()):
-                        self.medium().send(QuitMessage(self.index(), i))
+                if AodvNode.data_messages_received == self.number_of_devices:
+                    for i in range(0, self.number_of_devices):
+                        self.medium.send(QuitMessage(self.index, i))
                 # </hack for the termination>
             else:
                 next = self.next_hop(
@@ -74,9 +74,9 @@ class AodvNode(Device):
                 if next is not None:
                     # I know how to reach the destination
                     message = DataMessage(
-                        self.index(), next, ingoing.last, ingoing.data
+                        self.index, next, ingoing.last, ingoing.data
                     )
-                    self.medium().send(message)
+                    self.medium.send(message)
                     return True
                 # I don't have the route to the destination.
                 # I need to save the outgoing message in a cache
@@ -93,7 +93,7 @@ class AodvNode(Device):
             # TODO
             pass
 
-            if self.index() == ingoing.last:
+            if self.index == ingoing.last:
                 # the message is for me. I can send back a Route Reply
                 # TODO
                 pass
@@ -105,7 +105,7 @@ class AodvNode(Device):
             # If I don't have the forward_path in my routing table, I save it
             # TODO
 
-            if self.index() == ingoing.first:
+            if self.index == ingoing.first:
                 # Finally, I can send all the messages I had saved "first -> last" from my cache
                 # TODO
                 pass
@@ -119,7 +119,7 @@ class AodvNode(Device):
 
     def print_result(self):
         print(
-            f"AODV node {self.index()} quits: neighbours = {self.neighbors}, forward paths = {self.forward_path}, reverse paths = {self.reverse_path}, saved data = {self.saved_data}, length of message cache (should be 0) = {len(self.outgoing_message_cache)}"
+            f"AODV node {self.index} quits: neighbours = {self.neighbors}, forward paths = {self.forward_path}, reverse paths = {self.reverse_path}, saved data = {self.saved_data}, length of message cache (should be 0) = {len(self.outgoing_message_cache)}"
         )
 
 

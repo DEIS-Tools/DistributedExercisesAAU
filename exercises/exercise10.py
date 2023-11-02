@@ -117,17 +117,17 @@ class BlockchainMiner(Device):
     def disseminate_chain(self):
         # I send the blockchain to everybody
         for m in BlockchainNetwork.miners:
-            if not m == self.index():
-                message = BlockchainMessage(self.index(), m, self.blockchain.chain)
-                self.medium().send(message)
+            if not m == self.index:
+                message = BlockchainMessage(self.index, m, self.blockchain.chain)
+                self.medium.send(message)
         # Since I flushed the unconfirmed transactions, I assign the incentives to myself for next block, in case I will be the winner of the proof of work test
-        self.blockchain.add_new_transaction(f"(miner {self.index()} gets incentive)")
+        self.blockchain.add_new_transaction(f"(miner {self.index} gets incentive)")
 
     def do_some_work(self):
         # if the chain is empty and index == 0, create the genesis block and disseminate the blockchain
         # if index is not 0, do nothing
         if len(self.blockchain.chain) == 0:
-            if self.index() == 0:
+            if self.index == 0:
                 self.blockchain.create_genesis_block()
                 self.disseminate_chain()
             else:
@@ -138,14 +138,14 @@ class BlockchainMiner(Device):
 
     def run(self):
         # I assign the incentives to myself, in case I add the next block
-        self.blockchain.add_new_transaction(f"(miner {self.index()} gets incentive)")
+        self.blockchain.add_new_transaction(f"(miner {self.index} gets incentive)")
         # since this is a miner, it tries to mine, then it looks for incoming requests (messages) to accumulate transactions etc
         while True:
             self.do_some_work()
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, BlockchainMessage):
@@ -156,9 +156,9 @@ class BlockchainMiner(Device):
         elif isinstance(ingoing, BlockchainRequestMessage):
             # this is used to send the blockchain data to a client requesting them
             message = BlockchainMessage(
-                self.index(), ingoing.source, self.blockchain.chain
+                self.index, ingoing.source, self.blockchain.chain
             )
-            self.medium().send(message)
+            self.medium.send(message)
         elif isinstance(ingoing, TransactionMessage):
             self.blockchain.add_new_transaction(ingoing.transaction)
         elif isinstance(ingoing, QuitMessage):
@@ -166,7 +166,7 @@ class BlockchainMiner(Device):
         return True
 
     def print_result(self):
-        print("Miner " + str(self.index()) + " quits")
+        print("Miner " + str(self.index) + " quits")
 
 
 class BlockchainClient(Device):
@@ -180,20 +180,20 @@ class BlockchainClient(Device):
         # the client spends its time adding transactions (reasonable) and asking how long the blockchain is (unreasonable, but used for the termination)
         self.request_blockchain()
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def send_transaction(self):
         message = TransactionMessage(
-            self.index(), self.my_miner, f"(transaction by client {self.index()})"
+            self.index, self.my_miner, f"(transaction by client {self.index})"
         )
-        self.medium().send(message)
+        self.medium.send(message)
 
     def request_blockchain(self):
-        message = BlockchainRequestMessage(self.index(), self.my_miner)
-        self.medium().send(message)
+        message = BlockchainRequestMessage(self.index, self.my_miner)
+        self.medium.send(message)
 
     def handle_ingoing(self, ingoing: MessageStub):
         # the termination clause is *very* random
@@ -202,7 +202,7 @@ class BlockchainClient(Device):
 
         if isinstance(ingoing, BlockchainMessage):
             if target_len <= len(ingoing.chain):
-                self.medium().send(QuitMessage(self.index(), self.my_miner))
+                self.medium.send(QuitMessage(self.index, self.my_miner))
                 return False
             # if I don't decide to quit, I add a transaction and request the blockchain data one more time
             self.send_transaction()
@@ -210,7 +210,7 @@ class BlockchainClient(Device):
         return True
 
     def print_result(self):
-        print(f"client {self.index()} quits")
+        print(f"client {self.index} quits")
 
 
 class BlockchainNetwork:

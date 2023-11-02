@@ -25,10 +25,10 @@ class GfsMaster(Device):
     def run(self):
         # since this is a server, its job is to wait for requests (messages), then do something
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, File2ChunkReqMessage):
@@ -40,19 +40,19 @@ class GfsMaster(Device):
                         self.chunks_being_allocated.append((chunk[0], ingoing.source))
                         return True
                 answer = File2ChunkRspMessage(
-                    self.index(), ingoing.source, chunk[0], chunk[1]
+                    self.index, ingoing.source, chunk[0], chunk[1]
                 )
-                self.medium().send(answer)
+                self.medium.send(answer)
             else:
                 if ingoing.createIfNotExists:
                     self.do_allocate_request(
                         ingoing.filename, ingoing.chunkindex, ingoing.source
                     )
                 else:
-                    answer = File2ChunkRspMessage(self.index(), ingoing.source, 0, [])
-                    self.medium().send(answer)
+                    answer = File2ChunkRspMessage(self.index, ingoing.source, 0, [])
+                    self.medium.send(answer)
         elif isinstance(ingoing, QuitMessage):
-            print(f"I am Master {self.index()} and I am quitting")
+            print(f"I am Master {self.index} and I am quitting")
             return False
         elif isinstance(ingoing, AllocateChunkRspMessage):
             if ingoing.result != "ok":
@@ -73,9 +73,9 @@ class GfsMaster(Device):
             ]
             for request in requests:
                 answer = File2ChunkRspMessage(
-                    self.index(), request[1], chunk[0], chunk[1]
+                    self.index, request[1], chunk[0], chunk[1]
                 )
-                self.medium().send(answer)
+                self.medium.send(answer)
                 self.chunks_being_allocated.remove(request)
 
     def do_allocate_request(self, filename, chunkindex: int, requester: int):
@@ -87,9 +87,9 @@ class GfsMaster(Device):
         chunkservers = random.sample(GfsNetwork.gfschunkserver, NUMBER_OF_REPLICAS)
         for i in chunkservers:
             message = AllocateChunkReqMessage(
-                self.index(), i, chunkhandle, chunkservers
+                self.index, i, chunkhandle, chunkservers
             )
-            self.medium().send(message)
+            self.medium.send(message)
 
     def print_result(self):
         pass
@@ -106,21 +106,21 @@ class GfsChunkserver(Device):
     def run(self):
         # since this is a server, its job is to answer for requests (messages), then do something
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, QuitMessage):
-            print(f"I am Chunk Server {self.index()} and I am quitting")
+            print(f"I am Chunk Server {self.index} and I am quitting")
             return False
         elif isinstance(ingoing, AllocateChunkReqMessage):
             self.do_allocate_chunk(ingoing.chunkhandle, ingoing.chunkservers)
             message = AllocateChunkRspMessage(
-                self.index(), ingoing.source, ingoing.chunkhandle, "ok"
+                self.index, ingoing.source, ingoing.chunkhandle, "ok"
             )
-            self.medium().send(message)
+            self.medium.send(message)
         elif isinstance(ingoing, RecordAppendReqMessage):
             #
             # TODO: need to implement the storage operation
@@ -145,16 +145,16 @@ class GfsClient(Device):
 
     def run(self):
         # being a client, it listens to incoming messages, but it also does something to put the ball rolling
-        print(f"I am Client {self.index()}")
+        print(f"I am Client {self.index}")
         master = GfsNetwork.gfsmaster[0]
-        message = File2ChunkReqMessage(self.index(), master, "myfile.txt", 0, True)
-        self.medium().send(message)
+        message = File2ChunkReqMessage(self.index, master, "myfile.txt", 0, True)
+        self.medium.send(message)
 
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, File2ChunkRspMessage):
@@ -165,18 +165,18 @@ class GfsClient(Device):
             # I select a random chunk server, and I send the append request
             # I do not necessarily select the primary
             randomserver = random.choice(ingoing.locations)
-            data = f"hello from client number {self.index()}\n"
-            self.medium().send(
+            data = f"hello from client number {self.index}\n"
+            self.medium.send(
                 RecordAppendReqMessage(
-                    self.index(), randomserver, ingoing.chunkhandle, data
+                    self.index, randomserver, ingoing.chunkhandle, data
                 )
             )
         elif isinstance(ingoing, RecordAppendRspMessage):
             # project completed, time to quit
             for i in GfsNetwork.gfsmaster:
-                self.medium().send(QuitMessage(self.index(), i))
+                self.medium.send(QuitMessage(self.index, i))
             for i in GfsNetwork.gfschunkserver:
-                self.medium().send(QuitMessage(self.index(), i))
+                self.medium.send(QuitMessage(self.index, i))
             return False
         return True
 
