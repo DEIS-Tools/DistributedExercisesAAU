@@ -1,15 +1,9 @@
-import math
-import random
-import threading
-import time
-
 from emulators.Medium import Medium
 from emulators.Device import Device
 from emulators.MessageStub import MessageStub
 
 
 class Vote(MessageStub):
-
     def __init__(self, sender: int, destination: int, vote: int, decided: bool):
         super().__init__(sender, destination)
         self._vote = vote
@@ -22,11 +16,10 @@ class Vote(MessageStub):
         return self._decided
 
     def __str__(self):
-        return f'Vote: {self.source} -> {self.destination}, voted for {self._vote}, decided? {self._decided}'
+        return f"Vote: {self.source} -> {self.destination}, voted for {self._vote}, decided? {self._decided}"
 
 
 class Bully(Device):
-
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
         self._leader = None
@@ -34,7 +27,7 @@ class Bully(Device):
         self._election = False
 
     def largest(self):
-        return self.index() == max(self.medium().ids())
+        return self.index == max(self.medium.ids)
 
     def run(self):
         """TODO"""
@@ -43,4 +36,4 @@ class Bully(Device):
         """TODO"""
 
     def print_result(self):
-        print(f'Leader seen from {self._id} is {self._leader}')
+        print(f"Leader seen from {self._id} is {self._leader}")
