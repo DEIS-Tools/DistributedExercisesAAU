@@ -86,7 +86,7 @@ class BasicMulticast(Device, MulticastService):
             self._application.forward(ingoing)
 
     def send_to_all(self, content):
-        for id in self.medium.ids():
+        for id in self.medium.ids:
             # we purposely send to ourselves also!
             message = MulticastMessage(self.index, id, content)
             self.medium.send(message)
@@ -175,7 +175,7 @@ class ReliableIPMulticast(MulticastListener, MulticastService, Device):
         else:
             self._application = Multicaster(index, self)
         self._b_multicast = BasicMulticast(index, number_of_devices, medium, self)
-        self._seq_numbers = [0 for _ in medium.ids()]
+        self._seq_numbers = [0 for _ in medium.ids]
         self._received = {}
 
     def deliver(self, message):
@@ -389,7 +389,7 @@ class COMulticast(MulticastListener, MulticastService, Device):
         else:
             self._application = Multicaster(index, self)
         self._b_multicast = BasicMulticast(index, number_of_devices, medium, self)
-        self._n_vect = [-1 for _ in self.medium.ids()]
+        self._n_vect = [-1 for _ in self.medium.ids]
         self._hb_q = []
 
     def send(self, content):
@@ -413,7 +413,7 @@ class COMulticast(MulticastListener, MulticastService, Device):
     def is_next(self, vec, index):
         if vec[index] != self._n_vect[index] + 1:
             return False
-        for i in self.medium.ids():
+        for i in self.medium.ids:
             if i != index and vec[i] > self._n_vect[i]:
                 return False
         return True

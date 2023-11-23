@@ -49,11 +49,11 @@ class Propose(MessageStub):
 
 class FResilientConsensus(Device):
     def __init__(
-            self,
-            index: int,
-            number_of_devices: int,
-            medium: Medium,
-            application: ConsensusRequester = None,
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
     ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
@@ -78,7 +78,7 @@ class FResilientConsensus(Device):
 
     def b_multicast(self, message: MessageStub):
         message.source = self.index
-        for i in self.medium.ids():
+        for i in self.medium.ids:
             message.destination = i
             self.medium.send(message)
 
@@ -88,11 +88,11 @@ class FResilientConsensus(Device):
 
 class SingleByzantine(Device):
     def __init__(
-            self,
-            index: int,
-            number_of_devices: int,
-            medium: Medium,
-            application: ConsensusRequester = None,
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
     ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
@@ -126,7 +126,7 @@ class SingleByzantine(Device):
 
     def b_multicast(self, message: MessageStub):
         message.source = self.index
-        for i in self.medium.ids():
+        for i in self.medium.ids:
             message.destination = i
             self.medium.send(message)
 
@@ -158,11 +158,11 @@ def most_common():
 
 class King(Device):
     def __init__(
-            self,
-            index: int,
-            number_of_devices: int,
-            medium: Medium,
-            application: ConsensusRequester = None,
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
     ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
@@ -172,7 +172,7 @@ class King(Device):
 
     def b_multicast(self, message: MessageStub):
         message.source = self.index
-        for i in self.medium.ids():
+        for i in self.medium.ids:
             message.destination = i
             self.medium.send(message)
 
@@ -197,9 +197,8 @@ class King(Device):
         v = random.randint(1, 100)
         for i in range(0, self.number_of_devices):
             self.b_multicast(message=Propose(v))
-            vs = self.medium.receive_all()
-            v = most_common()
-            mult = vs.count(v)
+            # vs = self.medium.receive_all()
+            # ...
 
     def print_result(self):
         pass
@@ -216,7 +215,7 @@ class PrepareMessage(MessageStub):
 
 class PromiseMessage(MessageStub):
     def __init__(
-            self, sender: int, destination: int, uid: int, prev_uid: int, prev_value
+        self, sender: int, destination: int, uid: int, prev_uid: int, prev_value
     ):
         super().__init__(sender, destination)
         self.uid = uid
@@ -251,7 +250,7 @@ class AcceptMessage(MessageStub):
 
 class PAXOSNetwork:
     def __init__(
-            self, index: int, medium: Medium, acceptors: list[int], learners: list[int]
+        self, index: int, medium: Medium, acceptors: list[int], learners: list[int]
     ):
         self._acceptors = acceptors
         self._learners = learners
@@ -292,11 +291,11 @@ class PAXOSNetwork:
 
 class PAXOS(Device):
     def __init__(
-            self,
-            index: int,
-            number_of_devices: int,
-            medium: Medium,
-            application: ConsensusRequester = None,
+        self,
+        index: int,
+        number_of_devices: int,
+        medium: Medium,
+        application: ConsensusRequester = None,
     ):
         super().__init__(index, number_of_devices, medium)
         if application is not None:
@@ -304,9 +303,7 @@ class PAXOS(Device):
         else:
             self._application = SimpleRequester()
         # assumes everyone has every role
-        config = PAXOSNetwork(
-            index, self.medium, self.medium.ids(), self.medium.ids()
-        )
+        config = PAXOSNetwork(index, self.medium, self.medium.ids, self.medium.ids)
         self._proposer = Proposer(config, self._application)
         self._acceptor = Acceptor(config)
         self._learner = Learner(config, self._application)

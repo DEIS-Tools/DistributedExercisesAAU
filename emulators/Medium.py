@@ -13,6 +13,7 @@ class Medium:
         _id (int): The unique identifier for the medium.
         _emulator: The emulator object associated with the medium.
     """
+
     _id: int
 
     def __init__(self, index: int, emulator):
@@ -59,6 +60,7 @@ class Medium:
         """
         self._emulator.done(self._id)
 
+    @property
     def ids(self):
         """
         Get the unique identifier of the medium.
@@ -66,4 +68,4 @@ class Medium:
         Returns:
             int: The unique identifier of the medium.
         """
-        return self._emulator.ids()
+        return self._emulator.ids

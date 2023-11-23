@@ -6,7 +6,11 @@ from emulators.AsyncEmulator import AsyncEmulator
 from .EmulatorStub import EmulatorStub
 from emulators.SyncEmulator import SyncEmulator
 from emulators.MessageStub import MessageStub
-from threading import Barrier, Lock, BrokenBarrierError  # run getpass in seperate thread
+from threading import (
+    Barrier,
+    Lock,
+    BrokenBarrierError,
+)  # run getpass in seperate thread
 from os import name
 
 if name == "posix":
@@ -130,7 +134,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
         while self.next_message:
             self.pick_running = True
             self.step_barrier.wait()
-            while self.pick_running and not self.all_terminated():
+            while self.pick_running and not self.all_terminated:
                 pass
             sleep(0.1)
 
@@ -146,7 +150,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
             args = line.split(" ")
             match args[0]:
                 case "":
-                    if not self.all_terminated():
+                    if not self.all_terminated:
                         self.step_barrier.wait()
                 case "queue":
                     if len(args) == 1:
@@ -212,7 +216,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
 
     def run(self):
         self._progress.acquire()
-        for index in self.ids():
+        for index in self.ids:
             self._awaits[index].acquire()
         self._start_threads()
         self._progress.release()
@@ -223,7 +227,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 sleep(0.1)
                 self._progress.acquire()
                 # check if everyone terminated
-                if self.all_terminated():
+                if self.all_terminated:
                     break
                 self._progress.release()
             else:
@@ -231,11 +235,11 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 # check if everyone terminated
                 self._progress.acquire()
                 print(f"\r\t## {GREEN}ROUND {self._rounds}{RESET} ##")
-                if self.all_terminated():
+                if self.all_terminated:
                     self._progress.release()
                     break
                 # send messages
-                for index in self.ids():
+                for index in self.ids:
                     # intentionally change the order
                     if index in self._current_round_messages:
                         nxt = copy.deepcopy(self._current_round_messages[index])
@@ -247,7 +251,7 @@ class SteppingEmulator(SyncEmulator, AsyncEmulator):
                 self._current_round_messages = {}
                 self.reset_done()
                 self._rounds += 1
-                ids = [x for x in self.ids()]  # convert to list to make it shuffleable
+                ids = [x for x in self.ids]  # convert to list to make it shuffleable
                 random.shuffle(ids)
                 for index in ids:
                     if self._awaits[index].locked():

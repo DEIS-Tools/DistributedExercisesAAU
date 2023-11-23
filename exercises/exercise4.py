@@ -118,7 +118,7 @@ class Requester(WorkerDevice):
                     self._requested = False
                     self.medium.send(MutexMessage(self.index, 0, Type.RELEASE))
 
-            if self.has_work() and not self._requested:
+            if self.has_work and not self._requested:
                 self._requested = True
                 self.medium.send(MutexMessage(self.index, 0, Type.REQUEST))
 
@@ -144,7 +144,7 @@ class TokenRing(WorkerDevice):
                 if ingoing.is_grant():
                     self._has_token = True
             if self._has_token:
-                if self.has_work():
+                if self.has_work:
                     self.do_work()
                 nxt = (self.index + 1) % self.number_of_devices
                 self._has_token = False
@@ -183,7 +183,7 @@ class RicartAgrawala(WorkerDevice):
 
     def run(self):
         while True:
-            if self.has_work():
+            if self.has_work:
                 self.acquire()
             while True:
                 ingoing = self.medium.receive()
@@ -199,8 +199,8 @@ class RicartAgrawala(WorkerDevice):
     def handle_request(self, message: StampedMessage):
         new_time = max(self._time, message.stamp()) + 1
         if self._state == State.HELD or (
-                self._state == State.WANTED
-                and (self._time, self.index) < (message.stamp(), message.source)
+            self._state == State.WANTED
+            and (self._time, self.index) < (message.stamp(), message.source)
         ):
             self._time = new_time
             self._waiting.append(message.source)
@@ -232,16 +232,14 @@ class RicartAgrawala(WorkerDevice):
             return
         self._state = State.WANTED
         self._time += 1
-        for id in self.medium.ids():
+        for id in self.medium.ids:
             if id != self.index:
                 self.medium.send(
                     StampedMessage(self.index, id, Type.REQUEST, self._time)
                 )
 
     def print_result(self):
-        print(
-            f"RA {self.index} Terminated with request? {self._state == State.WANTED}"
-        )
+        print(f"RA {self.index} Terminated with request? {self._state == State.WANTED}")
 
 
 class Maekawa(WorkerDevice):
@@ -274,7 +272,7 @@ class Maekawa(WorkerDevice):
                     self.handle_request(ingoing)
                 elif ingoing.is_release():
                     self.handle_release(ingoing)
-            if self.has_work():
+            if self.has_work:
                 self.acquire()
             self.medium.wait_for_next_round()
 
@@ -314,9 +312,7 @@ class Maekawa(WorkerDevice):
             self._voted = False
 
     def print_result(self):
-        print(
-            f"MA {self.index} Terminated with request? {self._state == State.WANTED}"
-        )
+        print(f"MA {self.index} Terminated with request? {self._state == State.WANTED}")
 
 
 class SKToken(MessageStub):
@@ -355,7 +351,7 @@ class SuzukiKasami(WorkerDevice):
     def run(self):
         while True:
             self.handle_messages()
-            if self.has_work():
+            if self.has_work:
                 if self._token is not None:
                     self._working = True
                     self.do_work()
@@ -391,7 +387,7 @@ class SuzukiKasami(WorkerDevice):
         (queue, ln) = self._token
         ln[self.index] = self._rn[self.index]
         # let's generate a new queue with all devices with outstanding requests
-        for id in self.medium.ids():
+        for id in self.medium.ids:
             if ln[id] + 1 == self._rn[id]:
                 if id not in queue:
                     queue.append(id)
@@ -407,12 +403,10 @@ class SuzukiKasami(WorkerDevice):
         # Tell everyone that we want the token!
         self._requested = True
         self._rn[self.index] += 1
-        for id in self.medium.ids():
+        for id in self.medium.ids:
             if id != self.index:
                 self.medium.send(
-                    StampedMessage(
-                        self.index, id, Type.REQUEST, self._rn[self.index]
-                    )
+                    StampedMessage(self.index, id, Type.REQUEST, self._rn[self.index])
                 )
 
 
@@ -479,7 +473,7 @@ class Bully(Device):
         self._election = False
 
     def largest(self):
-        return self.index == max(self.medium.ids())
+        return self.index == max(self.medium.ids)
 
     def run(self):
         first_round = True
@@ -520,11 +514,9 @@ class Bully(Device):
                         self.start_election()
                     else:
                         # we are the new leader, we could declare everybody else dead
-                        for id in self.medium.ids():
+                        for id in self.medium.ids:
                             if id != self.index:
-                                self.medium.send(
-                                    Vote(self.index, id, self.index, True)
-                                )
+                                self.medium.send(Vote(self.index, id, self.index, True))
                         self._leader = self.index
                         return
             self.medium.wait_for_next_round()
@@ -533,11 +525,9 @@ class Bully(Device):
     def start_election(self):
         if not self._election:
             self._election = True
-            for id in self.medium.ids():
+            for id in self.medium.ids:
                 if id > self.index:
-                    self.medium.send(
-                        Vote(self.index, id, self.index, self.largest())
-                    )
+                    self.medium.send(Vote(self.index, id, self.index, self.largest()))
 
     def print_result(self):
         print(f"Leader seen from {self._id} is {self._leader}")

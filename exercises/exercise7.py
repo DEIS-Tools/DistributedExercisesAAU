@@ -27,7 +27,7 @@ class Bully(Device):
         self._election = False
 
     def largest(self):
-        return self.index == max(self.medium.ids())
+        return self.index == max(self.medium.ids)
 
     def run(self):
         """TODO"""

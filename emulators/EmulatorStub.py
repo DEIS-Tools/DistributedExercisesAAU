@@ -13,7 +13,7 @@ class EmulatorStub:
         self._media = []
         self._progress = threading.Lock()
 
-        for index in self.ids():
+        for index in self.ids:
             self._media.append(Medium(index, self))
             self._devices.append(kind(index, number_of_devices, self._media[-1]))
             self._threads.append(
@@ -35,9 +35,11 @@ class EmulatorStub:
         for thread in cpy:
             thread.start()
 
+    @property
     def all_terminated(self) -> bool:
-        return all([not self._threads[x].is_alive() for x in self.ids()])
+        return all([not self._threads[x].is_alive() for x in self.ids])
 
+    @property
     def ids(self):
         return range(0, self._nids)
 

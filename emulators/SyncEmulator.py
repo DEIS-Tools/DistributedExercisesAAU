@@ -21,19 +21,19 @@ class SyncEmulator(EmulatorStub):
     def __init__(self, number_of_devices: int, kind):
         super().__init__(number_of_devices, kind)
         self._round_lock = threading.Lock()
-        self._done = [False for _ in self.ids()]
-        self._awaits = [threading.Lock() for _ in self.ids()]
+        self._done = [False for _ in self.ids]
+        self._awaits = [threading.Lock() for _ in self.ids]
         self._last_round_messages: dict[int, list[MessageStub]] = {}
         self._current_round_messages = {}
         self._messages_sent = 0
         self._rounds = 0
 
     def reset_done(self):
-        self._done = [False for _ in self.ids()]
+        self._done = [False for _ in self.ids]
 
     def run(self):
         self._progress.acquire()
-        for index in self.ids():
+        for index in self.ids:
             self._awaits[index].acquire()
         self._start_threads()
         self._progress.release()
@@ -45,11 +45,11 @@ class SyncEmulator(EmulatorStub):
             # check if everyone terminated
             self._progress.acquire()
             print(f"\r\t## {GREEN}ROUND {self._rounds}{RESET} ##")
-            if self.all_terminated():
+            if self.all_terminated:
                 self._progress.release()
                 break
             # send messages
-            for index in self.ids():
+            for index in self.ids:
                 # intentionally change the order
                 if index in self._current_round_messages:
                     nxt = copy.deepcopy(self._current_round_messages[index])
@@ -61,7 +61,7 @@ class SyncEmulator(EmulatorStub):
             self._current_round_messages = {}
             self.reset_done()
             self._rounds += 1
-            ids = [x for x in self.ids()]  # convert to list to make it shuffleable
+            ids = [x for x in self.ids]  # convert to list to make it shuffleable
             random.shuffle(ids)
             for index in ids:
                 if self._awaits[index].locked():
@@ -113,7 +113,7 @@ class SyncEmulator(EmulatorStub):
         self._done[index] = True
 
         # check if the thread have marked their round as done OR have ended
-        if all([self._done[x] or not self._threads[x].is_alive() for x in self.ids()]):
+        if all([self._done[x] or not self._threads[x].is_alive() for x in self.ids]):
             self._round_lock.release()
         self._progress.release()
         self._awaits[index].acquire()
@@ -128,7 +128,7 @@ class SyncEmulator(EmulatorStub):
     def terminated(self, index: int):
         self._progress.acquire()
         self._done[index] = True
-        if all([self._done[x] or not self._threads[x].is_alive() for x in self.ids()]):
+        if all([self._done[x] or not self._threads[x].is_alive() for x in self.ids]):
             if self._round_lock.locked():
                 self._round_lock.release()
         self._progress.release()

@@ -86,9 +86,7 @@ class GfsMaster(Device):
         # Allocate the new chunk on "NUMBER_OF_REPLICAS" random chunkservers
         chunkservers = random.sample(GfsNetwork.gfschunkserver, NUMBER_OF_REPLICAS)
         for i in chunkservers:
-            message = AllocateChunkReqMessage(
-                self.index, i, chunkhandle, chunkservers
-            )
+            message = AllocateChunkReqMessage(self.index, i, chunkhandle, chunkservers)
             self.medium.send(message)
 
     def print_result(self):

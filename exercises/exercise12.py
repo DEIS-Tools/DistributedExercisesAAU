@@ -41,9 +41,7 @@ class AodvNode(Device):
     def run(self):
         last = random.randint(0, self.number_of_devices - 1)
         # I send the message to myself, so it gets routed
-        message = DataMessage(
-            self.index, self.index, last, f"Hi. I am {self.index}."
-        )
+        message = DataMessage(self.index, self.index, last, f"Hi. I am {self.index}.")
         self.medium.send(message)
         while True:
             for ingoing in self.medium.receive_all():
@@ -73,9 +71,7 @@ class AodvNode(Device):
                 )  # change self.next_hop if you implement a different data structure for the routing tables
                 if next is not None:
                     # I know how to reach the destination
-                    message = DataMessage(
-                        self.index, next, ingoing.last, ingoing.data
-                    )
+                    message = DataMessage(self.index, next, ingoing.last, ingoing.data)
                     self.medium.send(message)
                     return True
                 # I don't have the route to the destination.

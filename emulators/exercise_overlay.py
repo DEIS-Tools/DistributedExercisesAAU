@@ -257,8 +257,7 @@ class Window(QWidget):
                     self.emulator.pick_running = True
                     self.step()
                     while (
-                            self.emulator.pick_running
-                            and not self.emulator.all_terminated()
+                        self.emulator.pick_running and not self.emulator.all_terminated
                     ):
                         pass
                     sleep(0.1)
@@ -308,11 +307,11 @@ class Window(QWidget):
         table.show()
 
     def end(self):
-        if self.emulator.all_terminated():
+        if self.emulator.all_terminated:
             return
         self.emulator.is_stepping = False
         self.emulator.step_barrier.wait()
-        while not self.emulator.all_terminated():
+        while not self.emulator.all_terminated:
             self.set_device_color()
         sleep(0.1)
         # self.emulator.print_prompt()
@@ -344,7 +343,7 @@ class Window(QWidget):
 
     def step(self):
         self.emulator.input_lock.acquire()
-        if not self.emulator.all_terminated():
+        if not self.emulator.all_terminated:
             self.emulator.step_barrier.wait()
         self.emulator.input_lock.release()
 

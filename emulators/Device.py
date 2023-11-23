@@ -78,11 +78,11 @@ class WorkerDevice(Device):
         super().__init__(index, number_of_devices, medium)
         self._has_work = False
 
+    @property
     def has_work(self) -> bool:
         # The random call emulates that a concurrent process asked for the
         self._has_work = (
-                self._has_work
-                or random.randint(0, self.number_of_devices) == self.index
+            self._has_work or random.randint(0, self.number_of_devices) == self.index
         )
         return self._has_work
 
@@ -99,7 +99,7 @@ class WorkerDevice(Device):
             raise Exception("More than one concurrent worker!")
         self._lock.release()
 
-        assert self.has_work()
+        assert self.has_work
         amount_of_work = random.randint(1, 4)
         for i in range(0, amount_of_work):
             self.medium.wait_for_next_round()

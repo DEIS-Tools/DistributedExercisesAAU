@@ -33,7 +33,7 @@ class AsyncEmulator(EmulatorStub):
             time.sleep(0.1)
             self._progress.acquire()
             # check if everyone terminated
-            if self.all_terminated():
+            if self.all_terminated:
                 break
             self._progress.release()
         for t in self._threads:
