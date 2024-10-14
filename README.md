@@ -12,6 +12,13 @@ These packages can be installed using `pip` as shown below:
 pip install --user -r requirements.txt
 ```
 
+These packages can be installed using `conda` as shown below:
+```bash
+conda env create -f environment.yml
+
+conda activate ds
+```
+
 ## General
 A FAQ can be found [here](https://github.com/DEIS-Tools/DistributedExercisesAAU/wiki)
 
