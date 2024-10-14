@@ -7,7 +7,6 @@ from emulators.MessageStub import MessageStub
 
 # We extend the MessageStub here for the message-types we wish to communicate
 class PingMessage(MessageStub):
-
     # the constructor-function takes the source and destination as arguments. These are used for "routing" but also
     # for pretty-printing. Here we also take the specific flag of "is_ping"
     def __init__(self, sender: int, destination: int, is_ping: bool):
@@ -19,14 +18,13 @@ class PingMessage(MessageStub):
     # remember to implement the __str__ method such that the debug of the framework works!
     def __str__(self):
         if self.is_ping:
-            return f'{self.source} -> {self.destination} : Ping'
+            return f"{self.source} -> {self.destination} : Ping"
         else:
-            return f'{self.source} -> {self.destination} : Pong'
+            return f"{self.source} -> {self.destination} : Pong"
 
 
 # This class extends on the basic Device class. We will implement the protocol in the run method
 class PingPong(Device):
-
     # The constructor must have exactly this form.
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         # forward the constructor arguments to the super-constructor
@@ -41,13 +39,17 @@ class PingPong(Device):
         # for this algorithm, we will repeat the protocol 10 times and then stop
         for repetetions in range(0, 10):
             # in each repetition, let us send the ping to one random other device
-            message = PingMessage(self.index(), random.randrange(0, self.number_of_devices()), self._is_ping)
+            message = PingMessage(
+                self.index,
+                random.randrange(0, self.number_of_devices),
+                self._is_ping,
+            )
             # we send the message via a "medium"
-            self.medium().send(message)
+            self.medium.send(message)
             # in this instance, we also try to receive some messages, there can be multiple, but
             # eventually the medium will return "None"
             while True:
-                ingoing = self.medium().receive()
+                ingoing = self.medium.receive()
                 if ingoing is None:
                     break
 
@@ -65,8 +67,10 @@ class PingPong(Device):
                     self._is_ping = ingoing.is_ping
 
             # this call is only used for synchronous networks
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     # for pretty-printing and debugging, implement this function
     def print_result(self):
-        print(f'\tDevice {self.index()} got pings: {self._rec_ping} and pongs: {self._rec_pong}')
+        print(
+            f"\tDevice {self.index} got pings: {self._rec_ping} and pongs: {self._rec_pong}"
+        )

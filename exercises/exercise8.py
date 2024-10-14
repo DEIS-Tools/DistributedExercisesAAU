@@ -1,6 +1,4 @@
-import math
 import random
-import sys
 
 from emulators.Device import Device
 from emulators.Medium import Medium
@@ -16,17 +14,21 @@ NUMBER_OF_REPLICAS = 3
 class GfsMaster(Device):
     def __init__(self, index: int, number_of_devices: int, medium: Medium):
         super().__init__(index, number_of_devices, medium)
-        self._metadata: dict[tuple[str, int], tuple[int, list[int]]] = {}  # (filename, chunk_index) -> (chunkhandle, [chunkservers])
-        self.chunks_being_allocated: list[tuple[int, int]] = []  # [(chunkhandle, requester_index)]
+        self._metadata: dict[
+            tuple[str, int], tuple[int, list[int]]
+        ] = {}  # (filename, chunk_index) -> (chunkhandle, [chunkservers])
+        self.chunks_being_allocated: list[
+            tuple[int, int]
+        ] = []  # [(chunkhandle, requester_index)]
         GfsNetwork.gfsmaster.append(index)
 
     def run(self):
         # since this is a server, its job is to wait for requests (messages), then do something
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, File2ChunkReqMessage):
@@ -38,25 +40,19 @@ class GfsMaster(Device):
                         self.chunks_being_allocated.append((chunk[0], ingoing.source))
                         return True
                 answer = File2ChunkRspMessage(
-                    self.index(),
-                    ingoing.source,
-                    chunk[0],
-                    chunk[1]
-                    )
-                self.medium().send(answer)
+                    self.index, ingoing.source, chunk[0], chunk[1]
+                )
+                self.medium.send(answer)
             else:
                 if ingoing.createIfNotExists:
-                    self.do_allocate_request(ingoing.filename, ingoing.chunkindex, ingoing.source)
+                    self.do_allocate_request(
+                        ingoing.filename, ingoing.chunkindex, ingoing.source
+                    )
                 else:
-                    answer = File2ChunkRspMessage(
-                        self.index(),
-                        ingoing.source,
-                        0,
-                        []
-                        )
-                    self.medium().send(answer)
+                    answer = File2ChunkRspMessage(self.index, ingoing.source, 0, [])
+                    self.medium.send(answer)
         elif isinstance(ingoing, QuitMessage):
-            print(f"I am Master {self.index()} and I am quitting")
+            print(f"I am Master {self.index} and I am quitting")
             return False
         elif isinstance(ingoing, AllocateChunkRspMessage):
             if ingoing.result != "ok":
@@ -70,15 +66,16 @@ class GfsMaster(Device):
     def add_chunk_to_metadata(self, chunk: tuple[int, list[int]], chunkserver: int):
         chunk[1].append(chunkserver)
         if len(chunk[1]) == NUMBER_OF_REPLICAS:
-            requests = [request for request in self.chunks_being_allocated if request[0] == chunk[0]]
+            requests = [
+                request
+                for request in self.chunks_being_allocated
+                if request[0] == chunk[0]
+            ]
             for request in requests:
                 answer = File2ChunkRspMessage(
-                    self.index(),
-                    request[1],
-                    chunk[0],
-                    chunk[1]
-                    )
-                self.medium().send(answer)
+                    self.index, request[1], chunk[0], chunk[1]
+                )
+                self.medium.send(answer)
                 self.chunks_being_allocated.remove(request)
 
     def do_allocate_request(self, filename, chunkindex: int, requester: int):
@@ -89,8 +86,8 @@ class GfsMaster(Device):
         # Allocate the new chunk on "NUMBER_OF_REPLICAS" random chunkservers
         chunkservers = random.sample(GfsNetwork.gfschunkserver, NUMBER_OF_REPLICAS)
         for i in chunkservers:
-            message = AllocateChunkReqMessage(self.index(), i, chunkhandle, chunkservers)
-            self.medium().send(message)
+            message = AllocateChunkReqMessage(self.index, i, chunkhandle, chunkservers)
+            self.medium.send(message)
 
     def print_result(self):
         pass
@@ -107,19 +104,21 @@ class GfsChunkserver(Device):
     def run(self):
         # since this is a server, its job is to answer for requests (messages), then do something
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, QuitMessage):
-            print(f"I am Chunk Server {self.index()} and I am quitting")
+            print(f"I am Chunk Server {self.index} and I am quitting")
             return False
         elif isinstance(ingoing, AllocateChunkReqMessage):
             self.do_allocate_chunk(ingoing.chunkhandle, ingoing.chunkservers)
-            message = AllocateChunkRspMessage(self.index(), ingoing.source, ingoing.chunkhandle, "ok")
-            self.medium().send(message)
+            message = AllocateChunkRspMessage(
+                self.index, ingoing.source, ingoing.chunkhandle, "ok"
+            )
+            self.medium.send(message)
         elif isinstance(ingoing, RecordAppendReqMessage):
             #
             # TODO: need to implement the storage operation
@@ -144,32 +143,38 @@ class GfsClient(Device):
 
     def run(self):
         # being a client, it listens to incoming messages, but it also does something to put the ball rolling
-        print(f"I am Client {self.index()}")
+        print(f"I am Client {self.index}")
         master = GfsNetwork.gfsmaster[0]
-        message = File2ChunkReqMessage(self.index(), master, "myfile.txt", 0, True)
-        self.medium().send(message)
+        message = File2ChunkReqMessage(self.index, master, "myfile.txt", 0, True)
+        self.medium.send(message)
 
         while True:
-            for ingoing in self.medium().receive_all():
+            for ingoing in self.medium.receive_all():
                 if not self.handle_ingoing(ingoing):
                     return
-            self.medium().wait_for_next_round()
+            self.medium.wait_for_next_round()
 
     def handle_ingoing(self, ingoing: MessageStub):
         if isinstance(ingoing, File2ChunkRspMessage):
-            print(f"I found out where my chunk is: {ingoing.chunkhandle}, locations: {ingoing.locations}")
+            print(
+                f"I found out where my chunk is: {ingoing.chunkhandle}, locations: {ingoing.locations}"
+            )
 
             # I select a random chunk server, and I send the append request
             # I do not necessarily select the primary
             randomserver = random.choice(ingoing.locations)
-            data = f"hello from client number {self.index()}\n"
-            self.medium().send(RecordAppendReqMessage(self.index(), randomserver, ingoing.chunkhandle, data))
+            data = f"hello from client number {self.index}\n"
+            self.medium.send(
+                RecordAppendReqMessage(
+                    self.index, randomserver, ingoing.chunkhandle, data
+                )
+            )
         elif isinstance(ingoing, RecordAppendRspMessage):
             # project completed, time to quit
             for i in GfsNetwork.gfsmaster:
-                self.medium().send(QuitMessage(self.index(), i))
+                self.medium.send(QuitMessage(self.index, i))
             for i in GfsNetwork.gfschunkserver:
-                self.medium().send(QuitMessage(self.index(), i))
+                self.medium.send(QuitMessage(self.index, i))
             return False
         return True
 
@@ -185,9 +190,9 @@ class GfsNetwork:
             return GfsChunkserver(index, number_of_devices, medium)
         else:
             return GfsClient(index, number_of_devices, medium)
+
     gfsmaster = []
     gfschunkserver = []
-
 
 
 class QuitMessage(MessageStub):
@@ -195,35 +200,50 @@ class QuitMessage(MessageStub):
         super().__init__(sender, destination)
 
     def __str__(self):
-        return f'QUIT REQUEST {self.source} -> {self.destination}'
+        return f"QUIT REQUEST {self.source} -> {self.destination}"
+
 
 class File2ChunkReqMessage(MessageStub):
-    def __init__(self, sender: int, destination: int, filename: str, chunkindex: int, createIfNotExists = False):
+    def __init__(
+        self,
+        sender: int,
+        destination: int,
+        filename: str,
+        chunkindex: int,
+        createIfNotExists=False,
+    ):
         super().__init__(sender, destination)
         self.filename = filename
         self.chunkindex = chunkindex
         self.createIfNotExists = createIfNotExists
 
     def __str__(self):
-        return f'FILE2CHUNK REQUEST {self.source} -> {self.destination}: ({self.filename}, {self.chunkindex}, createIfNotExists = {self.createIfNotExists})'
+        return f"FILE2CHUNK REQUEST {self.source} -> {self.destination}: ({self.filename}, {self.chunkindex}, createIfNotExists = {self.createIfNotExists})"
+
 
 class File2ChunkRspMessage(MessageStub):
-    def __init__(self, sender: int, destination: int, chunkhandle: int, locations: list):
+    def __init__(
+        self, sender: int, destination: int, chunkhandle: int, locations: list
+    ):
         super().__init__(sender, destination)
         self.chunkhandle = chunkhandle
         self.locations = locations
 
     def __str__(self):
-        return f'FILE2CHUNK RESPONSE {self.source} -> {self.destination}: ({self.chunkhandle}, {self.locations})'
+        return f"FILE2CHUNK RESPONSE {self.source} -> {self.destination}: ({self.chunkhandle}, {self.locations})"
+
 
 class AllocateChunkReqMessage(MessageStub):
-    def __init__(self, sender: int, destination: int, chunkhandle: int, chunkservers: list[int]):
+    def __init__(
+        self, sender: int, destination: int, chunkhandle: int, chunkservers: list[int]
+    ):
         super().__init__(sender, destination)
         self.chunkhandle = chunkhandle
         self.chunkservers = chunkservers
 
     def __str__(self):
-        return f'ALLOCATE REQUEST {self.source} -> {self.destination}: ({self.chunkhandle})'
+        return f"ALLOCATE REQUEST {self.source} -> {self.destination}: ({self.chunkhandle})"
+
 
 class AllocateChunkRspMessage(MessageStub):
     def __init__(self, sender: int, destination: int, chunkhandle: int, result: str):
@@ -232,7 +252,8 @@ class AllocateChunkRspMessage(MessageStub):
         self.result = result
 
     def __str__(self):
-        return f'ALLOCATE RESPONSE {self.source} -> {self.destination}: ({self.chunkhandle, self.result})'
+        return f"ALLOCATE RESPONSE {self.source} -> {self.destination}: ({self.chunkhandle, self.result})"
+
 
 class RecordAppendReqMessage(MessageStub):
     def __init__(self, sender: int, destination: int, chunkhandle: int, data: str):
@@ -241,7 +262,8 @@ class RecordAppendReqMessage(MessageStub):
         self.data = data
 
     def __str__(self):
-        return f'RECORD APPEND REQUEST {self.source} -> {self.destination}: ({self.chunkhandle}, {self.data})'
+        return f"RECORD APPEND REQUEST {self.source} -> {self.destination}: ({self.chunkhandle}, {self.data})"
+
 
 class RecordAppendRspMessage(MessageStub):
     def __init__(self, sender: int, destination: int, result: str):
@@ -250,5 +272,4 @@ class RecordAppendRspMessage(MessageStub):
         # TODO: possibly, complete this message with the fields you need
 
     def __str__(self):
-        return f'RECORD APPEND RESPONSE {self.source} -> {self.destination}: ({self.result})'
-
+        return f"RECORD APPEND RESPONSE {self.source} -> {self.destination}: ({self.result})"

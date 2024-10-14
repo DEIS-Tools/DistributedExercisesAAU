@@ -6,6 +6,7 @@ class MessageStub:
         _source (int): The identifier of the message sender.
         _destination (int): The identifier of the message receiver.
     """
+
     _source: int
     _destination: int
 
