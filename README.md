@@ -231,7 +231,7 @@ For all exercises today, you can use the `sync` network type - but most algorith
       log-file
 
 # Exercise 7
-1. DS5ed exercises 18.5 and 18.13
+1. DS5ed exercises 18.10 and 18.13
 2. Sketch an architecture for the following three systems: A bulletin board (simple reddit), a bank, a version control 
    system (e.g. GIT)
    1. Identify the system types (with respect to CAP).
