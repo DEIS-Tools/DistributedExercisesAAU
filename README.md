@@ -288,6 +288,17 @@ python exercise_runner.py --lecture 9 --algorithm MapReduceNetwork --type async 
    3. Look for the TODOs, and implement your solution.
    4. Try the code for both sync and async devices. Does it work in both cases?
 
+3. Consider the modified blockchain, we will simulate an attack that controls a percentage of the total computing power. The goal of the attacker is to create a fork of the blockchain that ignore the last 5 blocks, and eventually make the fork the dominant chain in the network.
+   1. Think about how you can exploit a majority control of the network to alter the blockchain history by introducing a fork.
+      1. How can the attackers ensure that their fork becomes the longest chain and eventually gets accepted by other miners?
+      2. How do you deal with new transactions in both the original chain and the forked chain?
+   2. Take a look at the existing BlockchainNetwork and BlockchainMiner classes. Modify these to implement your blockchain attack.
+      1. Create the BlockchainAttacker, which misbehaves if _self.id() is lower than a fraction of the total number of nodes.
+      2. Initiate a fork of the blockchain using the attackers.
+      3. Make the attackers collude to ensure that the new fork surpasses the original.
+      4. Observe how the other miners react to your fork and if they eventually switch to your chain.
+   3. Play around with the number of attackers and discuss their impact on the network, can they create a new longest chain without majority control?
+
 NOTICE: To execute the code, issue for example:
 ```bash
 python exercise_runner.py --lecture 10 --algorithm BlockchainNetwork --type async --devices 4
