@@ -130,7 +130,8 @@ class ChordClient(Device):
 
     def run(self):
         for i in range(pow(2, address_size)):
-            guid = i  # I send a message to each address, to check if each node stores one data for each address it manages
+            guid = i  
+            # I send a message to each address, to check if each node stores one data for each address it manages
             # if your chord address space gets too big, use the following code:
             # for i in range(pow(2, address_size)):
             # guid = random.randint(0, pow(2,address_size)-1)
@@ -144,15 +145,14 @@ class ChordClient(Device):
         # message = StartJoinMessage(self.index(), 1, new_chord_id)
         # self.medium().send(message)
 
-        time.sleep(
-            10
-        )  # or use some smart trick to wait for the routing process to be completed before shutting down the distributed system
+        time.sleep(10)  
+        # or use some smart trick to wait for the routing process to be completed before shutting down the distributed system
         for i in range(1, self.number_of_devices):
             message = QuitMessage(self.index, i)
             self.medium.send(message)
         return
 
-        # currently, I do not manage incoming messages
+        # currently, I do not manage incoming messages since there are no incoming messages for the client.
         # while True:
         #     for ingoing in self.medium().receive_all():
         #         if not self.handle_ingoing(ingoing):
@@ -169,32 +169,47 @@ class ChordClient(Device):
 
 
 class ChordNetwork:
+    # Initializes routing tables for all nodes, except for the client and disconnected node
     def init_routing_tables(number_of_devices: int):
-        N = number_of_devices - 2  # routing_data 0 will be for device 2, etc
+        # The first node is always the client, and the second is a disconnected node
+        # Therefore routing_data 0 will be for device 2, etc
+        N = number_of_devices - 2  
+
+        # Populate the list of Chord IDs for the nodes
         while len(all_nodes) < N:
             new_chord_id = random.randint(0, pow(2, address_size) - 1)
             if new_chord_id not in all_nodes:
                 all_nodes.append(new_chord_id)
+
+        # Sort to determine the correct positions within the Chord ring
         all_nodes.sort()
 
+        # Initialize routing data for each node, including predecessor and finger table
         for id in range(N):
+            # Determine the previous node in the ring, using modulo for wrap-around
             prev_id = (id - 1) % N
-            prev = (
-                prev_id + 2,
-                all_nodes[prev_id],
-            )  # Add 2 to get "message-able" device index
+            # Add 2 to get "message-able" device index
+            prev = (prev_id + 2, all_nodes[prev_id])
+
+            # Populate the finger table for each node
             new_finger_table = []
             for i in range(address_size):
+                # Calculate the target ID for the current finger entry
                 at_least = (all_nodes[id] + pow(2, i)) % pow(2, address_size)
                 candidate = (id + 1) % N
+
+                # Find the appropriate node that should be the entry for this finger
                 while in_between(all_nodes[candidate], all_nodes[id], at_least):
                     candidate = (candidate + 1) % N
-                new_finger_table.append(
-                    (candidate + 2, all_nodes[candidate])
-                )  # I added 2 to candidate since routing_data 0 is for device 2, and so on
+
+                # I added 2 to candidate since routing_data 0 is for device 2, and so on
+                new_finger_table.append((candidate + 2, all_nodes[candidate]))
+
+            # Store the routing data for the current node
             all_routing_data.append(
                 RoutingData(id + 2, all_nodes[id], prev, new_finger_table)
             )
+
             print(
                 RoutingData(id + 2, all_nodes[id], prev, new_finger_table).to_string()
             )
