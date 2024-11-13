@@ -323,13 +323,17 @@ python exercise_runner.py --lecture 11 --algorithm ChordNetwork --type async --d
 
 # Exercise 12
 1. There are "exercises" on the Moodle page. I suggest to start with them.
-2. Consider the code in `exercise12.py`, which creates the topology for your IoT wireless network. The goal is to 
-   implement AODV.
+2. Consider the code in `exercise12.py`, which creates the topology for your IoT wireless network. The goal is to implement AODV.
    1. Please note that you can `self.medium().send()` messages only to the nodes in `self.neighbors`. This simulates a 
       wireless network with limited range.
    2. Design the logic for the Route Request process. What can you use as a broadcast id? Design also the Route Reply 
       process, which should be much easier.
    3. Look for the TODOs, and implement your solution.
+3. Now consider a node going offline in the network. Simulate a node failure in the AODV-based network and observe how the network handles it.
+   1. Discuss how you expect the network to handle the disconnection of a node.
+   2. Implement logic that simulates a node failure for one of the nodes by disconnecting it from its neighbours.
+   3. Observe the network's routing behaviour after the node fails. Does it match your expectations?
+
 
 NOTICE: To execute the code, issue for example:
 ```bash
