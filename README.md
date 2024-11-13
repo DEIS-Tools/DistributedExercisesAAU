@@ -329,11 +329,10 @@ python exercise_runner.py --lecture 11 --algorithm ChordNetwork --type async --d
    2. Design the logic for the Route Request process. What can you use as a broadcast id? Design also the Route Reply 
       process, which should be much easier.
    3. Look for the TODOs, and implement your solution.
-3. Now consider a node going offline in the network. Simulate a temporary node failure in the AODV-based network and observe how the network handles reconnection. 
-   1. Discuss how you expect the network to handle the disconnection and reconnection of a node.
-   2. Implement logic that simulates a temporary node failure for one of the nodes by disconnecting it from its neighbors. Let it reconnect after a short delay.
-   3. When the node reconnects, it should send a Route Request message to re-establish its presence in the network.
-   4. Observe the network's routing behavior during disconnection and reconnection. Does it match your expectations?
+3. Now consider a node going offline in the network. Simulate a node failure in the AODV-based network and observe how the network handles it.
+   1. Discuss how you expect the network to handle the disconnection of a node.
+   2. Implement logic that simulates a node failure for one of the nodes by disconnecting it from its neighbours.
+   3. Observe the network's routing behaviour after the node fails. Does it match your expectations?
 
 
 NOTICE: To execute the code, issue for example:
