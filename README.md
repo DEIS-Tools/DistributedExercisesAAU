@@ -249,6 +249,14 @@ For all exercises today, you can use the `sync` network type - but most algorith
       when they should be sent, etc
    3. Implement your solution, starting from the handler of RecordAppendReqMessage of the GfsChunkserver class
    4. Try out your solution with a larger number of clients, to have more concurrent changes to the "file"
+3. Implement fault tolerance mechanisms(Heartbeat Detection and Failover Mechanism) in the system:
+   1. Heartbeat Detection: The GFS master should periodically receive heartbeats from each chunkserver to monitor their health.
+      1. Modify the GfsChunkserver class to send periodic heartbeat messages to the GfsMaster.
+      2. Update the GfsMaster class to maintain a list of active chunkservers based on received heartbeats.
+   2. Failover Mechanism: When a chunkserver fails (i.e., stops sending heartbeats), the requests should be redirected to available replicas.
+      1. Introduce a simple mechanism to simulate a chunkserver failing.
+      2. Update the GfsMaster to detect a missing heartbeat and mark the corresponding chunkserver as failed.
+      3. Ensure the client (GfsClient) can reroute operations to other replicas if a chunkserver has failed.
 3. BONUS Exercise: Add shadow masters to the system. Clients and chunk servers will still interact with the first master 
    to change the file system, but the shadow master can take over if the master shuts down.
 
