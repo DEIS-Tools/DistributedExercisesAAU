@@ -273,3 +273,10 @@ class RecordAppendRspMessage(MessageStub):
 
     def __str__(self):
         return f"RECORD APPEND RESPONSE {self.source} -> {self.destination}: ({self.result})"
+
+class HeartbeatMessage(MessageStub):
+    def __init__(self, sender: int, destination: int):
+        super().__init__(sender, destination)
+
+    def __str__(self):
+        return f"HEARTBEAT {self.source} -> {self.destination}"
