@@ -277,12 +277,11 @@ python exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devi
    3. Consider how to implement the Reducers. Take into account that we are simulating "local storage in the mappers" 
       using memory.
    4. Look for the TODOs, and implement your solution.
-   5. Try to change the number of mappers and reducers, and look at the "performance". In particular, look at how many 
-      rounds are needed to complete the job with the "sync" simulator.
-4. Add simulation for stragglers (slow workers)
-   1. Modify the `MapReduceWorker` `run` or `do_some_work` method to occasionally add a random delay for specific workers, which can rarely be very large.
-   2. Modify the `MapReduceMaster`to track the progress of each worker and reassign uncompleted tasks if a worker takes too long.
-   3. Discuss the real-world relevance of stragglers in distributed systems (e.g., slow network nodes, overloaded servers) and how they affect system throughput and overall performance.
+   5. Try to change the number of mappers and reducers, and look at the "performance". In particular, look at how many rounds are needed to complete the job with the "sync" simulator.
+3. Add simulation for stragglers (slow workers)
+   1. Modify the `MapReduceWorker` `run` or `do_some_work` method to occasionally add a random delay for specific workers, which can rarely be very large.
+   2. Modify the `MapReduceMaster`to track the progress of each worker and reassign uncompleted tasks if a worker takes too long.
+   3. Discuss the real-world relevance of stragglers in distributed systems (e.g., slow network nodes, overloaded servers) and how they affect system throughput and overall performance.
 
 NOTICE: To execute the code, issue for example:
 ```bash
