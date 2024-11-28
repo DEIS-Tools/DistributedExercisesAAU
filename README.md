@@ -266,7 +266,11 @@ python exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devi
 ```
 
 # Exercise 9
-1. Consider the code in `exercise9.py`, which sketches MapReduce, and complete it.
+1. How do MapReduce, Spark, and Pregel differ? Discuss the following:
+   1. What are some major design and architectural differences in the three systems?
+   2. What are the target use cases for the different system? When do they perform good or bad.
+   3. What are trade-offs in terms of performance, scalability, and complexity for the three systems?
+2. Consider the code in `exercise9.py`, which sketches MapReduce, and complete it.
    1. Unzip the file books.zip in ex9data/books.
    2. The Master is pretty much complete. The same can be said for the client. Take a look at how the Master is supposed 
       to interact with Mappers and Reducers.
@@ -275,8 +279,10 @@ python exercise_runner.py --lecture 8 --algorithm GfsNetwork --type async --devi
    4. Look for the TODOs, and implement your solution.
    5. Try to change the number of mappers and reducers, and look at the "performance". In particular, look at how many 
       rounds are needed to complete the job with the "sync" simulator.
-2. Compare MapReduce and Spark RDDs, and consider what it would change in terms of architecture, especially to support 
-   RDDs.
+3. Add simulation for stragglers (slow workers)
+   1. Modify the `MapReduceWorker` `run` or `do_some_work` method to occasionally add a random delay for specific workers, which can rarely be very large.
+   2. Modify the `MapReduceMaster`to track the progress of each worker and reassign uncompleted tasks if a worker takes too long.
+   3. Discuss the real-world relevance of stragglers in distributed systems (e.g., slow network nodes, overloaded servers) and how they affect system throughput and overall performance.
 
 NOTICE: To execute the code, issue for example:
 ```bash
